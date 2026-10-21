@@ -948,6 +948,16 @@ const app=document.querySelector('#appcontent');
 if(app){
   new MutationObserver(()=>{
     if(typeof mode!=='undefined'&&mode!=='kakao'){
+      // Never let an old Gemini response overwrite another app after leaving KKT.
+      if(aiView){
+        aiRequestSequence++;
+        aiController?.abort();
+        aiController=null;
+        aiView='';
+        aiSending=false;
+        aiTyping=false;
+        aiError='';
+      }
       if(requestView){
         requestView='';
         currentId='';
