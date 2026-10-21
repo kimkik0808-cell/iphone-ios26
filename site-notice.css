@@ -101,10 +101,10 @@
 #site-announcement-overlay .site-announcement-languages button:focus-visible{
  outline:2px solid #e45881;outline-offset:2px;
 }
-#site-announcement-overlay .site-announcement-panel[lang="zh-CN"]{
+#site-announcement-overlay[lang="zh-CN"] .site-announcement-panel{
  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
 }
-#site-announcement-overlay .site-announcement-panel[lang="ko"]{
+#site-announcement-overlay[lang="ko"] .site-announcement-panel{
  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
 }
 @media(max-width:340px){
