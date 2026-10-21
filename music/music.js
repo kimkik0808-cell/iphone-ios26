@@ -109,31 +109,56 @@
   async function reload(force=false){
     if(loading||(!force&&loaded&&Date.now()-loadTime<300000))return;
     loading=true;error='';if(isMusic())refresh();
+    const found=[],seen=new Set(), metadata={};
+    const addTrack=(name,extra={},src='',size=0)=>{
+      if(typeof name!=='string'||!mediaType.test(name))return;
+      const canonical=name.normalize('NFC');
+      if(seen.has(canonical))return;
+      seen.add(canonical);
+      found.push({
+        id:'official:'+canonical,name,
+        title:extra.title||basename(name),artist:extra.artist||'아티스트 정보 없음',
+        cover:typeof extra.cover==='string'?extra.cover:'',
+        src:src||new URL('./music/'+encodeURIComponent(name),document.baseURI).href,size
+      });
+    };
     try{
-      let metadata={};
+      // The deployed music manifest is authoritative. No GitHub API is needed to see these tracks.
+      // Filename must retain its exact uploaded Unicode form (important for Hangul).
       try{
-        const m=await fetch(new URL('./music/manifest.json',document.baseURI).href+(force?'?ts='+Date.now():''),{cache:force?'no-store':'default'});
+        const manifestUrl=new URL('./music/manifest.json',document.baseURI);
+        if(force)manifestUrl.searchParams.set('ts',String(Date.now()));
+        const m=await fetch(manifestUrl.href,{cache:force?'no-store':'default'});
         if(m.ok){
-          const data=await m.json();const rows=Array.isArray(data)?data:data.tracks;
-          if(Array.isArray(rows))for(const x of rows){if(x&&typeof x.file==='string')metadata[x.file.normalize('NFC')]=x}
+          const data=await m.json();
+          const rows=Array.isArray(data)?data:data.tracks;
+          if(Array.isArray(rows)){
+            for(const entry of rows){
+              if(!entry||typeof entry.file!=='string')continue;
+              metadata[entry.file.normalize('NFC')]=entry;
+              addTrack(entry.file,entry,new URL('./music/'+encodeURIComponent(entry.file),document.baseURI).href);
+            }
+          }
         }
-      }catch{}
-      const response=await fetch(api,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
-      if(!response.ok)throw new Error('GitHub 목록을 불러오지 못했습니다');
-      const json=await response.json();
-      if(!Array.isArray(json))throw new Error('음원 목록 형식 오류');
-      const found=[];
-      for(const x of json){
-        if(x.type!=='file'||!mediaType.test(x.name))continue;
-        const extra=metadata[x.name.normalize('NFC')]||{};
-        const cover=typeof extra.cover==='string'?extra.cover:'';
-        found.push({
-          id:'official:'+x.name,name:x.name,
-          title:extra.title||basename(x.name),artist:extra.artist||'아티스트 정보 없음',
-          cover,src:raw+encodeURIComponent(x.name),size:x.size||0
-        });
+      }catch(err){ /* Live GitHub discovery remains optional */ }
+      // Discover newly added GitHub music, without removing playable files bundled in Cloudflare.
+      try{
+        const response=await fetch(api,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+        if(!response.ok)throw new Error('GitHub API status '+response.status);
+        const json=await response.json();
+        if(!Array.isArray(json))throw new Error('GitHub API did not return a directory');
+        for(const file of json){
+          if(file.type!=='file'||!mediaType.test(file.name))continue;
+          const extra=metadata[file.name.normalize('NFC')]||{};
+          const fileUrl=typeof file.download_url==='string'&&file.download_url.startsWith('https:')
+            ?file.download_url:raw+encodeURIComponent(file.name);
+          addTrack(file.name,extra,fileUrl,file.size||0);
+        }
+      }catch(err){
+        if(!found.length)throw new Error('음악 목록을 불러올 수 없습니다. 새로고침해 주세요.');
       }
-      built=found;loaded=true;loadTime=Date.now();
+      built=found;
+      loaded=true;loadTime=Date.now();
     }catch(err){error=String(err?.message||'음악 목록을 불러올 수 없습니다');loaded=true;loadTime=Date.now()}
     finally{loading=false;if(isMusic())refresh()}
   }
