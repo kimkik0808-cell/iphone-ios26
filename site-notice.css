@@ -76,3 +76,38 @@
 @media(prefers-reduced-motion:reduce){
  #site-announcement-overlay{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
+
+/* Manual bilingual language selector inside the notice heading. */
+#site-announcement-overlay .site-announcement-top{
+ display:flex;align-items:center;justify-content:space-between;gap:9px;
+ margin:0 35px 13px 0;
+}
+#site-announcement-overlay .site-announcement-top .site-announcement-label{
+ margin:0;flex:none;
+}
+#site-announcement-overlay .site-announcement-languages{
+ display:flex;align-items:center;gap:3px;padding:3px;
+ background:#f4f1f5;border-radius:11px;flex:none;
+}
+#site-announcement-overlay .site-announcement-languages button{
+ -webkit-appearance:none;appearance:none;background:transparent;border:0;box-shadow:none;
+ color:#857d88;font-family:inherit;font-size:12px;line-height:1.4;font-weight:590;
+ padding:6px 9px;min-height:31px;white-space:nowrap;border-radius:8px;
+ cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+#site-announcement-overlay .site-announcement-languages button.active{
+ background:#fff;color:#e34c76;font-weight:730;box-shadow:0 1px 5px #22221d17;
+}
+#site-announcement-overlay .site-announcement-languages button:focus-visible{
+ outline:2px solid #e45881;outline-offset:2px;
+}
+#site-announcement-overlay .site-announcement-panel[lang="zh-CN"]{
+ font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+#site-announcement-overlay .site-announcement-panel[lang="ko"]{
+ font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+}
+@media(max-width:340px){
+ #site-announcement-overlay .site-announcement-top{margin-right:33px;}
+ #site-announcement-overlay .site-announcement-languages button{padding:5px 6px;font-size:11px;}
+}
