@@ -7,6 +7,7 @@ on:
       - '.github/workflows/package-cloudflare.yml'
       - 'music/**'
       - 'fromm/**'
+      - 'notifications/**'
       - 'index.html'
       - 'credits.html'
 
@@ -23,7 +24,8 @@ jobs:
       - name: Validate app JavaScript and reply data
         run: |
           node --check fromm/fromm.js
-          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('fromm/scenes.json','utf8'));const b=JSON.parse(fs.readFileSync('fromm/replies.json','utf8'));let total=0;for(const s of a.scenes){const c=b.collections.find(x=>x.sceneId===s.id);if(!c||c.replies.length!==s.replyCount)throw Error('Reply mismatch: '+s.id);total+=c.replies.length;}if(a.scenes.length!==6||total!==427)throw Error('Unexpected total '+total);console.log('fromm reply records verified:',total);"
+          node --check notifications/notifications.js
+          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('fromm/scenes.json','utf8'));const b=JSON.parse(fs.readFileSync('fromm/replies.json','utf8'));const c=JSON.parse(fs.readFileSync('fromm/interactive.json','utf8'));let total=0,zh=0;for(const s of a.scenes){const group=b.collections.find(x=>x.sceneId===s.id);if(!group||group.replies.length!==s.replyCount)throw Error('Reply mismatch: '+s.id);total+=group.replies.length;zh+=group.replies.filter(r=>r.lang==='zh-CN').length;}if(a.scenes.length!==6||total!==427||zh!==128)throw Error('Historical replies mismatch '+total+'/'+zh);const phrases=['요','모하니','밥먹었어?'];const ids=['t01','t02','t03'];let script=0,scriptZh=0;for(let i=0;i<3;i++){const group=c.collections[i];if(!group||group.sceneId!==ids[i]||group.phrase!==phrases[i]||group.replies.length<60)throw Error('Fixed turn missing '+i);script+=group.replies.length;scriptZh+=group.replies.filter(r=>r.lang==='zh-CN').length;}if(script!==204||scriptZh!==61)throw Error('Fixed script reply mismatch '+script+'/'+scriptZh);console.log('fromm verified: '+total+' historical, '+script+' scripted, '+(zh+scriptZh)+' Chinese');"
 
       - name: Validate Music JavaScript
         run: |
@@ -35,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
-          zip -q -r "$archive" index.html credits.html assets photos voicemail music fromm
+          zip -q -r "$archive" index.html credits.html assets photos voicemail music fromm notifications
           unzip -tq "$archive"
           unzip -Z1 "$archive" | grep -Fx 'index.html'
           unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
@@ -46,6 +48,9 @@ jobs:
           unzip -Z1 "$archive" | grep -Fx 'fromm/fromm.css'
           unzip -Z1 "$archive" | grep -Fx 'fromm/scenes.json'
           unzip -Z1 "$archive" | grep -Fx 'fromm/replies.json'
+          unzip -Z1 "$archive" | grep -Fx 'fromm/interactive.json'
+          unzip -Z1 "$archive" | grep -Fx 'notifications/notifications.js'
+          unzip -Z1 "$archive" | grep -Fx 'notifications/notifications.css'
           unzip -Z1 "$archive" | grep -Fx 'credits.html'
           test -f index.html
           ls -lh "$archive"
@@ -60,6 +65,6 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$archive" --clobber
           else
-            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, fromm artist simulation and 427 fictional fan replies, and creator credits." --latest=false
+            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, fromm with 3 fixed interactions, Chinese fan replies, iOS-style Instagram/KakaoTalk banners, and creator credits." --latest=false
           fi
           echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/iphone-ios26-cloudflare.zip"
