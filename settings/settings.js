@@ -8,6 +8,7 @@
   const gesture=document.querySelector('#gesture');
   const DND_KEY='iphone26_dnd_enabled';
   const LANG_KEY='iphone26_ui_language';
+  const LANG_SET_KEY='iphone26_settings_language_confirmed_v1';
   const currentLanguage=()=>window.IphoneLocale?.language||
     (()=>{try{return localStorage.getItem(LANG_KEY)||'ko'}catch{return 'ko'}})();
   const locale=(ko,zh)=>currentLanguage()==='zh'?zh:ko;
@@ -95,8 +96,8 @@
       +'<span class="ios26-settings-itemlabel" style="font-weight:'+(lang==='zh'?710:450)+'">简体中文</span>'
       +'<span class="ios26-settings-trail">'+(lang==='zh'?'✓':'')+'</span></button></section>'
       +'<p class="ios26-settings-caption">'+locale(
-        '선택한 언어는 앱, 메시지, 알림 및 안내에 적용되고 이 기기에 저장됩니다.',
-        '选择后，手机界面、应用内容、聊天、通知和公告将切换语言，并在此设备上保存。'
+        '선택한 언어는 앱, 메시지, 알림에 적용되고 저장됩니다. 업데이트 안내 언어는 별도로 선택할 수 있어요.',
+        '选择后，手机界面、应用内容、聊天及通知将切换语言并保存。更新公告的语言可独立切换。'
       )+'</p>'
       +group(row('지역','gear','#858589',locale('대한민국','韩国'),'placeholder'))
       +'</main>';
@@ -147,6 +148,7 @@
     else if(a==='language'){languagePreviousPage=page;page='language';paint()}
     else if(a==='lang'){
       const requested=btn.dataset.lang==='zh'?'zh':'ko';
+      try{localStorage.setItem(LANG_SET_KEY,'1')}catch{}
       if(window.IphoneLocale)window.IphoneLocale.setLanguage(requested);
       else{try{localStorage.setItem(LANG_KEY,requested)}catch{}}
       paint();
