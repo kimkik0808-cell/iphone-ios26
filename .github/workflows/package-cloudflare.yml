@@ -1,0 +1,42 @@
+name: Package website for Cloudflare Pages
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/package-cloudflare.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+
+      - name: Create ZIP with index.html at root
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
+          zip -q -r "$archive" index.html assets photos voicemail
+          unzip -tq "$archive"
+          unzip -Z1 "$archive" | grep -Fx 'index.html'
+          unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
+          test -f index.html
+          ls -lh "$archive"
+
+      - name: Publish direct-download ZIP as GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="cloudflare-${GITHUB_SHA:0:12}"
+          archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$archive" --clobber
+          else
+            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos and voicemail." --latest=false
+          fi
+          echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/iphone-ios26-cloudflare.zip"
