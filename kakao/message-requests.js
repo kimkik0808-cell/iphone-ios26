@@ -539,9 +539,27 @@ function localContextReply(item,userText){
   return reply;
 }
 async function requestAiReply(item,userText){
-  const delay=180+(localHash(userText+item.id)%360);
-  await new Promise(resolve=>setTimeout(resolve,delay));
-  return localContextReply(item,userText);
+  const endpoint=location.hostname==='nuyheaj.pages.dev'?'/api/kkt-reply':'https://nuyheaj.pages.dev/api/kkt-reply';
+  const history=item.messages
+    .filter(message=>message[0]==='mine'||message[0]==='other')
+    .slice(0,-1)
+    .slice(-12)
+    .map(message=>({role:message[0]==='mine'?'user':'model',text:message[1]}));
+  aiController=new AbortController();
+  const timeout=setTimeout(()=>aiController?.abort(),18000);
+  try{
+    const response=await fetch(endpoint,{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({chatId:item.id,message:userText,history}),
+      signal:aiController.signal
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||!result.reply)throw new Error(result.error||'ai_request_failed');
+    return String(result.reply).trim();
+  }finally{
+    clearTimeout(timeout);
+  }
 }
 const aiWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function handleAiSubmit(event){
