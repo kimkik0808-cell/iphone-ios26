@@ -116,11 +116,8 @@ function refreshEntryCount(){
   const count=unreadCount();
   const bubble=entry.querySelector('.krq-entry-count');
   if(count){
-    if(bubble){
-      // MutationObserver watches this subtree: a redundant textContent write
-      // would cause an endless observer -> write -> observer loop on iOS.
-      if(bubble.textContent!==String(count))bubble.textContent=String(count);
-    }else entry.insertAdjacentHTML('beforeend','<i class="krq-entry-count">'+count+'</i>');
+    if(bubble)bubble.textContent=String(count);
+    else entry.insertAdjacentHTML('beforeend','<i class="krq-entry-count">'+count+'</i>');
   }else bubble?.remove();
 }
 const current=()=>conversations.find(item=>item.id===currentId);
@@ -975,13 +972,11 @@ if(app){
         xxxKeyboard=false;
         xxxTyping=false;
       }
-      return;
     }
-    // Do not rewrite unchanged entries: every DOM insertion notifies this observer.
     injectEntry();
     syncXxxPreview();
     restrictReadOnlyRooms();
-  }).observe(app,{childList:true});
+  }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
   if(xxxView){
