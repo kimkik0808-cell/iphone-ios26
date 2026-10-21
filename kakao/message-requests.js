@@ -1,3 +1,4 @@
+// Cloudflare deployment refresh: Gemini backend enabled
 (function(){
 'use strict';
 if(window.__KKT_REQUESTS_LOADED__)return;
