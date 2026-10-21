@@ -80,10 +80,16 @@
     const paths={
       play:'<path d="M8 4.9c0-.8.9-1.3 1.6-.9l10 7c.7.5.7 1.5 0 2l-10 7c-.7.4-1.6-.1-1.6-.9z" fill="currentColor" stroke="none"/>',
       pause:'<rect x="6" y="4" width="4" height="16" rx="1.5" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1.5" fill="currentColor" stroke="none"/>',
-      prev:'<path d="M5 5v14M18 5 7 12l11 7z" fill="currentColor" stroke="none" stroke-width="1.5"/>',
-      next:'<path d="M19 5v14M6 5l11 7-11 7z" fill="currentColor" stroke="none" stroke-width="1.5"/>'
+      prev:'<path d="M4.7 4.5v15" stroke-width="2.2"/><path d="M19.5 4.5 8 12l11.5 7.5z" fill="currentColor" stroke="none"/>',
+      next:'<path d="M19.3 4.5v15" stroke-width="2.2"/><path d="M4.5 4.5 16 12 4.5 19.5z" fill="currentColor" stroke="none"/>',
+      down:'<path d="m5 9 7 7 7-7" stroke-width="2.25"/>',
+      more:'<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
+      heart:'<path d="M20.5 8.6c0 4.1-4.5 7.5-8.5 10.8C8 16.1 3.5 12.7 3.5 8.6a4.7 4.7 0 0 1 8.5-2.7 4.7 4.7 0 0 1 8.5 2.7z" stroke-width="1.7"/>',
+      heartFill:'<path d="M20.5 8.6c0 4.1-4.5 7.5-8.5 10.8C8 16.1 3.5 12.7 3.5 8.6a4.7 4.7 0 0 1 8.5-2.7 4.7 4.7 0 0 1 8.5 2.7z" fill="currentColor" stroke="none"/>',
+      shuffle:'<path d="M4 7h2c5 0 7 10 12 10h2m-4-3 4 3-4 3M4 17h2c2.3 0 3.8-1.9 5-4M15 7h5m-4-3 4 3-4 3" stroke-width="1.9"/>',
+      repeat:'<path d="M17 5h1a3 3 0 0 1 3 3v5m0 0-3-3m3 3 3-3M7 19H6a3 3 0 0 1-3-3v-5m0 0 3 3m-3-3-3 3M7 5h7m3 14h-7" stroke-width="1.9"/>'
     };
-    return `<svg viewBox="0 0 24 24" width="25" height="25" aria-hidden="true" style="display:block;fill:none;stroke:currentColor;stroke-linejoin:round;stroke-linecap:round;stroke-width:2">${paths[type]}</svg>`;
+    return `<svg viewBox="0 0 24 24" width="25" height="25" aria-hidden="true" style="display:block;fill:none;stroke:currentColor;stroke-linejoin:round;stroke-linecap:round;stroke-width:2">${paths[type]||''}</svg>`;
   }
   const showNotice=msg=>{
     if(!isMusic())return;
@@ -109,7 +115,7 @@
         const m=await fetch(raw+'manifest.json?ts='+ (force?Date.now():'1'),{cache:force?'no-store':'default'});
         if(m.ok){
           const data=await m.json();const rows=Array.isArray(data)?data:data.tracks;
-          if(Array.isArray(rows))for(const x of rows){if(x&&typeof x.file==='string')metadata[x.file]=x}
+          if(Array.isArray(rows))for(const x of rows){if(x&&typeof x.file==='string')metadata[x.file.normalize('NFC')]=x}
         }
       }catch{}
       const response=await fetch(api,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
@@ -119,7 +125,7 @@
       const found=[];
       for(const x of json){
         if(x.type!=='file'||!mediaType.test(x.name))continue;
-        const extra=metadata[x.name]||{};
+        const extra=metadata[x.name.normalize('NFC')]||{};
         const cover=typeof extra.cover==='string'?extra.cover:'';
         found.push({
           id:'official:'+x.name,name:x.name,
@@ -251,7 +257,7 @@
     const t=current();
     if(!t){view='list';return listPage()}
     const dur=Number.isFinite(audio.duration)?audio.duration:0,pct=dur>0?audio.currentTime/dur*100:0;
-    return `<div class="am-player"><div class="am-playerbar"><button data-am="back" aria-label="보관함으로">⌄</button><span>재생 중</span><button data-am="menu" data-id="${e(t.id)}">•••</button></div><div class="am-playing-art">${imgCover(t)||'♫'}</div><div class="am-player-meta"><div class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></div><button class="am-heart" data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${fav.has(t.id)?'♥':'♡'}</button></div><div><input type="range" class="am-range" min="0" max="100" step=".1" id="am26-seek" value="${pct}" style="--pct:${pct}%" aria-label="재생 위치"><div class="am-timeline"><span id="am26-current">${fmt(audio.currentTime)}</span><span id="am26-total">-${fmt(Math.max(0,dur-audio.currentTime))}</span></div></div><div class="am-bigcontrols"><button data-am="previous" aria-label="이전 곡">${icon('prev')}</button><button data-am="toggle" class="am-central" aria-label="재생 또는 일시 정지" data-am-icon="play">${icon(audio.paused?'play':'pause')}</button><button data-am="next" aria-label="다음 곡">${icon('next')}</button></div><div class="am-playerfeet"><button data-am="shuffle" aria-label="셔플" style="color:${shuffle?'#fff':'#ffffff92'}">⤨</button><button data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${fav.has(t.id)?'♥':'♡'}</button><button data-am="repeat" aria-label="반복 재생" style="color:${repeat?'#fff':'#ffffff92'}">↻</button></div><div class="am-player-note">${e(origin(t))}</div>${uploadSheet()}</div>`;
+    return `<div class="am-player"><div class="am-playerbar"><button data-am="back" aria-label="보관함으로">${icon('down')}</button><span>재생 중</span><button data-am="menu" data-id="${e(t.id)}" aria-label="더 보기">${icon('more')}</button></div><div class="am-playing-art">${imgCover(t)||'♫'}</div><div class="am-player-meta"><div class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></div><button class="am-heart" data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button></div><div><input type="range" class="am-range" min="0" max="100" step=".1" id="am26-seek" value="${pct}" style="--pct:${pct}%" aria-label="재생 위치"><div class="am-timeline"><span id="am26-current">${fmt(audio.currentTime)}</span><span id="am26-total">-${fmt(Math.max(0,dur-audio.currentTime))}</span></div></div><div class="am-bigcontrols"><button data-am="previous" aria-label="이전 곡">${icon('prev')}</button><button data-am="toggle" class="am-central" aria-label="재생 또는 일시 정지" data-am-icon="play">${icon(audio.paused?'play':'pause')}</button><button data-am="next" aria-label="다음 곡">${icon('next')}</button></div><div class="am-playerfeet"><button data-am="shuffle" aria-label="셔플" data-active="${shuffle}">${icon('shuffle')}</button><button data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button><button data-am="repeat" aria-label="반복 재생" data-active="${repeat}">${icon('repeat')}</button></div><div class="am-player-note">${e(origin(t))}</div>${uploadSheet()}</div>`;
   }
   function listPage(){return `<div class="am-root"><div class="am-scroll">${content()}</div>${bottom()}${uploadSheet()}</div>`}
   const oldMusicPage=musicPage;
