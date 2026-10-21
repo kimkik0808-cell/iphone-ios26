@@ -112,7 +112,7 @@
     try{
       let metadata={};
       try{
-        const m=await fetch(raw+'manifest.json?ts='+ (force?Date.now():'1'),{cache:force?'no-store':'default'});
+        const m=await fetch(new URL('./music/manifest.json',document.baseURI).href+(force?'?ts='+Date.now():''),{cache:force?'no-store':'default'});
         if(m.ok){
           const data=await m.json();const rows=Array.isArray(data)?data:data.tracks;
           if(Array.isArray(rows))for(const x of rows){if(x&&typeof x.file==='string')metadata[x.file.normalize('NFC')]=x}
