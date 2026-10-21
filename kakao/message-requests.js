@@ -7,6 +7,8 @@ if(!conversations.length)return;
 const READ_KEY='jh_kkt_request_read_v1';
 const ACTION_KEY='jh_kkt_request_actions_v1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const isZh=()=>window.IphoneLocale?.language==='zh';
+const unknownTitle=()=>isZh()?'未知聊天':'알 수 없는 채팅';
 const load=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')||fallback}catch(e){return fallback}};
 let readState=load(READ_KEY,{});
 let actionState=load(ACTION_KEY,{});
@@ -73,7 +75,7 @@ function injectStyles(){
 }
 function entryHTML(){
   const count=unreadCount();
-  return '<button class="krq-entry" type="button" data-krq="open-list"><span class="krq-entry-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.3c5.45 0 9.65 3.38 9.65 7.85 0 4.48-4.2 7.86-9.65 7.86-.72 0-1.43-.06-2.1-.18L5.36 21.1c-.52.37-1.19-.12-.99-.73l1.21-3.65c-2.04-1.43-3.23-3.78-3.23-6.57C2.35 5.68 6.55 2.3 12 2.3z"/></svg></span><span class="krq-entry-text"><strong>알 수 없는 채팅</strong><span>친구로 등록되지 않은 사용자의 메시지 요청</span></span>'+(count?'<i class="krq-entry-count">'+count+'</i>':'')+'</button>';
+  return '<button class="krq-entry" type="button" data-krq="open-list"><span class="krq-entry-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.3c5.45 0 9.65 3.38 9.65 7.85 0 4.48-4.2 7.86-9.65 7.86-.72 0-1.43-.06-2.1-.18L5.36 21.1c-.52.37-1.19-.12-.99-.73l1.21-3.65c-2.04-1.43-3.23-3.78-3.23-6.57C2.35 5.68 6.55 2.3 12 2.3z"/></svg></span><span class="krq-entry-text"><strong>'+esc(unknownTitle())+'</strong><span>친구로 등록되지 않은 사용자의 메시지 요청</span></span>'+(count?'<i class="krq-entry-count">'+count+'</i>':'')+'</button>';
 }
 function injectEntry(){
   if(requestView||typeof mode==='undefined'||mode!=='kakao')return;
@@ -90,14 +92,14 @@ function renderList(){
   requestView='list';
   currentId='';
   modalAction='';
-  const app=document.querySelector('#app');
+  const app=document.querySelector('#appcontent');
   if(!app)return;
   const rows=conversations.map(item=>{
     const latest=item.messages[item.messages.length-1];
     const unread=!readState[item.id];
     return '<button class="krq-row" type="button" data-krq="open-room" data-id="'+esc(item.id)+'">'+avatar(item)+'<span class="krq-row-main"><strong>'+esc(item.name)+'</strong><p>'+esc(latest.text)+'</p></span><span class="krq-row-meta"><time>'+esc(item.latestTime)+'</time>'+(unread?'<i class="krq-unread">'+item.messages.length+'</i>':'')+'</span></button>';
   }).join('');
-  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>알 수 없는 채팅</strong><small>'+unreadCount()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">메시지 요청 '+conversations.length+'개</div>'+rows+'</main></section>';
+  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>'+esc(unknownTitle())+'</strong><small>'+unreadCount()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">메시지 요청 '+conversations.length+'개</div>'+rows+'</main></section>';
   requestAnimationFrame(()=>{const list=document.querySelector('#krq-list');if(list)list.scrollTop=listScroll});
 }
 function getAction(id){return actionState[id]||{added:false,unblocked:false,reported:false}}
@@ -118,7 +120,7 @@ function renderRoom(id){
   modalAction='';
   readState[id]=true;
   saveRead();
-  const app=document.querySelector('#app');
+  const app=document.querySelector('#appcontent');
   if(!app)return;
   const messages=item.messages.map((message,index)=>{
     const first=index===0;
@@ -187,7 +189,7 @@ function renderRoomWithModal(){
 injectStyles();
 removeLegacyRiskChat();
 document.addEventListener('click',handleClick,true);
-const app=document.querySelector('#app');
+const app=document.querySelector('#appcontent');
 if(app){
   new MutationObserver(()=>{
     if(typeof mode!=='undefined'&&mode!=='kakao'&&requestView){
@@ -198,6 +200,14 @@ if(app){
     injectEntry();
   }).observe(app,{childList:true,subtree:true});
 }
+window.addEventListener('iphone26:languagechange',()=>{
+  if(requestView==='list')renderList();
+  else if(requestView==='room')renderRoom(currentId);
+  else{
+    document.querySelector('.krq-entry')?.remove();
+    requestAnimationFrame(injectEntry);
+  }
+});
 window.addEventListener('pageshow',()=>{removeLegacyRiskChat();injectEntry()});
 window.__KKT_REQUESTS__={
   openList,
