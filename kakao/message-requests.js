@@ -23,8 +23,16 @@ let xxxKeyboard=false;
 let xxxTyping=false;
 let xxxTypeTimer=0;
 let xxxReplyTimer=0;
-const XXX_REPLY='응 조금 늦을 것 같아 끝나고 연락할게';
-const XXX_NEXT='알겠어 조심히 와';
+const XXX_REPLY='거의 다 끝났어';
+const XXX_NEXT='아니 이 사람 진짜 뭐야ㅋㅋㅋ';
+const XXX_FOLLOWUPS=[
+  ['mine','밥 먹었어?'],
+  ['mine','뭐 먹고 싶어?'],
+  ['mine','배달 시켜줄게'],
+  ['other','넌 다이어트하면서 왜 나만 자꾸 먹여ㅋㅋ'],
+  ['mine','배달 오면 사진 찍어서 보내줘'],
+  ['other',XXX_NEXT]
+];
 const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))}catch(e){}};
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const unreadCount=()=>conversations.reduce((n,item)=>n+(readState[item.id]?0:1),0);
@@ -70,7 +78,7 @@ function injectStyles(){
   .krq-avatar i:before{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:var(--krq-fg);top:9px;left:17px}.krq-avatar i:after{content:"";position:absolute;width:31px;height:20px;border-radius:18px 18px 5px 5px;background:var(--krq-fg);bottom:-2px;left:9px}.krq-avatar.small i:before{width:10px;height:10px;top:6px;left:12px}.krq-avatar.small i:after{width:22px;height:14px;left:6px}
   .krq-avatar b{display:none}
   .krq-room-head{height:104px;flex:0 0 104px;display:flex;flex-direction:column;background:#101010;border:0}.krq-room-top{height:58px;width:100%;display:flex;align-items:center;padding:0 12px;color:#fff}.krq-room-top>button{width:60px;height:44px;border-radius:18px;background:linear-gradient(#3d3d3f,#29292b);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:34px;line-height:1;text-align:center;box-shadow:inset 0 1px rgba(255,255,255,.12)}.krq-room-name{font-size:18px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center;padding-right:60px;color:#fff}
-  .krq-actions{height:46px;width:100%;display:flex;padding:1px 10px 5px;background:#101010}.krq-actions button{height:40px;min-width:0;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 8px;background:#303031;color:#f7f7f7;font-size:13.5px;font-weight:650;letter-spacing:-.25px;border-radius:0}.krq-actions button:first-child{border-radius:14px 0 0 14px}.krq-actions button:last-child{border-radius:0 14px 14px 0}.krq-actions button+button{position:relative}.krq-actions button+button:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:#5c5c5e}.krq-actions svg{width:19px;height:19px;display:block;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}.krq-actions button.danger{color:#ff7658}.krq-actions button.done{color:#999;background:#2b2b2c}
+  .krq-actions{height:46px;width:100%;display:flex;padding:1px 10px 5px;background:#b8cad8}.krq-actions button{height:40px;min-width:0;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 8px;background:#fff;color:#242527;font-size:13.5px;font-weight:650;letter-spacing:-.25px;border-radius:0}.krq-actions button:first-child{border-radius:14px 0 0 14px}.krq-actions button:last-child{border-radius:0 14px 14px 0}.krq-actions button+button{position:relative}.krq-actions button+button:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:#dedee0}.krq-actions svg{width:19px;height:19px;display:block;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}.krq-actions button.danger{color:#ff7658}.krq-actions button.done{color:#78787a;background:#fafafa}
   .krq-chat{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#b8cad8;padding:13px 13px max(30px,env(safe-area-inset-bottom))}
   .krq-date{text-align:center;margin:2px 0 17px}.krq-date span{display:inline-block;background:rgba(74,90,102,.35);color:#fff;font-size:10.5px;padding:5px 10px;border-radius:12px}
   .krq-message-row{display:flex;align-items:flex-start;gap:8px;margin:0 0 7px}.krq-message-row.follow{padding-left:42px;margin-top:-2px}.krq-message-block{max-width:76%;display:flex;flex-direction:column;gap:3px}.krq-sender{font-size:11.5px;color:#3e464c;margin:0 0 1px 2px}.krq-bubble-line{display:flex;align-items:flex-end;gap:5px}.krq-bubble{background:#fff;color:#17191b;border-radius:4px 11px 11px 11px;padding:8px 10px;font-size:14px;line-height:1.38;word-break:break-word;box-shadow:0 .5px 0 rgba(0,0,0,.06)}.krq-message-row.follow .krq-bubble{border-radius:11px}.krq-bubble-line time{font-size:9.5px;color:#5d6870;white-space:nowrap;margin-bottom:1px}
@@ -169,15 +177,15 @@ function prepareXxxFlow(){
   const chat=Array.isArray(data)?data.find(item=>item.id==='xxx'):null;
   if(!chat)return null;
   try{
-    if(localStorage.getItem('jh_kkt_xxx_flow_v2')!=='1'){
-      chat.messages=[['date','2026년 10월 21일 수요일'],['other','오늘도 늦게 끝나?','오전 8:12']];
-      chat.preview='오늘도 늦게 끝나?';
+    if(localStorage.getItem('jh_kkt_xxx_flow_v3')!=='1'){
+      chat.messages=[['date','2026년 10월 21일 수요일'],['other','끝났어?','오후 9:12']];
+      chat.preview='끝났어?';
       chat.time='방금';
       chat.unread=1;
       chat.scriptDone=false;
       chat.scriptReply=XXX_REPLY;
       chat.scriptNext=XXX_NEXT;
-      localStorage.setItem('jh_kkt_xxx_flow_v2','1');
+      localStorage.setItem('jh_kkt_xxx_flow_v3','1');
       saveKktData();
     }
   }catch(e){}
@@ -270,19 +278,30 @@ function sendXxxReply(){
   clearTimeout(xxxReplyTimer);
   xxxReplyTimer=setTimeout(()=>{
     sent[4]='read';
-    xxxTyping=true;
     saveKktData();
     renderXxxRoom();
-    xxxReplyTimer=setTimeout(()=>{
-      xxxTyping=false;
-      chat.messages.push(['other',XXX_NEXT,xxxTime()]);
-      chat.preview=XXX_NEXT;
-      chat.time='방금';
-      chat.scriptDone=true;
-      saveKktData();
-      renderXxxRoom();
-    },1700);
-  },2000);
+    let step=0;
+    function playNext(){
+      if(step>=XXX_FOLLOWUPS.length)return;
+      const [speaker,line]=XXX_FOLLOWUPS[step];
+      if(speaker==='other'){
+        xxxTyping=true;
+        renderXxxRoom();
+      }
+      xxxReplyTimer=setTimeout(()=>{
+        xxxTyping=false;
+        chat.messages.push([speaker,line,xxxTime()]);
+        chat.preview=line;
+        chat.time='방금';
+        step++;
+        if(step===XXX_FOLLOWUPS.length)chat.scriptDone=true;
+        saveKktData();
+        renderXxxRoom();
+        if(step<XXX_FOLLOWUPS.length)playNext();
+      },speaker==='other'?1300:920);
+    }
+    playNext();
+  },1100);
 }
 function closeXxxRoom(){
   clearTimeout(xxxTypeTimer);
@@ -629,12 +648,12 @@ function handleClick(event){
       event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();renderAiRoom(aiId);return;
     }
   }
-  const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"]');
+  const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"],[data-k15="friend"][data-id="xxx"]');
   if(xxxButton){
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    if(xxxButton.matches('[data-k15="chat"][data-id="xxx"]'))renderXxxRoom();
+    if(xxxButton.matches('[data-k15="chat"][data-id="xxx"],[data-k15="friend"][data-id="xxx"]'))renderXxxRoom();
     else if(xxxButton.dataset.xxx==='back')closeXxxRoom();
     else if(xxxButton.dataset.xxx==='compose'||xxxButton.dataset.xxx==='key')startXxxTyping();
     else if(xxxButton.dataset.xxx==='send')sendXxxReply();
