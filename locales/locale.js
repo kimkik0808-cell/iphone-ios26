@@ -26,7 +26,8 @@
   let scanning=false;
   let scheduled=false;
 
-  const SKIP='script,style,textarea,input,select,option,code,pre,[contenteditable],[data-no-translate],#site-announcement-overlay';
+  const SKIP='script,style,code,pre,[contenteditable],[data-no-translate],#site-announcement-overlay';
+  const SKIP_TEXT='textarea,input,select,option';
   const trackedAttributes=['placeholder','title','aria-label','alt'];
 
   function translateString(input) {
@@ -65,7 +66,8 @@
   function ignored(node){
     const element=node.nodeType===1?node:node.parentElement;
     if(!element)return true;
-    return !!element.closest(SKIP);
+    return !!element.closest(SKIP) ||
+      (node.nodeType===3 && !!element.closest(SKIP_TEXT));
   }
   function translateTextNode(node) {
     if(node.nodeType!==3||ignored(node))return;
