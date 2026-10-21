@@ -25,10 +25,12 @@
       button:'확인하고 시작하기'
     }
   };
-  const choiceKey='iphone26_notice_language';
+  const choiceKey='iphone26_ui_language';
   let showing=false,dismissed=false;
 
   function browserLanguage(){
+    if(window.IphoneLocale?.language==='zh'||window.IphoneLocale?.language==='ko')
+      return window.IphoneLocale.language;
     try{
       const saved=localStorage.getItem(choiceKey);
       if(saved==='zh'||saved==='ko')return saved;
@@ -148,6 +150,7 @@
     overlay.querySelectorAll('[data-language]').forEach(button=>{
       button.addEventListener('click',()=>{
         language=button.dataset.language==='zh'?'zh':'ko';
+        if(window.IphoneLocale) window.IphoneLocale.setLanguage(language);
         setLanguage(language);
       });
     });
