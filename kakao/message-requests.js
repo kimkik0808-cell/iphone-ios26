@@ -315,6 +315,9 @@ function ensureAiChats(){
     ]};
     data.splice(Math.min(3,data.length),0,nuna);
   }
+  const visibleOrder=['xxx','sw','nuna','jy'];
+  const visibleChats=visibleOrder.map(id=>data.find(item=>item.id===id)).filter(Boolean);
+  data.splice(0,data.length,...visibleChats);
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
     if(!item.aiInteractive&&item.id!=='xxx'){
