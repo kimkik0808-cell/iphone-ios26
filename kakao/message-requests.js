@@ -16,6 +16,14 @@ let requestView='';
 let currentId='';
 let listScroll=0;
 let modalAction='';
+let xxxView=false;
+let xxxDraft='';
+let xxxKeyboard=false;
+let xxxTyping=false;
+let xxxTypeTimer=0;
+let xxxReplyTimer=0;
+const XXX_REPLY='응 조금 늦을 것 같아 끝나고 연락할게';
+const XXX_NEXT='알겠어 조심히 와';
 const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))}catch(e){}};
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const unreadCount=()=>conversations.reduce((n,item)=>n+(readState[item.id]?0:1),0);
@@ -146,7 +154,153 @@ function backToMain(){
   window.__KKT15_TEST__?.render?.();
   requestAnimationFrame(injectEntry);
 }
+function saveKktData(){
+  const data=window.__KKT15_TEST__?.data;
+  if(!Array.isArray(data))return;
+  try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch(e){}
+}
+function prepareXxxFlow(){
+  const data=window.__KKT15_TEST__?.data;
+  const chat=Array.isArray(data)?data.find(item=>item.id==='xxx'):null;
+  if(!chat)return null;
+  try{
+    if(localStorage.getItem('jh_kkt_xxx_flow_v2')!=='1'){
+      chat.messages=[['date','2026년 10월 21일 수요일'],['other','오늘도 늦게 끝나?','오전 8:12']];
+      chat.preview='오늘도 늦게 끝나?';
+      chat.time='방금';
+      chat.unread=1;
+      chat.scriptDone=false;
+      chat.scriptReply=XXX_REPLY;
+      chat.scriptNext=XXX_NEXT;
+      localStorage.setItem('jh_kkt_xxx_flow_v2','1');
+      saveKktData();
+    }
+  }catch(e){}
+  return chat;
+}
+function xxxTime(){
+  return new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
+}
+function xxxAvatar(){
+  return '<span class="k15-avatar friend" style="--avbg:#efd1db;--avfg:#cb849b"></span>';
+}
+function xxxKeyboardHTML(){
+  const rows=[['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];
+  return '<div class="k15-keyboard">'+rows.map((row,rowIndex)=>'<div class="k15-keyrow">'+row.map(key=>'<button type="button" class="k15-key '+(rowIndex===2&&(key==='⇧'||key==='⌫')?'wide':'')+'" data-xxx="key" data-xxx-key="'+key+'">'+key+'</button>').join('')+'</div>').join('')+'<div class="k15-keyrow"><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="123">123</button><button type="button" class="k15-key space" data-xxx="key" data-xxx-key="space">간격</button><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="입력">입력</button></div></div>';
+}
+function xxxKeyParts(ch){
+  if(!ch)return [];
+  if(ch===' ')return ['space'];
+  const n=ch.charCodeAt(0)-44032;
+  if(!Number.isFinite(n)||n<0||n>11171)return [];
+  const first=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  const vowel=[['ㅏ'],['ㅐ'],['ㅑ'],['ㅒ'],['ㅓ'],['ㅔ'],['ㅕ'],['ㅖ'],['ㅗ'],['ㅗ','ㅏ'],['ㅗ','ㅐ'],['ㅗ','ㅣ'],['ㅛ'],['ㅜ'],['ㅜ','ㅓ'],['ㅜ','ㅔ'],['ㅜ','ㅣ'],['ㅠ'],['ㅡ'],['ㅡ','ㅣ'],['ㅣ']];
+  const last=['','ㄱ','ㄱ','ㄱ','ㄴ','ㄴ','ㄴ','ㄷ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅅ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  const f=Math.floor(n/588),v=Math.floor(n%588/28),l=n%28;
+  return [first[f],...vowel[v],...(last[l]?[last[l]]:[])];
+}
+function renderXxxRoom(){
+  const chat=prepareXxxFlow();
+  const app=document.querySelector('#appcontent');
+  if(!chat||!app)return;
+  xxxView=true;
+  requestView='';
+  chat.unread=0;
+  saveKktData();
+  const messages=chat.messages.map(message=>{
+    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(message[1])+'</span></div>';
+    const mine=message[0]==='mine';
+    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?xxxAvatar():'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(message[1])+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(message[2]||'방금')+'</time></span></div></div></div>';
+  }).join('');
+  const typing=xxxTyping?'<div class="k15-message">'+xxxAvatar()+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'';
+  const composer=chat.scriptDone?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="메시지를 입력하세요"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="메시지를 입력하세요"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===XXX_REPLY?'ready':'')+'">↑</button></label></div>';
+  app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-xxx="back">‹</button><h1 class="k15-roomtitle">xxx</h1><span class="k15-grow"></span></header><main class="k15-chatbody '+(xxxKeyboard?'keyboard':'')+'" id="k15-chatbody">'+messages+typing+'</main>'+composer+(xxxKeyboard?xxxKeyboardHTML():'')+'</section></div>';
+  requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
+}
+function startXxxTyping(){
+  const chat=prepareXxxFlow();
+  if(!chat||chat.scriptDone||xxxDraft)return;
+  clearTimeout(xxxTypeTimer);
+  xxxKeyboard=true;
+  xxxDraft='';
+  renderXxxRoom();
+  const chars=Array.from(XXX_REPLY);
+  let charIndex=0,keyIndex=0,parts=xxxKeyParts(chars[0]||'');
+  function next(){
+    if(charIndex>=chars.length){
+      document.querySelector('[data-xxx="send"]')?.classList.add('ready');
+      return;
+    }
+    const ch=chars[charIndex],key=parts[keyIndex];
+    const button=key?document.querySelector('[data-xxx-key="'+key+'"]'):null;
+    button?.classList.add('pressed');
+    xxxTypeTimer=setTimeout(()=>{
+      button?.classList.remove('pressed');
+      keyIndex++;
+      if(keyIndex>=parts.length){
+        xxxDraft+=ch;
+        const input=document.querySelector('[data-xxx="compose"]');
+        if(input)input.value=xxxDraft;
+        charIndex++;
+        keyIndex=0;
+        parts=xxxKeyParts(chars[charIndex]||'');
+        xxxTypeTimer=setTimeout(next,parts.length?30:46);
+      }else xxxTypeTimer=setTimeout(next,20);
+    },key?52:42);
+  }
+  next();
+}
+function sendXxxReply(){
+  const chat=prepareXxxFlow();
+  if(!chat||chat.scriptDone||xxxDraft!==XXX_REPLY)return;
+  clearTimeout(xxxTypeTimer);
+  const sent=['mine',XXX_REPLY,xxxTime(),'','unread'];
+  chat.messages.push(sent);
+  chat.preview=XXX_REPLY;
+  chat.time='방금';
+  xxxDraft='';
+  xxxKeyboard=false;
+  saveKktData();
+  renderXxxRoom();
+  clearTimeout(xxxReplyTimer);
+  xxxReplyTimer=setTimeout(()=>{
+    sent[4]='read';
+    xxxTyping=true;
+    saveKktData();
+    renderXxxRoom();
+    xxxReplyTimer=setTimeout(()=>{
+      xxxTyping=false;
+      chat.messages.push(['other',XXX_NEXT,xxxTime()]);
+      chat.preview=XXX_NEXT;
+      chat.time='방금';
+      chat.scriptDone=true;
+      saveKktData();
+      renderXxxRoom();
+    },1700);
+  },2000);
+}
+function closeXxxRoom(){
+  clearTimeout(xxxTypeTimer);
+  clearTimeout(xxxReplyTimer);
+  xxxView=false;
+  xxxDraft='';
+  xxxKeyboard=false;
+  xxxTyping=false;
+  window.__KKT15_TEST__?.render?.();
+  requestAnimationFrame(injectEntry);
+}
 function handleClick(event){
+  const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"]');
+  if(xxxButton){
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    if(xxxButton.matches('[data-k15="chat"][data-id="xxx"]'))renderXxxRoom();
+    else if(xxxButton.dataset.xxx==='back')closeXxxRoom();
+    else if(xxxButton.dataset.xxx==='compose'||xxxButton.dataset.xxx==='key')startXxxTyping();
+    else if(xxxButton.dataset.xxx==='send')sendXxxReply();
+    return;
+  }
   const button=event.target.closest('[data-krq]');
   if(!button)return;
   const action=button.dataset.krq;
@@ -188,14 +342,25 @@ function renderRoomWithModal(){
 }
 injectStyles();
 removeLegacyRiskChat();
+prepareXxxFlow();
 document.addEventListener('click',handleClick,true);
 const app=document.querySelector('#appcontent');
 if(app){
   new MutationObserver(()=>{
-    if(typeof mode!=='undefined'&&mode!=='kakao'&&requestView){
-      requestView='';
-      currentId='';
-      modalAction='';
+    if(typeof mode!=='undefined'&&mode!=='kakao'){
+      if(requestView){
+        requestView='';
+        currentId='';
+        modalAction='';
+      }
+      if(xxxView){
+        clearTimeout(xxxTypeTimer);
+        clearTimeout(xxxReplyTimer);
+        xxxView=false;
+        xxxDraft='';
+        xxxKeyboard=false;
+        xxxTyping=false;
+      }
     }
     injectEntry();
   }).observe(app,{childList:true,subtree:true});
