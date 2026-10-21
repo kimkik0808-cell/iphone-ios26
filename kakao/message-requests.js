@@ -164,10 +164,19 @@ function prepareXxxFlow(){
   const data=window.__KKT15_TEST__?.data;
   const chat=Array.isArray(data)?data.find(item=>item.id==='xxx'):null;
   if(!chat)return null;
-  delete chat.scriptReply;
-  delete chat.scriptNext;
-  chat.scriptDone=true;
-  saveKktData();
+  try{
+    if(localStorage.getItem('jh_kkt_xxx_flow_v2')!=='1'){
+      chat.messages=[['date','2026년 10월 21일 수요일'],['other','오늘도 늦게 끝나?','오전 8:12']];
+      chat.preview='오늘도 늦게 끝나?';
+      chat.time='방금';
+      chat.unread=1;
+      chat.scriptDone=false;
+      chat.scriptReply=XXX_REPLY;
+      chat.scriptNext=XXX_NEXT;
+      localStorage.setItem('jh_kkt_xxx_flow_v2','1');
+      saveKktData();
+    }
+  }catch(e){}
   return chat;
 }
 function xxxTime(){
@@ -308,7 +317,7 @@ function ensureAiChats(){
   }
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
-    if(!item.aiInteractive){
+    if(!item.aiInteractive&&item.id!=='xxx'){
       delete item.scriptReply;
       delete item.scriptNext;
       item.scriptDone=true;
@@ -444,7 +453,7 @@ function handleClick(event){
     }
   }
   const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"]');
-  if(false&&xxxButton){
+  if(xxxButton){
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
