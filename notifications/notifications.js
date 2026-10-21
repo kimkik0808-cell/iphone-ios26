@@ -15,6 +15,9 @@
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isDnd=()=>{try{return localStorage.getItem(DND_KEY)!=='0'}catch{return true}};
   const canDisplay=()=>!isDnd() && (typeof isLocked==='undefined'||!isLocked) && !document.hidden;
+  const zh=()=>window.IphoneLocale?.language==='zh';
+  const translate=value=>zh()?(window.IphoneLocale?.t(value)||value):value;
+  const kakaoName=()=>zh()?'KakaoTalk':'카카오톡';
 
   const instagramIcon=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="nig26" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ffcb54"/><stop offset=".28" stop-color="#fa5c39"/><stop offset=".56" stop-color="#d5268c"/><stop offset=".83" stop-color="#8c46cc"/><stop offset="1" stop-color="#4159c7"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#nig26)"/><rect x="14" y="14" width="36" height="36" rx="10" stroke="white" stroke-width="4.3" fill="none"/><circle cx="32" cy="32" r="8.7" fill="none" stroke="white" stroke-width="4.3"/><circle cx="43" cy="21" r="3" fill="white"/></svg>`;
   const kakaoIcon=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#FEE500"/><ellipse cx="32" cy="29.5" rx="24" ry="18" fill="#3b2923"/><path d="M18 44l-3.7 12 14-9.4" fill="#3b2923"/><text x="32" y="34" fill="#fee500" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="900" text-anchor="middle">TALK</text></svg>`;
@@ -98,33 +101,33 @@
     if(kind==='instagram'){
       const name=igFans[(i*7+Math.floor(i/igFans.length))%igFans.length];
       const message=i%6===4?
-        name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
-        igMessages[i%igMessages.length];
-      return {kind,name:'Instagram',sender:name+'님',message,icon:instagramIcon};
+        zh()?name+'及另外'+(12+(i*7)%68)+'人赞了你的帖子。':name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
+        translate(igMessages[i%igMessages.length]);
+      return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
     }
-    return {kind,name:'카카오톡',
-      sender:kktSenders[(i*3+Math.floor(i/6))%kktSenders.length],
-      message:kktMessages[(i*5+Math.floor(i/5))%kktMessages.length],
+    return {kind,name:kakaoName(),
+      sender:translate(kktSenders[(i*3+Math.floor(i/6))%kktSenders.length]),
+      message:translate(kktMessages[(i*5+Math.floor(i/5))%kktMessages.length]),
       icon:kakaoIcon};
   }
   function show(kind){
     if(!canDisplay())return false;
     const info=nextData();
     if(kind==='instagram' && info.kind!=='instagram'){
-      info.kind='instagram';info.name='Instagram';info.sender=igFans[(counter*5)%igFans.length]+'님';
-      info.message=igMessages[counter%igMessages.length];info.icon=instagramIcon;
+      info.kind='instagram';info.name='Instagram';info.sender=igFans[(counter*5)%igFans.length]+(zh()?'':'님');
+      info.message=translate(igMessages[counter%igMessages.length]);info.icon=instagramIcon;
     }
     if(kind==='kakao' && info.kind!=='kakao'){
-      info.kind='kakao';info.name='카카오톡';
-      info.sender=kktSenders[counter%kktSenders.length];info.message=kktMessages[counter%kktMessages.length];info.icon=kakaoIcon;
+      info.kind='kakao';info.name=kakaoName();
+      info.sender=translate(kktSenders[counter%kktSenders.length]);info.message=translate(kktMessages[counter%kktMessages.length]);info.icon=kakaoIcon;
     }
     clearNotice();
     const node=document.createElement('button');
     node.type='button';
     node.className='ios26-notice';
     node.dataset.notification=info.kind;
-    node.setAttribute('aria-label',info.name+' 알림: '+info.sender+' '+info.message);
-    node.innerHTML=`<div class="ios26-notice-top"><span class="ios26-notice-icon">${info.icon}</span><span class="ios26-notice-app">${esc(info.name)}</span><span class="ios26-notice-time">지금</span></div><div class="ios26-notice-content"><strong>${esc(info.sender)}</strong><p>${esc(info.message)}</p></div><div class="ios26-notice-handle"></div>`;
+    node.setAttribute('aria-label',info.name+(zh()?' 通知：':' 알림: ')+info.sender+' '+info.message);
+    node.innerHTML=`<div class="ios26-notice-top"><span class="ios26-notice-icon">${info.icon}</span><span class="ios26-notice-app">${esc(info.name)}</span><span class="ios26-notice-time">${zh()?'现在':'지금'}</span></div><div class="ios26-notice-content"><strong>${esc(info.sender)}</strong><p>${esc(info.message)}</p></div><div class="ios26-notice-handle"></div>`;
     stack.appendChild(node);
     displayed=node;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{if(node.isConnected)node.classList.add('ios26-notice-visible')}));
@@ -175,6 +178,7 @@
     };
   }
   if(canDisplay())schedule(1200);
+  window.addEventListener('iphone26:languagechange',()=>clearNotice());
   window.__IOS26_NOTIFICATIONS__={
     show,stop,replay:()=>{if(canDisplay())schedule(100);},
     get enabled(){return !isDnd()},
