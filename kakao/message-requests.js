@@ -33,6 +33,23 @@ const XXX_FOLLOWUPS=[
   ['mine','배달 오면 사진 찍어서 보내줘'],
   ['other',XXX_NEXT]
 ];
+const XXX_ZH={
+  '끝났어?':'结束了？',
+  '거의 다 끝났어':'快了',
+  '밥 먹었어?':'吃饭了吗',
+  '뭐 먹고 싶어?':'想吃什么',
+  '배달 시켜줄게':'给你点外卖',
+  '넌 다이어트하면서 왜 나만 자꾸 먹여ㅋㅋ':'为什么你在减肥但是总是让我吃',
+  '배달 오면 사진 찍어서 보내줘':'外卖到了记得给我拍照片',
+  '아니 이 사람 진짜 뭐야ㅋㅋㅋ':'这人搞什么啊',
+  '2026년 10월 21일 수요일':'2026年10月21日 星期三'
+};
+function xxxText(value){
+  const text=String(value??'');
+  if(!isZh())return text;
+  return XXX_ZH[text]||text.replace(/^오전\s+/,'上午 ').replace(/^오후\s+/,'下午 ');
+}
+const xxxReplyText=()=>xxxText(XXX_REPLY);
 const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))}catch(e){}};
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const unreadCount=()=>conversations.reduce((n,item)=>n+(readState[item.id]?0:1),0);
@@ -77,7 +94,7 @@ function injectStyles(){
   .krq-avatar{--krq-bg:#ddd;--krq-fg:#888;width:49px;height:49px;border-radius:19px;background:var(--krq-bg);display:grid;place-items:center;position:relative;overflow:hidden;flex:0 0 auto}.krq-avatar.small{width:34px;height:34px;border-radius:13px}
   .krq-avatar i:before{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:var(--krq-fg);top:9px;left:17px}.krq-avatar i:after{content:"";position:absolute;width:31px;height:20px;border-radius:18px 18px 5px 5px;background:var(--krq-fg);bottom:-2px;left:9px}.krq-avatar.small i:before{width:10px;height:10px;top:6px;left:12px}.krq-avatar.small i:after{width:22px;height:14px;left:6px}
   .krq-avatar b{display:none}
-  .krq-room-head{height:104px;flex:0 0 104px;display:flex;flex-direction:column;background:#101010;border:0}.krq-room-top{height:58px;width:100%;display:flex;align-items:center;padding:0 12px;color:#fff}.krq-room-top>button{width:60px;height:44px;border-radius:18px;background:linear-gradient(#3d3d3f,#29292b);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:34px;line-height:1;text-align:center;box-shadow:inset 0 1px rgba(255,255,255,.12)}.krq-room-name{font-size:18px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center;padding-right:60px;color:#fff}
+  .krq-room-head{height:104px;flex:0 0 104px;display:flex;flex-direction:column;background:#b8cad8;border:0}.krq-room-top{height:58px;width:100%;display:flex;align-items:center;padding:0 12px;color:#202429}.krq-room-top>button{width:60px;height:44px;border-radius:18px;background:rgba(255,255,255,.34);border:1px solid rgba(255,255,255,.53);color:#202429;font-size:34px;line-height:1;text-align:center;box-shadow:inset 0 1px rgba(255,255,255,.12)}.krq-room-name{font-size:18px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:center;padding-right:60px;color:#202429}
   .krq-actions{height:46px;width:100%;display:flex;padding:1px 10px 5px;background:#b8cad8}.krq-actions button{height:40px;min-width:0;flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 8px;background:#fff;color:#242527;font-size:13.5px;font-weight:650;letter-spacing:-.25px;border-radius:0}.krq-actions button:first-child{border-radius:14px 0 0 14px}.krq-actions button:last-child{border-radius:0 14px 14px 0}.krq-actions button+button{position:relative}.krq-actions button+button:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:#dedee0}.krq-actions svg{width:19px;height:19px;display:block;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}.krq-actions button.danger{color:#ff7658}.krq-actions button.done{color:#78787a;background:#fafafa}
   .krq-chat{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#b8cad8;padding:13px 13px max(30px,env(safe-area-inset-bottom))}
   .krq-date{text-align:center;margin:2px 0 17px}.krq-date span{display:inline-block;background:rgba(74,90,102,.35);color:#fff;font-size:10.5px;padding:5px 10px;border-radius:12px}
@@ -198,8 +215,10 @@ function xxxAvatar(){
   return '<span class="k15-avatar friend" style="--avbg:#efd1db;--avfg:#cb849b"></span>';
 }
 function xxxKeyboardHTML(){
-  const rows=[['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];
-  return '<div class="k15-keyboard">'+rows.map((row,rowIndex)=>'<div class="k15-keyrow">'+row.map(key=>'<button type="button" class="k15-key '+(rowIndex===2&&(key==='⇧'||key==='⌫')?'wide':'')+'" data-xxx="key" data-xxx-key="'+key+'">'+key+'</button>').join('')+'</div>').join('')+'<div class="k15-keyrow"><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="123">123</button><button type="button" class="k15-key space" data-xxx="key" data-xxx-key="space">간격</button><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="입력">입력</button></div></div>';
+  const rows=isZh()
+    ? [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['⇧','z','x','c','v','b','n','m','⌫']]
+    : [['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];
+  return '<div class="k15-keyboard">'+rows.map((row,rowIndex)=>'<div class="k15-keyrow">'+row.map(key=>'<button type="button" class="k15-key '+(rowIndex===2&&(key==='⇧'||key==='⌫')?'wide':'')+'" data-xxx="key" data-xxx-key="'+key+'">'+key+'</button>').join('')+'</div>').join('')+'<div class="k15-keyrow"><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="123">123</button><button type="button" class="k15-key space" data-xxx="key" data-xxx-key="space">'+(isZh()?'空格':'간격')+'</button><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="입력">'+(isZh()?'换行':'입력')+'</button></div></div>';
 }
 function xxxKeyParts(ch){
   if(!ch)return [];
@@ -221,12 +240,13 @@ function renderXxxRoom(){
   chat.unread=0;
   saveKktData();
   const messages=chat.messages.map(message=>{
-    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(message[1])+'</span></div>';
+    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(xxxText(message[1]))+'</span></div>';
     const mine=message[0]==='mine';
-    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?xxxAvatar():'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(message[1])+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(message[2]||'방금')+'</time></span></div></div></div>';
+    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?xxxAvatar():'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(xxxText(message[1]))+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(xxxText(message[2]||'방금'))+'</time></span></div></div></div>';
   }).join('');
   const typing=xxxTyping?'<div class="k15-message">'+xxxAvatar()+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'';
-  const composer=chat.scriptDone?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="메시지를 입력하세요"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="메시지를 입력하세요"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===XXX_REPLY?'ready':'')+'">↑</button></label></div>';
+  const placeholder=isZh()?'输入消息':'메시지를 입력하세요';
+  const composer=chat.scriptDone?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="'+placeholder+'"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="'+placeholder+'"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===xxxReplyText()?'ready':'')+'">↑</button></label></div>';
   app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-xxx="back">‹</button><h1 class="k15-roomtitle">xxx</h1><span class="k15-grow"></span></header><main class="k15-chatbody '+(xxxKeyboard?'keyboard':'')+'" id="k15-chatbody">'+messages+typing+'</main>'+composer+(xxxKeyboard?xxxKeyboardHTML():'')+'</section></div>';
   requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
 }
@@ -237,7 +257,7 @@ function startXxxTyping(){
   xxxKeyboard=true;
   xxxDraft='';
   renderXxxRoom();
-  const chars=Array.from(XXX_REPLY);
+  const chars=Array.from(xxxReplyText());
   let charIndex=0,keyIndex=0,parts=xxxKeyParts(chars[0]||'');
   function next(){
     if(charIndex>=chars.length){
@@ -257,7 +277,7 @@ function startXxxTyping(){
         charIndex++;
         keyIndex=0;
         parts=xxxKeyParts(chars[charIndex]||'');
-        xxxTypeTimer=setTimeout(next,parts.length?30:46);
+        xxxTypeTimer=setTimeout(next,isZh()?260:(parts.length?30:46));
       }else xxxTypeTimer=setTimeout(next,20);
     },key?52:42);
   }
@@ -265,7 +285,7 @@ function startXxxTyping(){
 }
 function sendXxxReply(){
   const chat=prepareXxxFlow();
-  if(!chat||chat.scriptDone||xxxDraft!==XXX_REPLY)return;
+  if(!chat||chat.scriptDone||xxxDraft!==xxxReplyText())return;
   clearTimeout(xxxTypeTimer);
   const sent=['mine',XXX_REPLY,xxxTime(),'','unread'];
   chat.messages.push(sent);
@@ -302,6 +322,14 @@ function sendXxxReply(){
     }
     playNext();
   },1100);
+}
+function syncXxxPreview(){
+  const chat=window.__KKT15_TEST__?.data?.find(item=>item.id==='xxx');
+  const preview=document.querySelector('#kkt15 .k15-row[data-k15="chat"][data-id="xxx"] .k15-rowtext p');
+  if(chat&&preview){
+    const text=xxxText(chat.preview);
+    if(preview.textContent!==text)preview.textContent=text;
+  }
 }
 function closeXxxRoom(){
   clearTimeout(xxxTypeTimer);
@@ -724,15 +752,22 @@ if(app){
       }
     }
     injectEntry();
+    syncXxxPreview();
     restrictReadOnlyRooms();
   }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
+  if(xxxView){
+    clearTimeout(xxxTypeTimer);
+    xxxDraft='';
+    xxxKeyboard=false;
+    renderXxxRoom();
+  }
   if(requestView==='list')renderList();
   else if(requestView==='room')renderRoom(currentId);
   else{
     document.querySelector('.krq-entry')?.remove();
-    requestAnimationFrame(injectEntry);
+    requestAnimationFrame(()=>{injectEntry();syncXxxPreview()});
   }
 });
 window.addEventListener('pageshow',()=>{removeLegacyRiskChat();injectEntry()});
@@ -744,5 +779,5 @@ window.__KKT_REQUESTS__={
   get readState(){return {...readState}},
   get view(){return requestView}
 };
-requestAnimationFrame(injectEntry);
+requestAnimationFrame(()=>{injectEntry();syncXxxPreview()});
 })();
