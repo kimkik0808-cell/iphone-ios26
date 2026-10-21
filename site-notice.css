@@ -1,0 +1,78 @@
+/* Editable launch announcement, separate from the virtual iPhone interface */
+#site-announcement-overlay,
+#site-announcement-overlay *{box-sizing:border-box}
+#site-announcement-overlay{
+ position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;
+ padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));
+ background:rgba(18,16,24,.62);-webkit-backdrop-filter:blur(11px);backdrop-filter:blur(11px);
+ font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+ color:#242127;-webkit-font-smoothing:antialiased;overflow:auto;
+}
+#site-announcement-overlay .site-announcement-panel{
+ position:relative;flex:none;width:100%;max-width:395px;background:#fff;color:#242127;
+ border-radius:25px;padding:26px 23px 21px;box-shadow:0 21px 75px rgba(0,0,0,.28);
+ max-height:calc(100dvh - 70px);overflow-y:auto;text-align:left;
+}
+#site-announcement-overlay .site-announcement-label{
+ display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#e64e79;
+ letter-spacing:.5px;font-weight:740;margin:0 0 10px;
+}
+#site-announcement-overlay .site-announcement-label::before{
+ content:"";height:7px;width:7px;background:#ef5182;border-radius:50%;display:inline-block;
+}
+#site-announcement-overlay .site-announcement-title{
+ font-size:25px;font-weight:770;letter-spacing:-.7px;line-height:1.25;margin:0 25px 7px 0;
+}
+#site-announcement-overlay .site-announcement-version{
+ font-size:11.5px;color:#99939d;margin-bottom:17px;
+}
+#site-announcement-overlay .site-announcement-credit{
+ background:#fff0f4;border:1px solid #ffe2ec;border-radius:13px;
+ display:flex;align-items:center;gap:9px;padding:12px 13px;margin-bottom:18px;color:#51434f;
+}
+#site-announcement-overlay .site-announcement-credit-icon{
+ height:30px;width:30px;display:grid;place-items:center;background:#ee577f;
+ color:#fff;border-radius:9px;font-size:16px;font-weight:700;flex:none;
+}
+#site-announcement-overlay .site-announcement-credit-text{min-width:0;flex:1}
+#site-announcement-overlay .site-announcement-credit-text small{
+ display:block;color:#ac8595;font-size:10px;line-height:1.6;
+}
+#site-announcement-overlay .site-announcement-credit-text strong{
+ display:block;font-size:15px;line-height:1.4;font-weight:720;word-break:break-word;
+}
+#site-announcement-overlay .site-announcement-heading{
+ font-weight:720;font-size:13.5px;margin:0 0 10px;color:#38313b;
+}
+#site-announcement-overlay .site-announcement-updates{
+ margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;
+}
+#site-announcement-overlay .site-announcement-updates li{
+ display:flex;gap:10px;font-size:13px;line-height:1.52;color:#5a535e;
+}
+#site-announcement-overlay .site-announcement-updates li::before{
+ content:"✓";font-size:11px;flex:none;color:#ea4d79;background:#fff0f5;
+ border-radius:50%;height:19px;width:19px;display:grid;place-items:center;margin-top:1px;font-weight:740;
+}
+#site-announcement-overlay .site-announcement-note{
+ padding:12px 0 15px;color:#9a939d;font-size:11px;line-height:1.55;margin:12px 0 0;
+}
+#site-announcement-overlay .site-announcement-enter{
+ width:100%;border:0;border-radius:14px;min-height:47px;
+ background:#f04f7d;color:#fff;font:730 15px -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+ padding:12px 17px;cursor:pointer;
+}
+#site-announcement-overlay .site-announcement-close{
+ position:absolute;right:16px;top:15px;height:32px;width:32px;
+ border:0;border-radius:50%;background:#f1eff2;color:#918b94;font-size:21px;
+ display:grid;place-items:center;cursor:pointer;line-height:1;
+}
+#site-announcement-overlay .site-announcement-enter:active,
+#site-announcement-overlay .site-announcement-close:active{opacity:.72}
+@media(max-height:670px){
+ #site-announcement-overlay .site-announcement-panel{padding-top:20px;padding-bottom:16px}
+ #site-announcement-overlay .site-announcement-updates{gap:7px}
+}
+@media(prefers-reduced-motion:reduce){
+ #site-announcement-overlay{-webkit-backdrop-filter:none;backdrop-filter:none}
+}
