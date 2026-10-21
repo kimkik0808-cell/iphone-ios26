@@ -6,14 +6,17 @@
   if (window.IphoneLocale) return;
 
   const KEY='iphone26_ui_language';
+  const SETTINGS_LANGUAGE_KEY='iphone26_settings_language_confirmed_v1';
   function selectedLanguage() {
     try {
-      const saved=localStorage.getItem(KEY);
-      if(saved==='ko'||saved==='zh')return saved;
+      // Only language choices made inside Settings can override Korean.
+      // Earlier notice selections used to write the same UI language key.
+      if(localStorage.getItem(SETTINGS_LANGUAGE_KEY)==='1'){
+        const saved=localStorage.getItem(KEY);
+        if(saved==='ko'||saved==='zh')return saved;
+      }
     } catch {}
-    const languages=Array.isArray(navigator.languages)&&navigator.languages.length
-      ?navigator.languages:[navigator.language||'ko'];
-    return /^zh\b/i.test(languages[0]||'')?'zh':'ko';
+    return 'ko';
   }
 
   let language=selectedLanguage();
