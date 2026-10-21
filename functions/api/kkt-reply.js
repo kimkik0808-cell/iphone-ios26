@@ -74,7 +74,7 @@ export async function onRequestPost({ request, env }) {
     '질문의 핵심에 직접 반응하고 직전 대화 맥락을 이어라. 한 번에 1~2개의 짧은 메시지만 작성하고 설명문 인용부호 이모지 해시태그는 쓰지 마라.';
 
   // Prefer stable models for short KKT messages; never expose the API key to browsers.
-  const models = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.6-flash'];
   let lastFailure = 'model_unavailable';
   let lastStatus = 503;
 
@@ -83,9 +83,7 @@ export async function onRequestPost({ request, env }) {
       systemInstruction: { parts: [{ text: instruction }] },
       contents,
       generationConfig: {
-        temperature: 0.85,
-        topP: 0.9,
-        maxOutputTokens: 320,
+        maxOutputTokens: 512,
         thinkingConfig: { thinkingLevel: 'minimal' }
       }
     });
