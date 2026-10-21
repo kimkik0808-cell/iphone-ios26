@@ -7,6 +7,10 @@
   const status=document.querySelector('#status');
   const gesture=document.querySelector('#gesture');
   const DND_KEY='iphone26_dnd_enabled';
+  const LANG_KEY='iphone26_ui_language';
+  const currentLanguage=()=>window.IphoneLocale?.language||
+    (()=>{try{return localStorage.getItem(LANG_KEY)||'ko'}catch{return 'ko'}})();
+  const locale=(ko,zh)=>currentLanguage()==='zh'?zh:ko;
   let page='main';
   let toastTimer=0;
   const isSettings=()=>typeof mode!=='undefined'&&mode==='settings';
@@ -37,7 +41,7 @@
     </button>
     ${group(row('에어플레인 모드','plane','#ff9e0b','끔')+row('Wi-Fi','wifi','#1685ee','연결됨')+row('Bluetooth','bluetooth','#1685ee','켬')+row('셀룰러','cellular','#34c759'))}
     ${group(row('알림','bell','#ff3b30')+row('사운드 및 햅틱','volume','#ff315e')+row('집중 모드','moon','#675bd5',isDnd()?'방해금지 켬':'끔','focus')+row('스크린 타임','display','#6f62e4'))}
-    ${group(row('일반','gear','#858589')+row('디스플레이 및 밝기','display','#2688ef')+row('개인정보 보호 및 보안','privacy','#367eeb'))}
+    ${group(row('일반','gear','#858589','','general')+row('언어 및 지역','gear','#858589',currentLanguage()==='zh'?'简体中文':'한국어','language')+row('디스플레이 및 밝기','display','#2688ef')+row('개인정보 보호 및 보안','privacy','#367eeb'))}
     </main>`;
   }
   function focus(){
@@ -63,6 +67,39 @@
       <p class="ios26-settings-focusinfo">이 가상 iPhone에서는 방해금지 모드의 알림 배너 표시 여부만 실제로 동작합니다. 다른 설정은 추후 구현될 예정입니다.</p>
     </main>`;
   }
+
+  function generalPage(){
+    return head(locale('일반','通用'),true)
+      +'<main class="ios26-settings-scroll">'
+      +'<h1 class="ios26-settings-title">'+locale('일반','通用')+'</h1>'
+      +group(
+        row('정보','gear','#858589','','placeholder')
+        +row('소프트웨어 업데이트','gear','#858589','','placeholder')
+        +row('언어 및 지역','gear','#858589',currentLanguage()==='zh'?'简体中文':'한국어','language')
+        +row('날짜 및 시간','gear','#858589','','placeholder')
+        +row('키보드','gear','#858589','','placeholder')
+      )+'</main>';
+  }
+  function languagePage(){
+    const lang=currentLanguage();
+    return head(locale('언어 및 지역','语言与地区'),true)
+      +'<main class="ios26-settings-scroll">'
+      +'<h1 class="ios26-settings-title">'+locale('언어 및 지역','语言与地区')+'</h1>'
+      +'<p class="ios26-settings-subtitle">'+locale('iPhone 언어','iPhone 语言')+'</p>'
+      +'<section class="ios26-settings-group">'
+      +'<button class="ios26-settings-item" data-s26="lang" data-lang="ko">'
+      +'<span class="ios26-settings-itemlabel" style="font-weight:'+(lang==='ko'?710:450)+'">한국어</span>'
+      +'<span class="ios26-settings-trail">'+(lang==='ko'?'✓':'')+'</span></button>'
+      +'<button class="ios26-settings-item" data-s26="lang" data-lang="zh">'
+      +'<span class="ios26-settings-itemlabel" style="font-weight:'+(lang==='zh'?710:450)+'">简体中文</span>'
+      +'<span class="ios26-settings-trail">'+(lang==='zh'?'✓':'')+'</span></button></section>'
+      +'<p class="ios26-settings-caption">'+locale(
+        '선택한 언어는 앱, 메시지, 알림 및 안내에 적용되고 이 기기에 저장됩니다.',
+        '选择后，手机界面、应用内容、聊天、通知和公告将切换语言，并在此设备上保存。'
+      )+'</p>'
+      +group(row('지역','gear','#858589',locale('대한민국','韩国'),'placeholder'))
+      +'</main>';
+  }
   function paint(){
     if(!isSettings())return;
     appEl.className='layer appscreen active ios26-settings-bg';
@@ -71,7 +108,7 @@
     gesture?.classList.add('ink');
     frame.style.overflow='hidden';
     frame.style.bottom='calc(var(--safe-bottom) + 28px)';
-    frame.innerHTML=`<div class="ios26-settings-root">${page==='dnd'?dnd():page==='focus'?focus():main()}</div>`;
+    frame.innerHTML=`<div class="ios26-settings-root">${page==='language'?languagePage():page==='general'?generalPage():page==='dnd'?dnd():page==='focus'?focus():main()}</div>`;
   }
   const oldRender=render;
   render=function(...args){
@@ -82,7 +119,8 @@
   back=function(...args){
     if(isSettings()){
       if(page==='dnd')page='focus';
-      else if(page==='focus')page='main';
+      else if(page==='focus'||page==='general')page='main';
+      else if(page==='language')page='general';
       else return closeApp();
       paint();
       return;
@@ -96,9 +134,17 @@
     e.preventDefault();e.stopImmediatePropagation();
     const a=btn.dataset.s26;
     if(a==='back'){
-      if(page==='dnd')page='focus';else if(page==='focus')page='main';else return closeApp();
+      if(page==='dnd')page='focus';else if(page==='focus'||page==='general')page='main';else if(page==='language')page='general';else return closeApp();
       paint();
     }else if(a==='focus'){page='focus';paint()}
+    else if(a==='general'){page='general';paint()}
+    else if(a==='language'){page='language';paint()}
+    else if(a==='lang'){
+      const requested=btn.dataset.lang==='zh'?'zh':'ko';
+      if(window.IphoneLocale)window.IphoneLocale.setLanguage(requested);
+      else{try{localStorage.setItem(LANG_KEY,requested)}catch{}}
+      paint();
+    }
     else if(a==='dnd'){page='dnd';paint()}
     else if(a==='toggle'){
       const next=!isDnd();
@@ -110,6 +156,8 @@
   window.__IOS26_SETTINGS__={
     get dnd(){return isDnd()},
     get page(){return page},
-    showDnd:()=>{page='dnd';if(isSettings())paint()}
+    showDnd:()=>{page='dnd';if(isSettings())paint()},
+    showLanguage:()=>{page='language';if(isSettings())paint()},
+    get language(){return currentLanguage()}
   };
 })();
