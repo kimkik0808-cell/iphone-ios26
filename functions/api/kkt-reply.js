@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env }) {
       generationConfig: {
         temperature: 0.85,
         topP: 0.9,
-        maxOutputTokens: 90
+        maxOutputTokens: 512
       }
     });
     let result = null;
