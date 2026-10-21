@@ -31,20 +31,16 @@
       button:'확인하고 시작하기'
     }
   };
-  const choiceKey='iphone26_ui_language';
+  const choiceKey='iphone26_notice_language_v1';
   let showing=false,dismissed=false;
 
   function browserLanguage(){
-    if(window.IphoneLocale?.language==='zh'||window.IphoneLocale?.language==='ko')
-      return window.IphoneLocale.language;
     try{
+      // Notice language is independent of the iPhone language in Settings.
       const saved=localStorage.getItem(choiceKey);
       if(saved==='zh'||saved==='ko')return saved;
     }catch{}
-    const languages=Array.isArray(navigator.languages)&&navigator.languages.length
-      ? navigator.languages:[navigator.language||'ko'];
-    const first=String(languages[0]||'ko').toLowerCase();
-    return first.startsWith('zh')?'zh':'ko';
+    return 'ko';
   }
   const toText=(value,defaultText='')=>typeof value==='string'?value:defaultText;
 
@@ -149,7 +145,7 @@
     overlay.querySelectorAll('[data-language]').forEach(button=>{
       button.addEventListener('click',()=>{
         language=button.dataset.language==='zh'?'zh':'ko';
-        if(window.IphoneLocale) window.IphoneLocale.setLanguage(language);
+        // This changes the announcement only, not the simulated phone UI.
         setLanguage(language);
       });
     });
