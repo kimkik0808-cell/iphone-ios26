@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/package-cloudflare.yml'
       - 'music/**'
+      - 'voicemail/**'
       - 'fromm/**'
       - 'notifications/**'
       - 'settings/**'
@@ -39,6 +40,7 @@ jobs:
         run: |
           node --check music/music.js
           node --check voicemail/voicemail.js
+          node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('voicemail/messages.json','utf8'));const list=Array.isArray(data)?data:data.messages;if(!Array.isArray(list)||!list.length)throw Error('Voicemail manifest missing or empty');for(const item of list){if(!item.file||!fs.existsSync('voicemail/'+item.file))throw Error('Missing voicemail audio: '+item.file);}console.log('Voicemail audio verified:',list.length)"
           node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('music/manifest.json'));for(const x of m.tracks||[]){if(!fs.existsSync('music/'+x.file))throw Error('Missing bundled music: '+x.file);}console.log('Music manifest files verified')"
 
       - name: Create ZIP with index.html at root
@@ -49,6 +51,7 @@ jobs:
           unzip -tq "$archive"
           unzip -Z1 "$archive" | grep -Fx 'index.html'
           unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
+          unzip -Z1 "$archive" | grep -Fx 'voicemail/messages.json'
           unzip -Z1 "$archive" | grep -Fx 'music/music.js'
           unzip -Z1 "$archive" | grep -Fx 'music/music.css'
           unzip -Z1 "$archive" | grep -Fx 'music/manifest.json'
