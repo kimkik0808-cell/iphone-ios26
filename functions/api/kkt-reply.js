@@ -64,33 +64,43 @@ export async function onRequestPost({ request, env }) {
     '질문의 핵심에 직접 반응하고 직전 대화 맥락을 이어라. 한 번에 1~2개의 짧은 메시지만 작성하고 설명문 인용부호 이모지 해시태그는 쓰지 마라.';
 
   try {
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-goog-api-key': env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: instruction }] },
-          contents,
-          generationConfig: {
-            temperature: 0.85,
-            topP: 0.9,
-            maxOutputTokens: 90
-          }
-        })
+    const models = ['gemini-3-flash-preview', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+    const payload = JSON.stringify({
+      systemInstruction: { parts: [{ text: instruction }] },
+      contents,
+      generationConfig: {
+        temperature: 0.85,
+        topP: 0.9,
+        maxOutputTokens: 90
       }
-    );
-
-    if (!response.ok) {
+    });
+    let result = null;
+    let lastStatus = 502;
+    for (const model of models) {
+      const response = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-goog-api-key': env.GEMINI_API_KEY
+          },
+          body: payload
+        }
+      );
+      if (response.ok) {
+        result = await response.json();
+        break;
+      }
+      lastStatus = response.status;
       const detail = await response.text();
-      console.error('Gemini error', response.status, detail.slice(0, 300));
-      return json({ error: 'model_error' }, 502, origin);
+      console.error('Gemini model error', model, response.status, detail.slice(0, 300));
+      if (response.status === 401 || response.status === 403) break;
     }
-
-    const result = await response.json();
+    if (!result) {
+      const error = lastStatus === 401 || lastStatus === 403 ? 'key_or_region_error' : lastStatus === 429 ? 'quota_exceeded' : 'model_error';
+      return json({ error }, 502, origin);
+    }
     const reply = result?.candidates?.[0]?.content?.parts
       ?.map(part => part.text || '')
       .join('')
