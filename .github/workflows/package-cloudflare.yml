@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/package-cloudflare.yml'
       - 'music/**'
+      - 'fromm/**'
       - 'index.html'
       - 'credits.html'
 
@@ -19,6 +20,11 @@ jobs:
       - name: Check out website
         uses: actions/checkout@v4
 
+      - name: Validate app JavaScript and reply data
+        run: |
+          node --check fromm/fromm.js
+          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('fromm/scenes.json','utf8'));const b=JSON.parse(fs.readFileSync('fromm/replies.json','utf8'));let total=0;for(const s of a.scenes){const c=b.collections.find(x=>x.sceneId===s.id);if(!c||c.replies.length!==s.replyCount)throw Error('Reply mismatch: '+s.id);total+=c.replies.length;}if(a.scenes.length!==6||total!==427)throw Error('Unexpected total '+total);console.log('fromm reply records verified:',total);"
+
       - name: Validate Music JavaScript
         run: |
           node --check music/music.js
@@ -29,13 +35,17 @@ jobs:
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
-          zip -q -r "$archive" index.html credits.html assets photos voicemail music
+          zip -q -r "$archive" index.html credits.html assets photos voicemail music fromm
           unzip -tq "$archive"
           unzip -Z1 "$archive" | grep -Fx 'index.html'
           unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
           unzip -Z1 "$archive" | grep -Fx 'music/music.js'
           unzip -Z1 "$archive" | grep -Fx 'music/music.css'
           unzip -Z1 "$archive" | grep -Fx 'music/manifest.json'
+          unzip -Z1 "$archive" | grep -Fx 'fromm/fromm.js'
+          unzip -Z1 "$archive" | grep -Fx 'fromm/fromm.css'
+          unzip -Z1 "$archive" | grep -Fx 'fromm/scenes.json'
+          unzip -Z1 "$archive" | grep -Fx 'fromm/replies.json'
           unzip -Z1 "$archive" | grep -Fx 'credits.html'
           test -f index.html
           ls -lh "$archive"
@@ -50,6 +60,6 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$archive" --clobber
           else
-            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, and creator credits." --latest=false
+            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, fromm artist simulation and 427 fictional fan replies, and creator credits." --latest=false
           fi
           echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/iphone-ios26-cloudflare.zip"
