@@ -5,23 +5,27 @@
   window.__SITE_NOTICE26__=true;
 
   const fallback={
-    enabled:true,version:'2026.10.21',creator:'imsryforyan',
+    enabled:true,version:'2026.10.21',
     zh:{
-      title:'更新公告',creatorLabel:'创作者 / CREATOR',
+      title:'更新公告',
       updatesTitle:'本次更新内容',
-      updates:['设置 App 已加入勿扰模式，可控制消息通知。',
-        'Instagram 点赞与 KakaoTalk 消息会以 iOS 风格横幅显示。',
-        'fromm 新增互动聊天和粉丝回复合集。'],
-      note:'本站为非官方粉丝制作的互动体验，模拟手机内部界面仍以韩语呈现。',
+      updates:[
+        '修复语音留言加载问题。',
+        '在「设置 → 通用 → 语言与地区」中切换中文／韩语。',
+        '开启勿扰模式后，将停止显示消息通知弹窗。'
+      ],
+      contact:'遇到问题请联系微博：淹到你了很抱歉',
       button:'知道了，开始体验'
     },
     ko:{
-      title:'업데이트 안내',creatorLabel:'제작자 / CREATOR',
+      title:'업데이트 안내',
       updatesTitle:'업데이트 내용',
-      updates:['설정 앱에 방해금지 모드가 추가되어 알림 배너를 제어할 수 있어요.',
-        'Instagram 좋아요와 카카오톡 메시지가 iOS 스타일 배너로 표시돼요.',
-        'fromm에 새로운 대화와 팬 답장 모음이 추가되었어요.'],
-      note:'이 웹사이트는 비공식 팬메이드 인터랙티브 프로젝트입니다. 가상 iPhone의 시스템 언어는 한국어입니다.',
+      updates:[
+        '음성 사서함 메시지가 로딩되지 않던 문제를 수정했어요.',
+        '설정 → 일반 → 언어 및 지역에서 한국어와 중국어를 변경할 수 있어요.',
+        '방해금지 모드를 켜면 메시지 알림 배너가 표시되지 않아요.'
+      ],
+      contact:'문제가 있다면 웨이보 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.',
       button:'확인하고 시작하기'
     }
   };
@@ -64,13 +68,9 @@
         '</div>'+
         '<h2 id="site-announcement-title" class="site-announcement-title"></h2>'+
         '<div class="site-announcement-version"></div>'+
-        '<div class="site-announcement-credit">'+
-          '<span class="site-announcement-credit-icon">♥</span>'+
-          '<span class="site-announcement-credit-text"><small></small><strong></strong></span>'+
-        '</div>'+
         '<h3 class="site-announcement-heading"></h3>'+
         '<ul class="site-announcement-updates"></ul>'+
-        '<p class="site-announcement-note" id="site-announcement-note"></p>'+
+        '<p class="site-announcement-contact" id="site-announcement-note"></p>'+
         '<button type="button" class="site-announcement-enter"></button>'+
       '</div>';
 
@@ -89,13 +89,10 @@
       overlay.querySelector('.site-announcement-title').textContent=
         toText(data.title,lang==='zh'?'更新公告':'업데이트 안내');
       overlay.querySelector('.site-announcement-version').textContent=toText(config.version);
-      overlay.querySelector('.site-announcement-credit-text small').textContent=
-        toText(data.creatorLabel,lang==='zh'?'创作者 / CREATOR':'제작자 / CREATOR');
-      overlay.querySelector('.site-announcement-credit-text strong').textContent=
-        toText(config.creator,'imsryforyan');
       overlay.querySelector('.site-announcement-heading').textContent=
         toText(data.updatesTitle,lang==='zh'?'本次更新内容':'업데이트 내용');
-      overlay.querySelector('.site-announcement-note').textContent=toText(data.note);
+      overlay.querySelector('.site-announcement-contact').textContent=
+        toText(data.contact,lang==='zh'?'遇到问题请联系微博：淹到你了很抱歉':'문제가 있다면 웨이보 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.');
       overlay.querySelector('.site-announcement-enter').textContent=
         toText(data.button,lang==='zh'?'知道了，开始体验':'확인하고 시작하기');
       overlay.querySelector('.site-announcement-close').setAttribute('aria-label',
