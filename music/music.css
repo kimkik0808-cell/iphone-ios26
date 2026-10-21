@@ -100,3 +100,16 @@
 .am-player-meta > button:active,
 .am-bigcontrols > button:active,
 .am-playerfeet > button:active {opacity:.55;}
+
+/* Secondary playback buttons: muted when inactive, pure white when toggled. */
+.am-playerfeet > button {color:rgba(255,255,255,.62) !important}
+.am-playerfeet > button[data-active="true"] {color:#fff !important}
+.am-playerfeet > button[data-am="favorite"] {color:rgba(255,255,255,.82) !important}
+.am-playerbar > button,
+.am-player-meta > button,
+.am-bigcontrols > button,
+.am-playerfeet > button {
+  font-family:inherit;
+  font-size:0;
+  line-height:1;
+}
