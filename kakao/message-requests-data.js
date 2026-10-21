@@ -3,7 +3,13 @@
 if(window.KKT_REQUEST_CONVERSATIONS)return;
 const make=(id,language,name,latestTime,avatarTone,messages)=>({
   id,language,name,latestTime,avatarTone,
-  messages:messages.map((text,index)=>({text,time:(language==='ko'?(index<4?'오후 ':'오후 '):(index<4?'晚上':'晚上'))+String(7+Math.floor(index/4))+':'+String(8+(index*7+Number(id.slice(-2)))%50).padStart(2,'0')}))
+  messages:messages.map((text,index)=>{
+    const absoluteMinute=19*60+(Number(id.slice(-2))*3)%24+index*5;
+    const hour24=Math.floor(absoluteMinute/60);
+    const displayHour=hour24>12?hour24-12:hour24;
+    const minute=String(absoluteMinute%60).padStart(2,'0');
+    return {text,time:(language==='ko'?'오후 ':'晚上')+displayHour+':'+minute};
+  })
 });
 const conversations=[
 make('req-ko-01','ko','밤기차_0214','방금',0,[
