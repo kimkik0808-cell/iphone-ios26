@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - '.github/workflows/package-cloudflare.yml'
+      - 'music/**'
+      - 'index.html'
 
 permissions:
   contents: write
@@ -16,14 +18,21 @@ jobs:
       - name: Check out website
         uses: actions/checkout@v4
 
+      - name: Validate Music JavaScript
+        run: |
+          node --check music/music.js
+          node --check voicemail/voicemail.js
+
       - name: Create ZIP with index.html at root
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
-          zip -q -r "$archive" index.html assets photos voicemail
+          zip -q -r "$archive" index.html assets photos voicemail music
           unzip -tq "$archive"
           unzip -Z1 "$archive" | grep -Fx 'index.html'
           unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
+          unzip -Z1 "$archive" | grep -Fx 'music/music.js'
+          unzip -Z1 "$archive" | grep -Fx 'music/music.css'
           test -f index.html
           ls -lh "$archive"
 
@@ -37,6 +46,6 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$archive" --clobber
           else
-            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos and voicemail." --latest=false
+            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail and interactive Music." --latest=false
           fi
           echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/iphone-ios26-cloudflare.zip"
