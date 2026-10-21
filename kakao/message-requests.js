@@ -981,7 +981,7 @@ if(app){
     injectEntry();
     syncXxxPreview();
     restrictReadOnlyRooms();
-  }).observe(app,{childList:true,subtree:true});
+  }).observe(app,{childList:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
   if(xxxView){
