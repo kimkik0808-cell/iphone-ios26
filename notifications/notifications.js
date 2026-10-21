@@ -13,7 +13,7 @@
 
   const DND_KEY='iphone26_dnd_enabled';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const isDnd=()=>{try{return localStorage.getItem(DND_KEY)!=='0'}catch{return true}};
+  const isDnd=()=>{try{return localStorage.getItem(DND_KEY)==='1'}catch{return false}};
   const canDisplay=()=>!isDnd() && (typeof isLocked==='undefined'||!isLocked) && !document.hidden;
   const zh=()=>window.IphoneLocale?.language==='zh';
   const translate=value=>zh()?(window.IphoneLocale?.t(value)||value):value;
