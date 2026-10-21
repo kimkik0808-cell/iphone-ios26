@@ -1,0 +1,56 @@
+name: 사진 목록 자동 업데이트
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "photos/**"
+      - "scripts/generate-photo-manifest.js"
+      - ".github/workflows/update-photo-manifest.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: photo-manifest-main
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 받기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: HEIC 사진을 JPEG로 변환
+        shell: bash
+        run: |
+          if find photos -type f \( -iname '*.heic' -o -iname '*.heif' \) -print -quit | grep -q .; then
+            sudo apt-get update
+            sudo apt-get install -y libheif-examples
+            while IFS= read -r -d '' file; do
+              output="${file%.*}.jpg"
+              if [ ! -s "$output" ]; then
+                heif-convert "$file" "$output"
+              fi
+            done < <(find photos -type f \( -iname '*.heic' -o -iname '*.heif' \) -print0)
+          fi
+
+      - name: 사진 목록 생성
+        run: node scripts/generate-photo-manifest.js
+
+      - name: 변경 사항 저장
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add photos/manifest.json photos/*.jpg 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "사진 목록 변경 없음"
+          else
+            git commit -m "chore: update photo manifest"
+            git push
+          fi
