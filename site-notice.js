@@ -15,6 +15,7 @@
         '开启勿扰模式后，将停止显示消息通知弹窗。',
         'KakaoTalk 新增可自主输入的聊天回复，并修复消息弹窗显示异常。'
       ],
+      help:'看不到最新更新？请先使用 Safari 无痕浏览检查；若仍是旧版，可能尚未完成部署。清除网站数据会重置聊天进度和设置。',
       contact:'遇到问题请联系微博：淹到你了很抱歉',
       button:'知道了，开始体验'
     },
@@ -27,6 +28,7 @@
         '방해금지 모드를 켜면 메시지 알림 배너가 표시되지 않아요.',
         '카카오톡에 자유 입력 대화 응답 기능을 추가하고 메시지 팝업 표시 오류를 수정했어요.'
       ],
+      help:'최신 내용이 보이지 않으면 Safari 개인정보 보호 브라우징에서 먼저 확인해 주세요. 이전 버전이라면 배포가 끝나지 않았을 수 있어요. 사이트 데이터를 삭제하면 대화 진행 상황과 설정이 초기화됩니다.',
       contact:'문제가 있다면 웨이보 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.',
       button:'확인하고 시작하기'
     }
@@ -68,6 +70,7 @@
         '<div class="site-announcement-version"></div>'+
         '<h3 class="site-announcement-heading"></h3>'+
         '<ul class="site-announcement-updates"></ul>'+
+        '<p class="site-announcement-help" id="site-announcement-help"></p>'+
         '<p class="site-announcement-contact" id="site-announcement-note"></p>'+
         '<button type="button" class="site-announcement-enter"></button>'+
       '</div>';
@@ -89,6 +92,8 @@
       overlay.querySelector('.site-announcement-version').textContent=toText(config.version);
       overlay.querySelector('.site-announcement-heading').textContent=
         toText(data.updatesTitle,lang==='zh'?'本次更新内容':'업데이트 내용');
+      overlay.querySelector('.site-announcement-help').textContent=
+        toText(data.help, fallback[lang].help);
       overlay.querySelector('.site-announcement-contact').textContent=
         toText(data.contact,lang==='zh'?'遇到问题请联系微博：淹到你了很抱歉':'문제가 있다면 웨이보 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.');
       overlay.querySelector('.site-announcement-enter').textContent=
