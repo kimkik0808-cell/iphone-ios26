@@ -36,6 +36,7 @@ const XXX_SEQUENCE=[
   ['other','아니 이 사람 진짜 뭐야ㅋㅋㅋ']
 ];
 let xxxReplyPending=false;
+const xxxReadTimers=new Map();
 const XXX_ZH={
   '끝났어?':'结束了？',
   '거의 다 끝났어':'快了',
@@ -216,7 +217,34 @@ function prepareXxxFlow(){
     chat.scriptStep=Math.min(XXX_SEQUENCE.length,Math.max(1,(chat.messages?.length||2)-1));
   }
   chat.scriptDone=chat.scriptStep>=XXX_SEQUENCE.length;
+  // Restore the remaining read delay after reopening; settle old saved unread
+  // flags without replaying messages that the visitor already sent.
+  let changed=false;
+  for(const message of chat.messages){
+    if(message[0]!=='mine'||message[4]!=='unread')continue;
+    const deadline=Number(message[5]);
+    if(!Number.isFinite(deadline)||deadline<=Date.now()){
+      message[4]='read';
+      changed=true;
+    }else{
+      scheduleXxxRead(chat,message,deadline-Date.now());
+    }
+  }
+  if(changed)saveKktData();
   return chat;
+}
+function scheduleXxxRead(chat,message,delay){
+  if(xxxReadTimers.has(message)||message[4]!=='unread')return;
+  const timer=setTimeout(()=>{
+    xxxReadTimers.delete(message);
+    if(message[4]!=='unread')return;
+    message[4]='read';
+    saveKktData();
+    if(xxxView)renderXxxRoom();
+    // An incoming message starts typing only after its unread "1" disappears.
+    queueXxxIncoming();
+  },Math.max(0,delay));
+  xxxReadTimers.set(message,timer);
 }
 function xxxTime(){
   return new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
@@ -302,7 +330,7 @@ function sendXxxReply(){
   // Never append a user's outgoing message until the send button is pressed.
   if(!chat||!next||next[0]!=='mine'||xxxDraft!==xxxText(next[1]))return;
   clearTimeout(xxxTypeTimer);
-  const sent=['mine',next[1],xxxTime(),'','unread'];
+  const sent=['mine',next[1],xxxTime(),'','unread',Date.now()+2000];
   chat.messages.push(sent);
   chat.scriptStep+=1;
   chat.scriptDone=chat.scriptStep>=XXX_SEQUENCE.length;
@@ -317,7 +345,7 @@ function sendXxxReply(){
 function queueXxxIncoming(){
   const chat=prepareXxxFlow();
   const next=chat?xxxNextMessage(chat):null;
-  if(!xxxView||xxxReplyPending||!next||next[0]!=='other')return;
+  if(!xxxView||xxxReplyPending||!next||next[0]!=='other'||chat.messages.some(message=>message[0]==='mine'&&message[4]==='unread'))return;
   xxxReplyPending=true;
   xxxTyping=true;
   renderXxxRoom();
@@ -336,7 +364,7 @@ function queueXxxIncoming(){
     chat.time='방금';
     saveKktData();
     renderXxxRoom();
-  },1300);
+  },3000);
 }
 function syncXxxPreview(){
   const chat=window.__KKT15_TEST__?.data?.find(item=>item.id==='xxx');
