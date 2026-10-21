@@ -75,7 +75,7 @@
     node.classList.add('ios26-notice-leaving');
     setTimeout(()=>node.remove(),230);
   }
-  function navigate(name){
+  function navigate(name,requestId){
     removeNotice();
     if(typeof isLocked!=='undefined'&&isLocked)return;
     if(typeof openApp!=='function')return;
@@ -89,9 +89,10 @@
       }
       document.querySelector('#ig14 [data-a="detail"][data-id="own1"]')?.click();
     }else{
-      // Every KakaoTalk banner is stored in the matching risk chat before navigation.
       openApp('kakao');
-      document.querySelector('#kkt15 [data-k15="chat"][data-id="unknown"]')?.click();
+      const requests=window.__KKT_REQUESTS__;
+      if(requestId&&requests?.openConversation)requests.openConversation(requestId);
+      else requests?.openList?.();
     }
   }
   function nextData(){
@@ -105,27 +106,14 @@
         translate(igMessages[i%igMessages.length]);
       return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
     }
+    const requests=window.KKT_REQUEST_CONVERSATIONS||[];
+    const request=requests.length?requests[(i*11+3)%requests.length]:null;
+    const requestMessage=request?.messages?.length?request.messages[(i*7+2)%request.messages.length]?.text:null;
     return {kind,name:kakaoName(),
-      sender:translate('알 수 없는 계정'),
-      message:translate(kktMessages[(i*5+Math.floor(i/5))%kktMessages.length]),
+      sender:request?.name||translate('알 수 없는 계정'),
+      message:requestMessage||translate(kktMessages[(i*5+Math.floor(i/5))%kktMessages.length]),
+      requestId:request?.id||'',
       icon:kakaoIcon};
-  }
-  function storeKakaoMessage(info){
-    if(info?.kind!=='kakao')return;
-    const api=window.__KKT15_TEST__;
-    const data=api?.data;
-    if(!Array.isArray(data))return;
-    const chat=data.find(item=>item.id==='unknown');
-    if(!chat||!Array.isArray(chat.messages))return;
-    const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
-    const roomOpen=typeof mode!=='undefined'&&mode==='kakao'&&api.view==='room'&&
-      document.querySelector('#kkt15 .k15-roomtitle')?.textContent?.includes(chat.name);
-    chat.messages.push(['other',info.message,now]);
-    chat.preview=info.message;
-    chat.time='방금';
-    chat.unread=roomOpen?0:Math.min(99,Number(chat.unread||0)+1);
-    try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch(e){}
-    if(typeof mode!=='undefined'&&mode==='kakao'&&typeof api.render==='function')api.render();
   }
   function show(kind){
     if(!canDisplay())return false;
@@ -136,9 +124,11 @@
     }
     if(kind==='kakao' && info.kind!=='kakao'){
       info.kind='kakao';info.name=kakaoName();
-      info.sender=translate('알 수 없는 계정');info.message=translate(kktMessages[counter%kktMessages.length]);info.icon=kakaoIcon;
+      const requests=window.KKT_REQUEST_CONVERSATIONS||[];
+      const request=requests.length?requests[(counter*13+1)%requests.length]:null;
+      const requestMessage=request?.messages?.length?request.messages[(counter*5+1)%request.messages.length]?.text:null;
+      info.sender=request?.name||translate('알 수 없는 계정');info.message=requestMessage||translate(kktMessages[counter%kktMessages.length]);info.requestId=request?.id||'';info.icon=kakaoIcon;
     }
-    if(info.kind==='kakao')storeKakaoMessage(info);
     clearNotice();
     const node=document.createElement('button');
     node.type='button';
@@ -150,7 +140,7 @@
     displayed=node;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{if(node.isConnected)node.classList.add('ios26-notice-visible')}));
     eraseTimer=setTimeout(removeNotice,4600);
-    node.addEventListener('click',()=>navigate(info.kind));
+    node.addEventListener('click',()=>navigate(info.kind,info.requestId));
     let touchY=null;
     node.addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null},{passive:true});
     node.addEventListener('touchend',e=>{
