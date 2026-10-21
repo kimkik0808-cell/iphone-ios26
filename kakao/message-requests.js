@@ -317,6 +317,15 @@ function xxxKeyboardHTML(){
     : [['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];
   return '<div class="k15-keyboard">'+rows.map((row,rowIndex)=>'<div class="k15-keyrow">'+row.map(key=>'<button type="button" class="k15-key '+(rowIndex===2&&(key==='⇧'||key==='⌫')?'wide':'')+'" data-xxx="key" data-xxx-key="'+key+'">'+key+'</button>').join('')+'</div>').join('')+'<div class="k15-keyrow"><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="123">123</button><button type="button" class="k15-key space" data-xxx="key" data-xxx-key="space">'+(isZh()?'空格':'간격')+'</button><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="입력">'+(isZh()?'换行':'입력')+'</button></div></div>';
 }
+const XXX_PINYIN={
+  '快':'kuai','了':'le','吃':'chi','饭':'fan','吗':'ma',
+  '想':'xiang','什':'shen','么':'me','给':'gei','你':'ni',
+  '点':'dian','外':'wai','卖':'mai','到':'dao','记':'ji',
+  '得':'de','我':'wo','拍':'pai','照':'zhao','片':'pian'
+};
+function xxxTypingParts(ch){
+  return isZh()?Array.from(XXX_PINYIN[ch]||''):xxxKeyParts(ch);
+}
 function xxxKeyParts(ch){
   if(!ch)return [];
   if(ch===' ')return ['space'];
@@ -345,7 +354,7 @@ function renderXxxRoom(){
   const placeholder=isZh()?'输入消息':'메시지를 입력하세요';
   const next=xxxNextMessage(chat);
   const canWrite=next?.[0]==='mine';
-  const composer=!canWrite?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="'+placeholder+'"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="'+placeholder+'"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===xxxText(next[1])?'ready':'')+'">↑</button></label></div>';
+  const composer=chat.scriptDone?'<div class="k15-input k15-replay-bar"><button type="button" class="k15-replay-button" data-xxx="replay">↻ '+(isZh()?'重新体验对话':'대화 다시 보기')+'</button></div>':!canWrite?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="'+placeholder+'"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="'+placeholder+'"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===xxxText(next[1])?'ready':'')+'">↑</button></label></div>';
   app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-xxx="back">‹</button><h1 class="k15-roomtitle">xxx</h1><span class="k15-grow"></span></header><main class="k15-chatbody '+(xxxKeyboard?'keyboard':'')+'" id="k15-chatbody">'+messages+typing+'</main>'+composer+(xxxKeyboard?xxxKeyboardHTML():'')+'</section></div>';
   requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
 }
@@ -358,8 +367,9 @@ function startXxxTyping(){
   xxxDraft='';
   renderXxxRoom();
   const chars=Array.from(xxxText(next[1]));
-  let charIndex=0,keyIndex=0,parts=xxxKeyParts(chars[0]||'');
+  let charIndex=0,keyIndex=0,parts=xxxTypingParts(chars[0]||'');
   function typeNext(){
+    if(!xxxView||!xxxKeyboard)return;
     if(charIndex>=chars.length){
       document.querySelector('[data-xxx="send"]')?.classList.add('ready');
       return;
@@ -369,17 +379,19 @@ function startXxxTyping(){
     button?.classList.add('pressed');
     xxxTypeTimer=setTimeout(()=>{
       button?.classList.remove('pressed');
+      const input=document.querySelector('[data-xxx="compose"]');
+      // Simulate pinyin composition before the Chinese character is committed.
+      if(isZh()&&key&&input)input.value=xxxDraft+parts.slice(0,keyIndex+1).join('');
       keyIndex++;
       if(keyIndex>=parts.length){
         xxxDraft+=ch;
-        const input=document.querySelector('[data-xxx="compose"]');
         if(input)input.value=xxxDraft;
         charIndex++;
         keyIndex=0;
-        parts=xxxKeyParts(chars[charIndex]||'');
-        xxxTypeTimer=setTimeout(typeNext,isZh()?260:(parts.length?30:46));
-      }else xxxTypeTimer=setTimeout(typeNext,20);
-    },key?52:42);
+        parts=xxxTypingParts(chars[charIndex]||'');
+        xxxTypeTimer=setTimeout(typeNext,isZh()?145:(parts.length?30:46));
+      }else xxxTypeTimer=setTimeout(typeNext,isZh()?45:20);
+    },key?64:65);
   }
   typeNext();
 }
@@ -432,6 +444,26 @@ function syncXxxPreview(){
     const text=xxxText(chat.preview);
     if(preview.textContent!==text)preview.textContent=text;
   }
+}
+function replayXxxRoom(){
+  const chat=prepareXxxFlow();
+  if(!chat)return;
+  clearTimeout(xxxTypeTimer);
+  clearTimeout(xxxReplyTimer);
+  xxxReplyPending=false;
+  xxxTyping=false;
+  xxxKeyboard=false;
+  xxxDraft='';
+  for(const timer of xxxReadTimers.values())clearTimeout(timer);
+  xxxReadTimers.clear();
+  chat.messages=[['date','2026년 10월 21일 수요일'],['other',XXX_SEQUENCE[0][1],'오후 9:12']];
+  chat.preview=XXX_SEQUENCE[0][1];
+  chat.time='방금';
+  chat.unread=0;
+  chat.scriptStep=1;
+  chat.scriptDone=false;
+  saveKktData();
+  renderXxxRoom();
 }
 function closeXxxRoom(){
   clearTimeout(xxxTypeTimer);
@@ -492,7 +524,7 @@ function injectAiStyles(){
   if(document.querySelector('#kai-styles'))return;
   const style=document.createElement('style');
   style.id='kai-styles';
-  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}';
+  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}.k15-replay-bar{align-items:center;justify-content:center}.k15-replay-button{background:#fee500;color:#252525;border:0;border-radius:18px;padding:9px 22px;font-size:13px;font-weight:650}';
   document.head.appendChild(style);
 }
 function aiMessages(item){
@@ -786,6 +818,7 @@ function handleClick(event){
     event.stopImmediatePropagation();
     if(xxxButton.matches('[data-k15="chat"][data-id="xxx"],[data-k15="friend"][data-id="xxx"]')){renderXxxRoom();queueXxxIncoming();}
     else if(xxxButton.dataset.xxx==='back')closeXxxRoom();
+    else if(xxxButton.dataset.xxx==='replay')replayXxxRoom();
     else if(xxxButton.dataset.xxx==='compose'||xxxButton.dataset.xxx==='key')startXxxTyping();
     else if(xxxButton.dataset.xxx==='send')sendXxxReply();
     return;
