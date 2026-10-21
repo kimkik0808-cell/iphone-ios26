@@ -151,7 +151,8 @@ function backToMain(){
   requestView='';
   currentId='';
   modalAction='';
-  window.__KKT15_TEST__?.render?.();
+  if(typeof render==='function')render();
+  else window.__KKT15_TEST__?.render?.();
   requestAnimationFrame(injectEntry);
 }
 function saveKktData(){
