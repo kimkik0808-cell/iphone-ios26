@@ -23,15 +23,44 @@ a{color:inherit;text-decoration:none}
 .link{display:block;background:#ffffff17;border:1px solid #ffffff25;padding:14px 18px;border-radius:15px;margin:11px 0;font-size:15px;font-weight:600}
 .link.primary{background:#f2f2fa;color:#222333}
 small{display:block;margin-top:38px;color:#aaa2b1;line-height:1.8}
+.lang-switch{display:inline-flex;align-items:center;gap:5px;background:#ffffff13;padding:5px;border-radius:13px;margin:0 auto 26px}
+.lang-switch button{border:0;border-radius:9px;padding:8px 12px;background:transparent;color:#cfcbda;font:600 12px -apple-system,system-ui,sans-serif;cursor:pointer}
+.lang-switch button.selected{color:#181927;background:#fff}
 </style>
 </head>
 <body><main>
 <div class="icon"><svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"><rect x="13" y="3.5" width="22" height="41" rx="5"/><path d="M21 8h6M22 39h4"/></svg></div>
-<h1>iPhone iOS 26 팬메이드</h1>
-<p class="subtitle">인터랙티브 웹 프로젝트 · 한국어 UI</p>
-<p class="credit">제작 및 개발 · imsryforyan</p>
-<p class="help">이 페이지는 팬이 제작한 비공식 체험용 웹사이트입니다.<br>Apple 및 아티스트의 공식 사이트나 서비스가 아닙니다.</p>
-<a class="link primary" href="./">가상 iPhone 체험하기</a>
-<a class="link" href="https://github.com/kimkik0808-cell/iphone-ios26" rel="noopener noreferrer">제작자 GitHub 방문하기 ↗</a>
+<nav class="lang-switch" aria-label="Language / 语言 / 언어"><button data-lang="zh" type="button">中文</button><button data-lang="ko" type="button">한국어</button></nav>
+<h1 data-ko="iPhone iOS 26 팬메이드" data-zh="李在贤的 iPhone · 粉丝创作">iPhone iOS 26 팬메이드</h1>
+<p class="subtitle" data-ko="인터랙티브 웹 프로젝트 · 한국어/중국어 UI" data-zh="互动虚拟 iPhone · 韩语及中文界面">인터랙티브 웹 프로젝트 · 한국어/중국어 UI</p>
+<p class="credit" data-ko="제작 및 개발 · imsryforyan" data-zh="制作与开发 · imsryforyan">제작 및 개발 · imsryforyan</p>
+<p class="help" data-ko="이 페이지는 팬이 제작한 비공식 체험용 웹사이트입니다. Apple 및 아티스트의 공식 사이트나 서비스가 아닙니다." data-zh="本站为非官方粉丝创作的互动体验网站，并非 Apple 或艺人的官方产品或服务。">이 페이지는 팬이 제작한 비공식 체험용 웹사이트입니다. Apple 및 아티스트의 공식 사이트나 서비스가 아닙니다.</p>
+<a class="link primary" href="./" data-ko="가상 iPhone 체험하기" data-zh="进入虚拟 iPhone">가상 iPhone 체험하기</a>
+<a class="link" href="https://github.com/kimkik0808-cell/iphone-ios26" rel="noopener noreferrer" data-ko="제작자 GitHub 방문하기 ↗" data-zh="访问创作者 GitHub ↗">제작자 GitHub 방문하기 ↗</a>
 <small>© 2026 imsryforyan · Fan-made interactive project</small>
-</main></body></html>
+</main>
+<script>
+(function(){
+  const key='iphone26_ui_language';
+  function language(){
+    try{
+      const saved=localStorage.getItem(key);
+      if(saved==='zh'||saved==='ko')return saved;
+    }catch{}
+    return /^zh/i.test(navigator.language||'')?'zh':'ko';
+  }
+  function apply(lang){
+    document.documentElement.lang=lang==='zh'?'zh-CN':'ko';
+    document.querySelectorAll('[data-ko][data-zh]').forEach(el=>{
+      el.textContent=el.dataset[lang]||el.dataset.ko;
+    });
+    document.querySelectorAll('[data-lang]').forEach(el=>{
+      el.classList.toggle('selected',el.dataset.lang===lang);
+      el.setAttribute('aria-pressed',String(el.dataset.lang===lang));
+    });
+    try{localStorage.setItem(key,lang)}catch{}
+  }
+  document.querySelectorAll('[data-lang]').forEach(el=>el.addEventListener('click',()=>apply(el.dataset.lang)));
+  apply(language());
+})();
+</script></body></html>
