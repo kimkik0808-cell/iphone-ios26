@@ -371,22 +371,174 @@ function closeAiRoom(){
   else window.__KKT15_TEST__?.render?.();
   requestAnimationFrame(()=>{injectEntry();restrictReadOnlyRooms()});
 }
-function aiPrompt(item,userText){
-  const recent=item.messages.filter(message=>message[0]!=='date').slice(-10).map(message=>(message[0]==='mine'?'재현':'상대')+': '+message[1]).join('\n');
-  return AI_PERSONAS[item.id]+'\n이 대화는 허구의 인터랙티브 작품이다. 실제 개인정보나 비공개 장소를 만들어내지 않는다. 사용자의 언어가 중국어면 자연스럽게 중국어로 답해도 된다. 설명이나 역할 이름 없이 답장 내용만 출력한다.\n\n최근 대화:\n'+recent+'\n재현: '+userText+'\n상대:';
+function localHash(value){
+  let hash=2166136261;
+  for(const ch of String(value)){
+    hash^=ch.codePointAt(0);
+    hash=Math.imul(hash,16777619);
+  }
+  return hash>>>0;
+}
+function localPick(list,seed){
+  return list[seed%list.length];
+}
+function localLanguage(textValue){
+  const chinese=(textValue.match(/[\u4e00-\u9fff]/g)||[]).length;
+  const korean=(textValue.match(/[가-힣]/g)||[]).length;
+  return chinese>korean?'zh':'ko';
+}
+function localIntent(textValue){
+  const text=textValue.toLowerCase().replace(/\s+/g,' ').trim();
+  const rules=[
+    ['hello',/(안녕|하이|ㅎㅇ|뭐해|在吗|你好|嗨|干嘛|做什么)/],
+    ['meal',/(밥|먹었|먹을|배고|야식|메뉴|吃饭|吃了|饿|宵夜|吃什么)/],
+    ['where',/(어디|위치|왔어|도착|오는 중|在哪|哪里|到了|过来|回来)/],
+    ['schedule',/(언제|몇 시|스케줄|일정|끝나|늦어|时间|几点|什么时候|行程|结束|忙完)/],
+    ['sleep',/(자니|잘 거|졸려|잠|굿나잇|晚安|睡了|困|睡觉)/],
+    ['game',/(게임|한 판|접속|롤|배그|游戏|开黑|上线|打一局)/],
+    ['photo',/(사진|셀카|보내|찍어|照片|自拍|发给|拍一张)/],
+    ['mood',/(힘들|피곤|지쳐|짜증|우울|좋아|기분|累|烦|难受|开心|心情|不舒服)/],
+    ['care',/(괜찮|조심|아프|건강|챙겨|没事吧|小心|生病|身体|照顾)/],
+    ['thanks',/(고마|감사|땡큐|谢谢|谢啦)/],
+    ['sorry',/(미안|죄송|对不起|抱歉)/],
+    ['negative',/(싫어|화났|왜 그래|됐어|몰라|讨厌|生气|算了|烦死|不想)/],
+    ['yesno',/(맞아|그래|응|네|아니|아냐|是吗|真的|嗯|不是|对吗)/]
+  ];
+  for(const [intent,pattern] of rules)if(pattern.test(text))return intent;
+  if(/[?？]$/.test(text)||/(왜|어떻게|뭐|누구|가능해|할까|吗|呢|为什么|怎么|谁|能不能|可以)/.test(text))return 'question';
+  return text.length<=3?'short':'fallback';
+}
+const LOCAL_CHAT_LINES={
+  sw:{
+    ko:{
+      hello:['형 뭐 해요 ㅋㅋ','왜요 형','저 그냥 폰 보고 있었어요'],
+      meal:['아직요 형은 먹었어요?','뭐 먹을 건데요 저도 껴요','저 지금 메뉴 보고 있어요'],
+      where:['지금 연습실 쪽이에요','가는 중인데 왜요','아직 밖이에요 금방 가요'],
+      schedule:['끝나는 거 봐야 알 것 같아요','조금 있다가 다시 말해줄게요','오늘은 좀 늦을 수도 있어요'],
+      sleep:['아직 안 자요 ㅋㅋ','형도 빨리 자요','조금만 더 있다가 잘게요'],
+      game:['콜 형 들어오면 말해요','한 판만 해요 진짜','저 먼저 접속해 있을게요'],
+      photo:['사진은 좀 이따 보내줄게요','그걸 왜 보고 싶어요 ㅋㅋ','잘 나온 거 있으면 보내줄게요'],
+      mood:['왜요 무슨 일 있었어요?','형 오늘 많이 힘들었어요?','일단 좀 쉬어요'],
+      care:['알았어요 형도 챙겨요','저 괜찮아요 걱정 마요','형이나 조심해요 ㅋㅋ'],
+      thanks:['갑자기 왜 그래요 ㅋㅋ','네 형','오케이 알겠어요'],
+      sorry:['됐어요 신경 쓰지 마요','알겠어요 다음엔 그러지 마요','뭐 그럴 수도 있죠'],
+      negative:['왜 화났어요','아니 갑자기 뭐예요','일단 진정해요 형'],
+      yesno:['맞아요 ㅋㅋ','아닌 것 같은데요','응 저도 그렇게 생각해요'],
+      question:['아마 그런 것 같은데요','잘 모르겠는데 확인해볼게요','형은 어떻게 생각해요?'],
+      short:['응 형','왜요','ㅋㅋ 알겠어요'],
+      fallback:['아 그 얘기였어요?','형 말이 좀 애매한데 ㅋㅋ','응 보고 있어요']
+    },
+    zh:{
+      hello:['哥你干嘛呢','在啊 怎么了','刚在看手机'],
+      meal:['还没吃 哥吃了吗','吃什么啊 我也想吃','我正在看菜单'],
+      where:['还在练习室这边','在路上了 怎么了','还在外面 马上回'],
+      schedule:['得看什么时候结束','过一会儿再跟你说','今天可能会晚一点'],
+      sleep:['还没睡呢ㅋㅋ','哥也早点睡','再待一会儿就睡'],
+      game:['可以啊 你上线叫我','就打一局 真的','我先上线等你'],
+      photo:['晚点发给你','为什么突然要照片ㅋㅋ','有拍得好的再发'],
+      mood:['怎么了 出什么事了','今天很累吗','先休息一下吧'],
+      care:['知道了 哥也照顾好自己','我没事 别担心','你才要小心ㅋㅋ'],
+      thanks:['突然这么客气干嘛ㅋㅋ','知道了哥','行'],
+      sorry:['没事 别想了','知道了 下次别这样','也没多大事'],
+      negative:['怎么突然生气了','不是 怎么了','先冷静一下'],
+      yesno:['对啊ㅋㅋ','好像不是','嗯 我也这么觉得'],
+      question:['应该是吧','我不太清楚 等我确认一下','哥你怎么想'],
+      short:['嗯哥','怎么了','ㅋㅋ知道了'],
+      fallback:['原来你说这个啊','哥你说得有点模糊ㅋㅋ','嗯 我在看']
+    }
+  },
+  nuna:{
+    ko:{
+      hello:['응 왜','무슨 일이야','나 지금 집이야'],
+      meal:['넌 밥 먹었어?','나는 먹었지 너나 챙겨','또 대충 먹은 건 아니지?'],
+      where:['나 집이야 넌 어디야','아직 밖이야','가는 중이야 왜'],
+      schedule:['끝나면 연락해','몇 시인지는 아직 몰라','너 일정부터 잘 보고 말해'],
+      sleep:['이제 자려고','너도 폰 그만 보고 자','늦게까지 있지 마'],
+      game:['게임은 적당히 해','또 게임이야?','난 안 해 너나 해'],
+      photo:['잘 나온 걸로 보내','사진은 왜','나중에 찾아볼게'],
+      mood:['많이 힘들었어?','일단 쉬고 천천히 말해','오늘은 그냥 푹 쉬어'],
+      care:['난 괜찮아 너나 조심해','아프면 바로 말해','약 챙겼어?'],
+      thanks:['됐어 가족끼리 뭘','알면 됐어','응'],
+      sorry:['알았어 다음부터 조심해','됐어 너무 신경 쓰지 마','말했으면 됐어'],
+      negative:['왜 또 그래','무슨 일인데','화부터 내지 말고 말해'],
+      yesno:['응 맞아','아닌 것 같은데','그래 그러자'],
+      question:['그건 네가 정하면 되지','확인해 보고 말해줄게','왜 갑자기 궁금해?'],
+      short:['응','왜','알겠어'],
+      fallback:['응 계속 말해 봐','그래서 어떻게 됐는데','그 얘기였구나']
+    },
+    zh:{
+      hello:['嗯 怎么了','什么事','我在家'],
+      meal:['你吃饭了吗','我吃了 你管好自己','你不会又随便吃了吧'],
+      where:['我在家 你在哪','还在外面','在路上 怎么了'],
+      schedule:['结束了告诉我','几点还不知道','先看好你自己的行程'],
+      sleep:['准备睡了','你也别玩手机了 快睡','别又熬太晚'],
+      game:['游戏少玩一点','又打游戏啊','我不玩 你自己玩'],
+      photo:['挑张好看的发','突然要照片干嘛','晚点找找看'],
+      mood:['很累吗','先休息 再慢慢说','今天就早点休息'],
+      care:['我没事 你自己小心','不舒服就马上说','药吃了吗'],
+      thanks:['一家人谢什么','知道就好','嗯'],
+      sorry:['知道了 下次注意','没事 别一直想','说开了就行'],
+      negative:['怎么又这样','出什么事了','别先发火 好好说'],
+      yesno:['嗯 对','我觉得不是','行 那就这样'],
+      question:['这个你自己决定啊','我确认一下再告诉你','怎么突然问这个'],
+      short:['嗯','怎么了','知道了'],
+      fallback:['嗯 你继续说','然后呢','原来是这件事']
+    }
+  },
+  jy:{
+    ko:{
+      hello:['왜 ㅋㅋ','나 그냥 쉬고 있어','뭐 해 너는'],
+      meal:['아직 뭐 먹을지 못 정했어','너 먹는 거 보고 정할래','국밥 갈래?'],
+      where:['아직 연습실','지금 가는 중','밖인데 왜'],
+      schedule:['끝나 봐야 알 듯','조금 늦을 것 같아','정해지면 바로 말할게'],
+      sleep:['아직 안 자','너 먼저 자 ㅋㅋ','곧 잘 거야'],
+      game:['콜 들어와','한 판만 하고 자자','나 이미 켰어'],
+      photo:['그 사진 말하는 거야?','있으면 보내줄게','나중에 골라서 보낼게'],
+      mood:['오늘 좀 힘들었냐','너 일단 쉬어','무슨 일 있었어?'],
+      care:['난 괜찮아','너나 잘 챙겨','알았어 조심할게'],
+      thanks:['뭘 이런 걸로 ㅋㅋ','응','다음에 밥 사'],
+      sorry:['됐어 괜찮아','신경 쓰지 마','다음엔 미리 말해'],
+      negative:['왜 또 삐졌어','갑자기 왜 그래','말해 봐 무슨 일인데'],
+      yesno:['응 맞아','아닌데 ㅋㅋ','그럴 수도 있지'],
+      question:['아마 될걸','나도 잘 모르겠어','일단 해 보고 말해'],
+      short:['응','왜','ㅋㅋ 알았어'],
+      fallback:['뭔 말인지는 알겠어','그래서 너는 어떻게 할 건데','응 계속 말해']
+    },
+    zh:{
+      hello:['怎么了ㅋㅋ','我在休息','你干嘛呢'],
+      meal:['还没决定吃什么','看你吃什么再说','去吃汤饭吗'],
+      where:['还在练习室','正在过去','在外面 怎么了'],
+      schedule:['得结束了才知道','可能会晚一点','定下来马上告诉你'],
+      sleep:['还没睡','你先睡ㅋㅋ','马上就睡'],
+      game:['可以 上线吧','打一局就睡','我已经开了'],
+      photo:['你说那张照片吗','有的话发给你','晚点挑一下再发'],
+      mood:['今天很累吗','你先休息','出什么事了'],
+      care:['我没事','先管好你自己','知道了 我会小心'],
+      thanks:['这有什么好谢的ㅋㅋ','嗯','下次请我吃饭'],
+      sorry:['没事','别想太多','下次提前说'],
+      negative:['怎么又不高兴了','突然怎么了','说吧 出什么事了'],
+      yesno:['嗯 对','不是吧ㅋㅋ','也有可能'],
+      question:['应该可以','我也不太清楚','先试试再说'],
+      short:['嗯','怎么了','ㅋㅋ知道了'],
+      fallback:['我懂你意思了','所以你打算怎么办','嗯 继续说']
+    }
+  }
+};
+function localContextReply(item,userText){
+  const language=localLanguage(userText);
+  const intent=localIntent(userText);
+  const replies=LOCAL_CHAT_LINES[item.id]?.[language]||LOCAL_CHAT_LINES[item.id]?.ko;
+  const list=replies?.[intent]||replies?.fallback||['응'];
+  const seed=localHash(item.id+'|'+userText+'|'+item.messages.length);
+  let reply=localPick(list,seed);
+  const lastOther=[...item.messages].reverse().find(message=>message[0]==='other')?.[1];
+  if(reply===lastOther&&list.length>1)reply=list[(seed+1)%list.length];
+  return reply;
 }
 async function requestAiReply(item,userText){
-  aiController?.abort();
-  aiController=new AbortController();
-  const timeout=setTimeout(()=>aiController?.abort(),18000);
-  try{
-    const url='https://text.pollinations.ai/'+encodeURIComponent(aiPrompt(item,userText));
-    const response=await fetch(url,{signal:aiController.signal,referrerPolicy:'no-referrer'});
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    let reply=(await response.text()).trim().replace(/^[\"“]|[\"”]$/g,'');
-    if(!reply||reply.length>600||/<html/i.test(reply))throw new Error('invalid response');
-    return reply.slice(0,260);
-  }finally{clearTimeout(timeout)}
+  const delay=180+(localHash(userText+item.id)%360);
+  await new Promise(resolve=>setTimeout(resolve,delay));
+  return localContextReply(item,userText);
 }
 const aiWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function handleAiSubmit(event){
