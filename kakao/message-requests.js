@@ -164,19 +164,10 @@ function prepareXxxFlow(){
   const data=window.__KKT15_TEST__?.data;
   const chat=Array.isArray(data)?data.find(item=>item.id==='xxx'):null;
   if(!chat)return null;
-  try{
-    if(localStorage.getItem('jh_kkt_xxx_flow_v2')!=='1'){
-      chat.messages=[['date','2026년 10월 21일 수요일'],['other','오늘도 늦게 끝나?','오전 8:12']];
-      chat.preview='오늘도 늦게 끝나?';
-      chat.time='방금';
-      chat.unread=1;
-      chat.scriptDone=false;
-      chat.scriptReply=XXX_REPLY;
-      chat.scriptNext=XXX_NEXT;
-      localStorage.setItem('jh_kkt_xxx_flow_v2','1');
-      saveKktData();
-    }
-  }catch(e){}
+  delete chat.scriptReply;
+  delete chat.scriptNext;
+  chat.scriptDone=true;
+  saveKktData();
   return chat;
 }
 function xxxTime(){
@@ -290,9 +281,170 @@ function closeXxxRoom(){
   window.__KKT15_TEST__?.render?.();
   requestAnimationFrame(injectEntry);
 }
+
+const AI_CHAT_IDS=new Set(['sw','nuna','jy']);
+const AI_PERSONAS={
+  sw:'너는 선우다. 재현을 형이라고 부르는 친한 같은 팀 멤버다. 장난스럽고 짧게 자연스러운 한국어 카톡 말투로 답한다. 과하게 다정하거나 문어체로 말하지 않는다. 보통 한두 문장만 보낸다.',
+  nuna:'너는 재현의 누나다. 현실적인 가족 말투로 편하게 말한다. 잔소리와 챙김이 자연스럽게 섞이지만 과장하지 않는다. 짧은 한국어 카톡으로 답한다.',
+  jy:'너는 주연이다. 재현과 오래 알고 지낸 같은 팀 멤버다. 무심하고 편한 반말과 가벼운 농담을 쓴다. 짧고 자연스러운 한국어 카톡으로 답한다.'
+};
+let aiView='';
+let aiTyping=false;
+let aiError='';
+let aiController=null;
+let aiSending=false;
+function ensureAiChats(){
+  const data=window.__KKT15_TEST__?.data;
+  if(!Array.isArray(data))return;
+  let nuna=data.find(item=>item.id==='nuna');
+  if(!nuna){
+    nuna={id:'nuna',name:'누나',initial:'누',type:'family',tag:'가족',preview:'밥은 챙겨 먹었어?',time:'어제',unread:0,members:1,messages:[
+      ['date','2026년 10월 19일 월요일'],
+      ['other','오늘도 늦어?','오후 7:14'],
+      ['mine','응 연습 끝나고 들어갈 것 같아','오후 7:18'],
+      ['other','알겠어 밥은 꼭 챙겨 먹어','오후 7:20']
+    ]};
+    data.splice(Math.min(3,data.length),0,nuna);
+  }
+  for(const item of data){
+    item.aiInteractive=AI_CHAT_IDS.has(item.id);
+    if(!item.aiInteractive){
+      delete item.scriptReply;
+      delete item.scriptNext;
+      item.scriptDone=true;
+    }
+  }
+  saveKktData();
+}
+function aiTime(){
+  return new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
+}
+function aiAvatar(item){
+  return '<span class="k15-avatar '+esc(item.type||'friend')+'" style="--avbg:#d8dfc4;--avfg:#7f9457"></span>';
+}
+function injectAiStyles(){
+  if(document.querySelector('#kai-styles'))return;
+  const style=document.createElement('style');
+  style.id='kai-styles';
+  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}';
+  document.head.appendChild(style);
+}
+function aiMessages(item){
+  return item.messages.map(message=>{
+    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(message[1])+'</span></div>';
+    const mine=message[0]==='mine';
+    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?aiAvatar(item):'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(message[1])+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(message[2]||'방금')+'</time></span></div></div></div>';
+  }).join('');
+}
+function renderAiRoom(id){
+  ensureAiChats();
+  const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===id);
+  if(!item||!AI_CHAT_IDS.has(id))return;
+  aiView=id;
+  item.unread=0;
+  saveKktData();
+  const app=document.querySelector('#appcontent');
+  if(!app)return;
+  app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-ai-chat="back">‹</button><h1 class="k15-roomtitle">'+esc(item.name)+'</h1><span class="k15-grow"></span><div class="k15-head-actions"><button class="k15-ico" type="button">•••</button></div></header><main class="k15-chatbody" id="k15-chatbody">'+aiMessages(item)+(aiTyping?'<div class="k15-message">'+aiAvatar(item)+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'')+(aiError?'<div class="kai-error">'+esc(aiError)+'</div>':'')+'</main><form class="k15-input kai-form" id="kai-form"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input id="kai-input" autocomplete="off" enterkeyhint="send" maxlength="160" placeholder="메시지를 입력하세요"><button class="k15-send" type="submit" aria-label="전송">↑</button></label></form></section></div>';
+  requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
+}
+function closeAiRoom(){
+  aiController?.abort();
+  aiController=null;
+  aiView='';
+  aiTyping=false;
+  aiError='';
+  aiSending=false;
+  if(typeof render==='function')render();
+  else window.__KKT15_TEST__?.render?.();
+  requestAnimationFrame(()=>{injectEntry();restrictReadOnlyRooms()});
+}
+function aiPrompt(item,userText){
+  const recent=item.messages.filter(message=>message[0]!=='date').slice(-10).map(message=>(message[0]==='mine'?'재현':'상대')+': '+message[1]).join('\n');
+  return AI_PERSONAS[item.id]+'\n이 대화는 허구의 인터랙티브 작품이다. 실제 개인정보나 비공개 장소를 만들어내지 않는다. 사용자의 언어가 중국어면 자연스럽게 중국어로 답해도 된다. 설명이나 역할 이름 없이 답장 내용만 출력한다.\n\n최근 대화:\n'+recent+'\n재현: '+userText+'\n상대:';
+}
+async function requestAiReply(item,userText){
+  aiController?.abort();
+  aiController=new AbortController();
+  const timeout=setTimeout(()=>aiController?.abort(),18000);
+  try{
+    const url='https://text.pollinations.ai/'+encodeURIComponent(aiPrompt(item,userText));
+    const response=await fetch(url,{signal:aiController.signal,referrerPolicy:'no-referrer'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    let reply=(await response.text()).trim().replace(/^[\"“]|[\"”]$/g,'');
+    if(!reply||reply.length>600||/<html/i.test(reply))throw new Error('invalid response');
+    return reply.slice(0,260);
+  }finally{clearTimeout(timeout)}
+}
+const aiWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function handleAiSubmit(event){
+  if(event.target?.id!=='kai-form')return;
+  event.preventDefault();
+  event.stopPropagation();
+  if(aiSending||!aiView)return;
+  const input=document.querySelector('#kai-input');
+  const textValue=input?.value.trim();
+  if(!textValue)return;
+  const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===aiView);
+  if(!item)return;
+  aiSending=true;
+  aiError='';
+  item.messages.push(['mine',textValue,aiTime(),'','unread']);
+  item.preview=textValue;
+  item.time='방금';
+  saveKktData();
+  renderAiRoom(aiView);
+  const replyPromise=requestAiReply(item,textValue);
+  await aiWait(2000);
+  const mine=[...item.messages].reverse().find(message=>message[0]==='mine'&&message[4]==='unread');
+  if(mine)mine[4]='read';
+  aiTyping=true;
+  saveKktData();
+  renderAiRoom(aiView);
+  try{
+    const reply=await replyPromise;
+    await aiWait(850);
+    if(!aiView)return;
+    aiTyping=false;
+    item.messages.push(['other',reply,aiTime()]);
+    item.preview=reply;
+    item.time='방금';
+    saveKktData();
+    renderAiRoom(aiView);
+  }catch(error){
+    if(!aiView)return;
+    aiTyping=false;
+    aiError='답장을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+    renderAiRoom(aiView);
+  }finally{
+    aiSending=false;
+    aiController=null;
+  }
+}
+function restrictReadOnlyRooms(){
+  if(aiView||requestView)return;
+  const room=document.querySelector('#kkt15 .k15-chatroom');
+  const form=room?.querySelector('#k15-form');
+  if(!room||!form)return;
+  const title=room.querySelector('.k15-roomtitle')?.textContent?.trim()||'';
+  if(['선우','누나','주연'].includes(title))return;
+  form.outerHTML='<div class="kai-readonly">읽기 전용 대화</div>';
+  room.querySelector('.k15-keyboard')?.remove();
+}
+
 function handleClick(event){
+  const aiButton=event.target.closest('[data-ai-chat],[data-k15="chat"][data-id],[data-k15="friend"][data-id]');
+  if(aiButton){
+    const aiId=aiButton.dataset.id;
+    if(aiButton.dataset.aiChat==='back'){
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();closeAiRoom();return;
+    }
+    if(aiId&&AI_CHAT_IDS.has(aiId)){
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();renderAiRoom(aiId);return;
+    }
+  }
   const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"]');
-  if(xxxButton){
+  if(false&&xxxButton){
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -342,9 +494,12 @@ function renderRoomWithModal(){
   }
 }
 injectStyles();
+injectAiStyles();
 removeLegacyRiskChat();
 prepareXxxFlow();
+ensureAiChats();
 document.addEventListener('click',handleClick,true);
+document.addEventListener('submit',handleAiSubmit,true);
 const app=document.querySelector('#appcontent');
 if(app){
   new MutationObserver(()=>{
@@ -364,6 +519,7 @@ if(app){
       }
     }
     injectEntry();
+    restrictReadOnlyRooms();
   }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
