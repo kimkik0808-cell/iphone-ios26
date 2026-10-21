@@ -12,6 +12,7 @@
     (()=>{try{return localStorage.getItem(LANG_KEY)||'ko'}catch{return 'ko'}})();
   const locale=(ko,zh)=>currentLanguage()==='zh'?zh:ko;
   let page='main';
+  let languagePreviousPage='general';
   let toastTimer=0;
   const isSettings=()=>typeof mode!=='undefined'&&mode==='settings';
   const isDnd=()=>{try{return localStorage.getItem(DND_KEY)!=='0'}catch{return true}};
@@ -110,6 +111,11 @@
     frame.style.bottom='calc(var(--safe-bottom) + 28px)';
     frame.innerHTML=`<div class="ios26-settings-root">${page==='language'?languagePage():page==='general'?generalPage():page==='dnd'?dnd():page==='focus'?focus():main()}</div>`;
   }
+  const oldOpenApp=openApp;
+  openApp=function(next,...args){
+    if(next==='settings')page='main';
+    return oldOpenApp.call(this,next,...args);
+  };
   const oldRender=render;
   render=function(...args){
     if(isSettings()){paint();return}
@@ -120,7 +126,7 @@
     if(isSettings()){
       if(page==='dnd')page='focus';
       else if(page==='focus'||page==='general')page='main';
-      else if(page==='language')page='general';
+      else if(page==='language')page=languagePreviousPage;
       else return closeApp();
       paint();
       return;
@@ -134,11 +140,11 @@
     e.preventDefault();e.stopImmediatePropagation();
     const a=btn.dataset.s26;
     if(a==='back'){
-      if(page==='dnd')page='focus';else if(page==='focus'||page==='general')page='main';else if(page==='language')page='general';else return closeApp();
+      if(page==='dnd')page='focus';else if(page==='focus'||page==='general')page='main';else if(page==='language')page=languagePreviousPage;else return closeApp();
       paint();
     }else if(a==='focus'){page='focus';paint()}
     else if(a==='general'){page='general';paint()}
-    else if(a==='language'){page='language';paint()}
+    else if(a==='language'){languagePreviousPage=page;page='language';paint()}
     else if(a==='lang'){
       const requested=btn.dataset.lang==='zh'?'zh':'ko';
       if(window.IphoneLocale)window.IphoneLocale.setLanguage(requested);
