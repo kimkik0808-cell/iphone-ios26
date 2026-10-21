@@ -148,9 +148,9 @@
     busy = true;
     try {
       const responses = await Promise.all([
-        fetch(new URL('scenes.json', base)),
-        fetch(new URL('replies.json', base)),
-        fetch(new URL('interactive.json', base))
+        fetch(new URL('scenes.json?locale=2', base),{cache:'no-store'}),
+        fetch(new URL('replies.json?locale=2', base),{cache:'no-store'}),
+        fetch(new URL('interactive.json?locale=2', base),{cache:'no-store'})
       ]);
       if (!responses.every(r => r.ok)) throw new Error('Data missing');
       const [a, b, c] = await Promise.all(responses.map(x => x.json()));
