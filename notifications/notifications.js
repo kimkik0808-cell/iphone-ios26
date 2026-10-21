@@ -89,7 +89,7 @@
       }
       document.querySelector('#ig14 [data-a="detail"][data-id="own1"]')?.click();
     }else{
-      // Banner-only fictional contacts are not inserted into KakaoTalk's actual chat list.
+      // Every KakaoTalk banner is stored in the matching risk chat before navigation.
       openApp('kakao');
       document.querySelector('#kkt15 [data-k15="chat"][data-id="unknown"]')?.click();
     }
@@ -106,9 +106,26 @@
       return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
     }
     return {kind,name:kakaoName(),
-      sender:translate(kktSenders[(i*3+Math.floor(i/6))%kktSenders.length]),
+      sender:translate('알 수 없는 계정'),
       message:translate(kktMessages[(i*5+Math.floor(i/5))%kktMessages.length]),
       icon:kakaoIcon};
+  }
+  function storeKakaoMessage(info){
+    if(info?.kind!=='kakao')return;
+    const api=window.__KKT15_TEST__;
+    const data=api?.data;
+    if(!Array.isArray(data))return;
+    const chat=data.find(item=>item.id==='unknown');
+    if(!chat||!Array.isArray(chat.messages))return;
+    const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
+    const roomOpen=typeof mode!=='undefined'&&mode==='kakao'&&api.view==='room'&&
+      document.querySelector('#kkt15 .k15-roomtitle')?.textContent?.includes(chat.name);
+    chat.messages.push(['other',info.message,now]);
+    chat.preview=info.message;
+    chat.time='방금';
+    chat.unread=roomOpen?0:Math.min(99,Number(chat.unread||0)+1);
+    try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch(e){}
+    if(typeof mode!=='undefined'&&mode==='kakao'&&typeof api.render==='function')api.render();
   }
   function show(kind){
     if(!canDisplay())return false;
@@ -119,8 +136,9 @@
     }
     if(kind==='kakao' && info.kind!=='kakao'){
       info.kind='kakao';info.name=kakaoName();
-      info.sender=translate(kktSenders[counter%kktSenders.length]);info.message=translate(kktMessages[counter%kktMessages.length]);info.icon=kakaoIcon;
+      info.sender=translate('알 수 없는 계정');info.message=translate(kktMessages[counter%kktMessages.length]);info.icon=kakaoIcon;
     }
+    if(info.kind==='kakao')storeKakaoMessage(info);
     clearNotice();
     const node=document.createElement('button');
     node.type='button';
