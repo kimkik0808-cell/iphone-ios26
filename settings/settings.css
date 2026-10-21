@@ -1,0 +1,58 @@
+/* iOS 26 Korean Settings: demo visuals, Focus -> Do Not Disturb is interactive. */
+.appscreen.ios26-settings-bg{background:#f5f5f9;color:#1e1c22}
+.ios26-settings-root{height:100%;width:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;
+  color:#1c1b20;background:linear-gradient(175deg,#f7f7fa,#f2f2f7);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
+  letter-spacing:-.28px;-webkit-user-select:text;user-select:text}
+.ios26-settings-root *{box-sizing:border-box}
+.ios26-settings-root button,.ios26-settings-root input{-webkit-appearance:none;appearance:none;font:inherit;color:inherit}
+.ios26-settings-root button{border:0;background:transparent;box-shadow:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ios26-settings-scroll{min-height:0;flex:1;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:0 15px 35px}
+.ios26-settings-scroll::-webkit-scrollbar{display:none}
+.ios26-settings-head{display:flex;align-items:center;height:52px;min-height:52px;padding:0 14px;gap:8px;justify-content:space-between;flex:none}
+.ios26-settings-head strong{font-size:17px;font-weight:710;text-align:center;flex:1}
+.ios26-settings-back{font-size:16px!important;min-width:72px;text-align:left;padding:9px 0!important;color:#0a7aff!important;display:flex;align-items:center;gap:3px}
+.ios26-settings-back span{font-size:24px;line-height:15px;font-weight:360}
+.ios26-settings-head-end{width:72px;flex:none}
+.ios26-settings-title{font-size:34px;letter-spacing:-1.15px;font-weight:760;line-height:1.13;margin:15px 5px 13px}
+.ios26-settings-search{width:100%;border-radius:12px;background:#e5e5e9;color:#97969e;padding:9px 10px;margin:5px 0 16px;display:flex;align-items:center;gap:8px;font-size:14px}
+.ios26-settings-search svg{width:18px;height:18px;flex:none}
+.ios26-settings-account{width:100%;border-radius:14px;background:#fff;margin-bottom:24px;display:flex;align-items:center;
+  gap:12px;padding:12px;text-align:left!important;box-shadow:0 .5px 1px #1b1c2910}
+.ios26-settings-avatar{width:49px;height:49px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,#d0cfdd,#b1b8d1);color:#fff;font-size:21px;font-weight:700}
+.ios26-settings-account-text{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ios26-settings-account-text strong{font-size:17px;font-weight:660}
+.ios26-settings-account-text small{font-size:12px;color:#92929a}
+.ios26-settings-chevron{font-size:20px;font-weight:400;line-height:1;color:#c5c5c9;padding:0 2px;flex:none}
+.ios26-settings-group{overflow:hidden;border-radius:15px;background:#fff;margin:0 0 23px;box-shadow:0 .5px 1px #1b1c2910}
+.ios26-settings-item{width:100%;min-height:51px;padding:8px 12px 8px 13px;display:flex;align-items:center;gap:12px;text-align:left!important;position:relative}
+.ios26-settings-item+.ios26-settings-item:before{content:"";position:absolute;top:0;right:0;left:57px;height:.5px;background:#dddde3}
+.ios26-settings-item:active,.ios26-settings-account:active{background:#f8f8fb}
+.ios26-settings-symbol{display:grid;place-items:center;flex:none;width:29px;height:29px;border-radius:7px;
+  color:#fff;font-size:19px;line-height:1;font-weight:700}
+.ios26-settings-symbol svg{width:19px;height:19px;display:block}
+.ios26-settings-itemlabel{font-size:15.5px;font-weight:490;flex:1;min-width:0}
+.ios26-settings-trail{display:flex;align-items:center;gap:8px;color:#8e8d95;font-size:13px}
+.ios26-settings-switch{position:relative;width:49px;height:30px;flex:none;border-radius:18px!important;
+  background:#e5e5ea!important;transition:background .2s ease;display:inline-flex;align-items:center;padding:2px!important;
+  border:0;box-shadow:none!important}
+.ios26-settings-switch[aria-checked="true"]{background:#34c759!important}
+.ios26-settings-switch i{display:block;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1.5px 4px #0003;
+  transition:transform .2s ease;transform:translateX(0)}
+.ios26-settings-switch[aria-checked="true"] i{transform:translateX(19px)}
+.ios26-settings-caption{font-size:12px;line-height:1.65;color:#929198;margin:-14px 5px 23px}
+.ios26-settings-subtitle{font-size:12px;color:#8d8b95;text-transform:uppercase;margin:18px 14px 8px}
+.ios26-settings-focushead{display:flex;flex-direction:column;align-items:center;padding:29px 0 27px;gap:13px}
+.ios26-settings-focusicon{width:84px;height:84px;border-radius:25px;background:linear-gradient(140deg,#aa83f1,#7e57cb);display:grid;place-items:center;color:#fff}
+.ios26-settings-focusicon svg{width:51px;height:51px}
+.ios26-settings-focushead strong{font-size:26px;font-weight:760}
+.ios26-settings-focushead small{font-size:13px;color:#94919a}
+.ios26-settings-focusstate{background:#fff;border-radius:15px;display:flex;align-items:center;justify-content:space-between;
+  gap:15px;padding:16px 14px;margin:7px 0 24px}
+.ios26-settings-focusstate strong{font-size:17px;font-weight:660}
+.ios26-settings-focusstate p{font-size:12px;color:#8f8b94;line-height:1.5;margin:6px 0 0}
+.ios26-settings-focusinfo{margin:10px 8px;font-size:12px;line-height:1.75;color:#888791}
+.ios26-settings-toast{position:absolute;bottom:32px;left:17px;right:17px;border-radius:13px;background:#313039ec;color:white;
+  text-align:center;font-size:13px;padding:12px;box-shadow:0 3px 12px #0003;z-index:20}
+@media(prefers-reduced-motion:reduce){.ios26-settings-switch,.ios26-settings-switch i{transition:none}}
