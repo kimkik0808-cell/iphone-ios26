@@ -45,6 +45,14 @@
   } catch {}
 
   const isActive = () => typeof mode !== 'undefined' && mode === 'fromm';
+  const chinese=()=>window.IphoneLocale?.language==='zh';
+  const contentFor=item=>{
+    if(!item)return '';
+    if(!chinese())return item.text||'';
+    if(item.fixed&&item.stage)return ['요','在干嘛','吃饭了吗？'][item.stage-1]||item.text;
+    return item.textZh||item.text||'';
+  };
+  const labelFor=(item,key)=>chinese()?(item?.[key+'Zh']||item?.[key]||''):(item?.[key]||'');
   const getScene = () => scenes.find(x => x.id === selectedId);
   const activeLocal = () => local.find(x => x.id === selectedId);
   const activeThread = () => getScene() || activeLocal();
@@ -72,21 +80,21 @@
 
   function message(item) {
     const isYo = item.text.trim() === '요';
-    return `<div class="fm-msg"><time class="fm-time">${escape(item.time)}</time><div class="fm-bubble ${isYo ? 'fm-yo' : ''}">${escape(item.text)}</div></div>`;
+    return `<div class="fm-msg"><time class="fm-time">${escape(item.time)}</time><div class="fm-bubble ${isYo ? 'fm-yo' : ''}">${escape(contentFor(item))}</div></div>`;
   }
 
   function chatHtml() {
     const days = scenes.map(scene => {
       const messages = scene.messages.map(m => {
-        const card = m.replies ? replyCard(scene.id, scene.replyCount, scene.preview) : '';
+        const card = m.replies ? replyCard(scene.id, scene.replyCount, chinese()?(scene.previewZh||scene.preview):scene.preview) : '';
         return message(m) + card;
       }).join('');
-      return `<section class="fm-scene"><div class="fm-date">${escape(scene.dateLabel)}</div>${messages}</section>`;
+      return `<section class="fm-scene"><div class="fm-date">${escape(labelFor(scene,'dateLabel'))}</div>${messages}</section>`;
     }).join('');
     const extras = local.map(m => {
       const scene = scenes.find(x => x.id === m.replyScene) || scripted.get(m.replyScene);
       const replies = collections.get(m.replyScene) || [];
-      const previews = scene?.preview || replies.slice(0, 2).map(x => x.text);
+      const previews = chinese()?(scene?.previewZh || replies.slice(0,2).map(x=>x.textZh||x.text)):(scene?.preview || replies.slice(0,2).map(x=>x.text));
       const replyBlock = m.replyScene && scene
         ? replyCard(m.id, replies.length, previews)
         : (m.fixed && !m.replyScene ? replyCard(m.id, 0, [], true) : '');
@@ -98,7 +106,7 @@
   }
 
   function fanRow(item, i) {
-    const text = item.text || '';
+    const text = contentFor(item);
     const name = item.name || '더비';
     const color = (name.length + i) % 4;
     return `<div class="fm-fan"><span class="fm-avatar" data-c="${color}">${escape(name.slice(0, 1))}</span><div class="fm-fanbody"><div class="fm-fanheader"><b>${escape(name)}</b><time>${escape(item.time || '')}</time></div><div class="fm-fantext">${escape(text)}</div></div></div>`;
@@ -110,7 +118,7 @@
     const rows = getReplies();
     const custom = activeLocal();
     const anchor = custom || scene.messages.find(m => m.id === scene.anchor);
-    return `<div class="fm-shell">${header('답장 모아보기', '<span class="fm-emptybtn"></span>')}<div class="fm-origin"><small>재현 · ${escape(anchor?.time || '')}</small><strong>${escape(anchor?.text || scene.topic)}</strong></div><div class="fm-sortbar"><b>답장 ${rows.length}개</b><button data-fm="sort">${sort === 'new' ? '최신순' : '오래된순'} ⌄</button></div><div class="fm-replies" id="fm-replies-list">${rows.slice(0, visibleCount).map(fanRow).join('')}${visibleCount < rows.length ? '<button class="fm-more" data-fm="more">답장 더 보기 ↓</button>' : ''}</div></div>`;
+    return `<div class="fm-shell">${header('답장 모아보기', '<span class="fm-emptybtn"></span>')}<div class="fm-origin"><small>재현 · ${escape(anchor?.time || '')}</small><strong>${escape(contentFor(anchor)||labelFor(scene,'topic'))}</strong></div><div class="fm-sortbar"><b>답장 ${rows.length}개</b><button data-fm="sort">${sort === 'new' ? '최신순' : '오래된순'} ⌄</button></div><div class="fm-replies" id="fm-replies-list">${rows.slice(0, visibleCount).map(fanRow).join('')}${visibleCount < rows.length ? '<button class="fm-more" data-fm="more">답장 더 보기 ↓</button>' : ''}</div></div>`;
   }
 
   function draw(opts = {}) {
@@ -159,7 +167,7 @@
       }
       scenes = a.scenes;
       scripted = new Map(c.collections.map(x => [x.sceneId, {
-        topic: x.phrase, preview: x.preview, replyCount: x.replies.length
+        topic: x.phrase, topicZh:x.phraseZh, preview: x.preview,previewZh:x.previewZh, replyCount: x.replies.length
       }]));
       collections = next;
       // Recover an interrupted reply arrival after a page reload.
