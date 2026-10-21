@@ -261,6 +261,9 @@
     oldRender.apply(this,args);
     if(isMusic()){
       appEl.classList.toggle('am-now-playing',view==='player');
+      // Library pages use a light system status bar; Now Playing uses white text.
+      document.querySelector('#status')?.classList.toggle('dark',view!=='player');
+      document.querySelector('#gesture')?.classList.toggle('ink',view!=='player');
       frame.style.overflow='hidden';
       if(!loaded&&!loading)reload();
       syncProgress();
