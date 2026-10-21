@@ -97,37 +97,34 @@
   }
   function nextData(){
     const i=counter++;
-    // A celebrity receives many fan-like notifications: IG most often, KKT intermittently.
+    // Mixed IG and KKT banners. KKT content is delivered only in show(),
+    // never selected from undisclosed messages in the template database.
     const kind=(i%5===3||i%7===5)?'kakao':'instagram';
-    if(kind==='instagram'){
-      const name=igFans[(i*7+Math.floor(i/igFans.length))%igFans.length];
-      const message=i%6===4?
-        zh()?name+'及另外'+(12+(i*7)%68)+'人赞了你的帖子。':name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
-        translate(igMessages[i%igMessages.length]);
-      return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
-    }
-    const requests=window.KKT_REQUEST_CONVERSATIONS||[];
-    const request=requests.length?requests[(i*11+3)%requests.length]:null;
-    const requestMessage=request?.messages?.length?request.messages[(i*7+2)%request.messages.length]?.text:null;
-    return {kind,name:kakaoName(),
-      sender:request?.name||translate('알 수 없는 계정'),
-      message:requestMessage||translate(kktMessages[(i*5+Math.floor(i/5))%kktMessages.length]),
-      requestId:request?.id||'',
-      icon:kakaoIcon};
+    const name=igFans[(i*7+Math.floor(i/igFans.length))%igFans.length];
+    const message=i%6===4?
+      zh()?name+'及另外'+(12+(i*7)%68)+'人赞了你的帖子。':name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
+      translate(igMessages[i%igMessages.length]);
+    return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
   }
   function show(kind){
     if(!canDisplay())return false;
     const info=nextData();
-    if(kind==='instagram' && info.kind!=='instagram'){
-      info.kind='instagram';info.name='Instagram';info.sender=igFans[(counter*5)%igFans.length]+(zh()?'':'님');
-      info.message=translate(igMessages[counter%igMessages.length]);info.icon=instagramIcon;
-    }
-    if(kind==='kakao' && info.kind!=='kakao'){
-      info.kind='kakao';info.name=kakaoName();
-      const requests=window.KKT_REQUEST_CONVERSATIONS||[];
-      const request=requests.length?requests[(counter*13+1)%requests.length]:null;
-      const requestMessage=request?.messages?.length?request.messages[(counter*5+1)%request.messages.length]?.text:null;
-      info.sender=request?.name||translate('알 수 없는 계정');info.message=requestMessage||translate(kktMessages[counter%kktMessages.length]);info.requestId=request?.id||'';info.icon=kakaoIcon;
+    const requestedKind=kind==='instagram'||kind==='kakao'?kind:info.kind;
+    if(requestedKind==='kakao'){
+      // Delivery and banner creation happen in the same foreground tick:
+      // no conversation or future message is exposed before the banner.
+      const delivery=window.__KKT_REQUESTS__?.deliverNext?.();
+      if(delivery){
+        info.kind='kakao';
+        info.name=kakaoName();
+        info.sender=delivery.name;
+        info.message=delivery.text;
+        info.requestId=delivery.id;
+        info.icon=kakaoIcon;
+      }else if(kind==='kakao'){
+        return false;
+      }
+      // With all scripted messages delivered, normal ticks remain IG-only.
     }
     clearNotice();
     const node=document.createElement('button');
