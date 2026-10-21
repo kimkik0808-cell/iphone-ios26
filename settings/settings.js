@@ -16,7 +16,7 @@
   let languagePreviousPage='general';
   let toastTimer=0;
   const isSettings=()=>typeof mode!=='undefined'&&mode==='settings';
-  const isDnd=()=>{try{return localStorage.getItem(DND_KEY)!=='0'}catch{return true}};
+  const isDnd=()=>{try{return localStorage.getItem(DND_KEY)==='1'}catch{return false}};
   const icons={
     chevron:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m14.7 4.5-7.5 7.5 7.5 7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5" stroke-linecap="round"/></svg>`,
