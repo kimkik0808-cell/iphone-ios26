@@ -24,6 +24,9 @@
 
   let scenes = [];
   let collections = new Map();
+  let scripted = new Map();
+  const fixedTurns = [{ text: '요', group: 't01' }, { text: '모하니', group: 't02' }, { text: '밥먹었어?', group: 't03' }];
+  const fixedSent = () => local.filter(x => x.fixed === true).length;
   let ready = false;
   let busy = false;
   let failed = false;
@@ -34,9 +37,7 @@
   let chatScrollTop = null;
   let replyScrollTop = 0;
   let currentDraft = '';
-  const pendingReplies = new Set();
-  const awaiting = new Map();
-  let pendingTimer = new Map();
+  const pendingTimer = new Map();
   let local = [];
   try {
     const saved = JSON.parse(localStorage.getItem('fromm26_artist_extra') || '[]');
@@ -55,16 +56,6 @@
     const rows = collections.get(selectedCollection()) || [];
     return sort === 'new' ? [...rows].reverse() : rows;
   };
-  function chooseReplyScene(messageText) {
-    const value = String(messageText || '').toLowerCase().replace(/\s+/g, '');
-    if (value === '요' || value === 'yo' || value === '안녕' || value === '왔어' || value === '나왔어') return 's05';
-    if (/먹|배고|음식|메뉴|밥|점심|저녁|야식|맛집|치킨|라면/.test(value)) return 's02';
-    if (/무대|공연|춤|직캠|노래|팬미팅|콘서트|리허설/.test(value)) return 's03';
-    if (/사진|셀카|거울|포토|얼굴|찍었/.test(value)) return 's04';
-    if (/자자|잘자|잘자요|졸려|굿나잇|꿈|밤늦|잠들|내일봐/.test(value)) return 's06';
-    if (/오늘|뭐해|어땠|하루|학교|회사|일|퇴근|공부|운동/.test(value)) return 's01';
-    return 's05';
-  }
   const koreanTime = () => new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit', hour12: true
   }).format(new Date());
@@ -93,14 +84,17 @@
       return `<section class="fm-scene"><div class="fm-date">${escape(scene.dateLabel)}</div>${messages}</section>`;
     }).join('');
     const extras = local.map(m => {
-      const scene = scenes.find(s => s.id === m.replyScene);
-      const previews = scene ? scene.preview : [];
-      const replyBlock = m.replyScene && scene ? replyCard(m.id, scene.replyCount, previews) :
-        replyCard(m.id, 0, [], true);
+      const scene = scenes.find(x => x.id === m.replyScene) || scripted.get(m.replyScene);
+      const replies = collections.get(m.replyScene) || [];
+      const previews = scene?.preview || replies.slice(0, 2).map(x => x.text);
+      const replyBlock = m.replyScene && scene
+        ? replyCard(m.id, replies.length, previews)
+        : (m.fixed && !m.replyScene ? replyCard(m.id, 0, [], true) : '');
       return message(m) + replyBlock;
     }).join('');
     const more = extras ? `<section class="fm-scene"><div class="fm-date">내가 보낸 메시지</div>${extras}</section>` : '';
-    return `<div class="fm-shell">${header('재현', '<span class="fm-emptybtn"></span>')}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="메시지 입력" rows="1" maxlength="300">${escape(currentDraft)}</textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기">${svg('send')}</button></div></div>`;
+    const finished = fixedSent() >= fixedTurns.length;
+    return `<div class="fm-shell">${header('재현', '<span class="fm-emptybtn"></span>')}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="${finished ? '오늘의 메시지를 모두 보냈어요' : '메시지 입력'}" rows="1" maxlength="300" ${finished ? 'disabled' : ''}>${finished ? '' : escape(currentDraft)}</textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기" ${finished ? 'disabled' : ''}>${svg('send')}</button></div></div>`;
   }
 
   function fanRow(item, i) {
@@ -147,17 +141,36 @@
     try {
       const responses = await Promise.all([
         fetch(new URL('scenes.json', base)),
-        fetch(new URL('replies.json', base))
+        fetch(new URL('replies.json', base)),
+        fetch(new URL('interactive.json', base))
       ]);
       if (!responses.every(r => r.ok)) throw new Error('Data missing');
-      const [a, b] = await Promise.all(responses.map(x => x.json()));
-      if (!Array.isArray(a.scenes) || !Array.isArray(b.collections)) throw new Error('Invalid fromm data');
-      const next = new Map(b.collections.map(x => [x.sceneId, x.replies]));
-      for (const s of a.scenes) {
-        if (!next.has(s.id) || next.get(s.id).length !== s.replyCount) throw new Error('Reply count mismatch');
+      const [a, b, c] = await Promise.all(responses.map(x => x.json()));
+      if (!Array.isArray(a.scenes) || !Array.isArray(b.collections) || !Array.isArray(c.collections))
+        throw new Error('Invalid fromm data');
+      const next = new Map([...b.collections, ...c.collections].map(x => [x.sceneId, x.replies]));
+      for (const scene of a.scenes) {
+        if (!next.has(scene.id) || next.get(scene.id).length !== scene.replyCount)
+          throw new Error('Reply count mismatch');
+      }
+      for (const item of fixedTurns) {
+        if (!next.has(item.group) || next.get(item.group).length < 60)
+          throw new Error('Fixed three-step reply collection unavailable');
       }
       scenes = a.scenes;
+      scripted = new Map(c.collections.map(x => [x.sceneId, {
+        topic: x.phrase, preview: x.preview, replyCount: x.replies.length
+      }]));
       collections = next;
+      // Recover an interrupted reply arrival after a page reload.
+      let changed = false;
+      for (const item of local) {
+        if (item.fixed && !item.replyScene) {
+          item.replyScene = fixedTurns[(item.stage || 1) - 1]?.group || 't01';
+          changed = true;
+        }
+      }
+      if (changed) persistLocal();
       ready = true;
       failed = false;
       draw();
@@ -231,31 +244,33 @@
     }
     if (action === 'send') {
       const field = frame.querySelector('#fm-draft');
-      const value = field?.value.trim();
-      if (!value) return;
-      const id = 'sent-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-      const record = { id, text: value, time: koreanTime(), replyScene: '' };
+      const typed = field?.value.trim();
+      // Typed content is only the interaction trigger. The artist's message is fixed.
+      if (!typed || !ready) return;
+      const step = fixedSent();
+      if (step >= fixedTurns.length) return;
+      const script = fixedTurns[step];
+      const id = 'fixed-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      const record = {
+        id, text: script.text, time: koreanTime(), replyScene: '', fixed: true, stage: step + 1
+      };
       local.push(record);
       local = local.slice(-40);
       persistLocal();
       currentDraft = '';
       chatScrollTop = null;
       draw();
-      // Local simulation: as soon as an artist sends a message, fan replies begin arriving.
-      // Reuse an appropriate pre-authored collection; never contact the real fromm service.
-      pendingReplies.add(id);
       const timer = setTimeout(() => {
-        pendingReplies.delete(id);
         pendingTimer.delete(id);
         const item = local.find(x => x.id === id);
         if (!item) return;
-        item.replyScene = chooseReplyScene(item.text);
+        item.replyScene = script.group;
         persistLocal();
         if (isActive() && view === 'chat') {
           chatScrollTop = null;
           draw();
         }
-      }, 1000);
+      }, 850);
       pendingTimer.set(id, timer);
     }
   }, true);
@@ -273,7 +288,9 @@
     get scenes() { return scenes.length; },
     get replies() { return [...collections.values()].reduce((a, x) => a + x.length, 0); },
     get ready() { return ready; },
-    get view() { return view; }
+    get view() { return view; },
+    get fixedSent() { return fixedSent(); },
+    get scriptedGroups() { return [...scripted.keys()]; }
   };
 
   load();
