@@ -19,6 +19,16 @@ function json(data, status = 200, origin = '') {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
+export async function onRequestGet({ request, env }) {
+  const origin = request.headers.get('Origin') || '';
+  // Safe diagnostic: never returns a token or calls Gemini.
+  return json({
+    service: 'kkt-gemini',
+    version: 'gemini-stable-v2',
+    status: env.GEMINI_API_KEY ? 'configured' : 'ai_not_configured'
+  }, env.GEMINI_API_KEY ? 200 : 503, origin);
+}
+
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('Origin') || '';
   if (!ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403 });
@@ -63,55 +73,96 @@ export async function onRequestPost({ request, env }) {
     '상대가 중국어로 말하면 자연스러운 중국어 또는 중한 혼용으로 답할 수 있다. ' +
     '질문의 핵심에 직접 반응하고 직전 대화 맥락을 이어라. 한 번에 1~2개의 짧은 메시지만 작성하고 설명문 인용부호 이모지 해시태그는 쓰지 마라.';
 
-  try {
-    const models = ['gemini-3-flash-preview', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+  // Prefer stable models for short KKT messages; never expose the API key to browsers.
+  const models = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
+  let lastFailure = 'model_unavailable';
+  let lastStatus = 503;
+
+  for (const [modelIndex, model] of models.entries()) {
     const payload = JSON.stringify({
       systemInstruction: { parts: [{ text: instruction }] },
       contents,
       generationConfig: {
         temperature: 0.85,
         topP: 0.9,
-        maxOutputTokens: 512
+        maxOutputTokens: 320,
+        thinkingConfig: { thinkingLevel: 'minimal' }
       }
     });
-    let result = null;
-    let lastStatus = 502;
-    for (const model of models) {
-      const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent',
-        {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-goog-api-key': env.GEMINI_API_KEY
-          },
-          body: payload
+    // At most 2 attempts on the low-latency model and 1 on fallback.
+    const tries = modelIndex === 0 ? 2 : 1;
+    for (let attempt = 0; attempt < tries; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), modelIndex === 0 ? 9000 : 11000);
+      let response;
+      try {
+        response = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent',
+          {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-goog-api-key': env.GEMINI_API_KEY
+            },
+            body: payload,
+            signal: controller.signal
+          }
+        );
+      } catch (error) {
+        lastFailure = controller.signal.aborted ? 'upstream_timeout' : 'upstream_network';
+        lastStatus = 503;
+        console.warn('Gemini request failed', model, lastFailure);
+        if (attempt + 1 < tries) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+          continue;
         }
-      );
+        break;
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      lastStatus = response.status;
       if (response.ok) {
-        result = await response.json();
+        const result = await response.json().catch(() => ({}));
+        const candidate = result?.candidates?.[0];
+        const reply = (candidate?.content?.parts || [])
+          .filter(part => typeof part.text === 'string' && !part.thought)
+          .map(part => part.text)
+          .join('')
+          .trim()
+          .replace(/^["“”]|["“”]$/g, '')
+          .slice(0, 240);
+        if (reply) return json({ reply }, 200, origin);
+        lastFailure = (candidate?.finishReason === 'SAFETY' || result?.promptFeedback?.blockReason)
+          ? 'content_blocked' : 'empty_reply';
+        console.warn('Gemini no usable text', model, candidate?.finishReason || 'unknown');
         break;
       }
-      lastStatus = response.status;
-      const detail = await response.text();
-      console.error('Gemini model error', model, response.status, detail.slice(0, 300));
-      if (response.status === 401 || response.status === 403) break;
-    }
-    if (!result) {
-      const error = lastStatus === 401 || lastStatus === 403 ? 'key_or_region_error' : lastStatus === 429 ? 'quota_exceeded' : 'model_error';
-      return json({ error }, 502, origin);
-    }
-    const reply = result?.candidates?.[0]?.content?.parts
-      ?.map(part => part.text || '')
-      .join('')
-      .trim()
-      .replace(/^["“”]|["“”]$/g, '')
-      .slice(0, 240);
 
-    if (!reply) return json({ error: 'empty_reply' }, 502, origin);
-    return json({ reply }, 200, origin);
-  } catch (error) {
-    console.error('Gemini request failed', error);
-    return json({ error: 'request_failed' }, 502, origin);
+      // Never log API keys, raw prompts, or the user's chat text.
+      const detail = await response.text().catch(() => '');
+      console.warn('Gemini API status', model, lastStatus, detail.slice(0, 100));
+      if (response.status === 401 || response.status === 403) {
+        return json({ error: 'key_or_region_error', retryable: false }, 503, origin);
+      }
+      if (response.status === 429) {
+        lastFailure = 'quota_exceeded';
+        // Another model could have different limits, but repeated calls to
+        // the same model cannot instantly restore an exhausted quota.
+        break;
+      }
+      if (response.status === 400 || response.status === 404) {
+        lastFailure = 'model_unavailable';
+        break;
+      }
+      lastFailure = 'model_busy';
+      if ((response.status === 408 || response.status >= 500) && attempt + 1 < tries) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        continue;
+      }
+      break;
+    }
   }
+  const retryable = ['model_busy', 'upstream_timeout', 'upstream_network', 'empty_reply'].includes(lastFailure);
+  return json({ error: lastFailure, retryable }, lastFailure === 'quota_exceeded' ? 429 : 503, origin);
 }
