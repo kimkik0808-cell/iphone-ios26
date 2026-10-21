@@ -21,13 +21,19 @@ const conversations=templates.map(item=>({
 const deliveredTotal=()=>conversations.reduce((n,item)=>n+item.messages.length,0);
 const saveDeliveries=()=>{try{localStorage.setItem(DELIVERY_KEY,JSON.stringify(deliveryCounts))}catch{}};
 function peekNextDelivery(){
-  const start=deliveredTotal()%templates.length;
-  for(let offset=0;offset<templates.length;offset++){
-    const source=templates[(start+offset)%templates.length];
-    const index=deliveryCounts[source.id];
-    if(index<source.messages.length){
-      return {id:source.id,name:source.name,text:source.messages[index].text,index};
-    }
+  // Deliver one message at a time from a small group of six senders.
+  // For each group, sender messages interleave round-robin (1, 2, 3...),
+  // before progressively introducing the next group. Never expose future text.
+  const batchSize=6;
+  for(let start=0;start<templates.length;start+=batchSize){
+    const active=templates.slice(start,start+batchSize)
+      .map(source=>({source,index:deliveryCounts[source.id]||0}))
+      .filter(({source,index})=>index<source.messages.length);
+    if(!active.length)continue;
+    const earliest=Math.min(...active.map(item=>item.index));
+    const next=active.find(item=>item.index===earliest);
+    const message=next.source.messages[next.index];
+    return {id:next.source.id,name:next.source.name,text:message.text,index:next.index};
   }
   return null;
 }
