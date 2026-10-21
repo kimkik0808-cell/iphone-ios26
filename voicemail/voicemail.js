@@ -77,24 +77,31 @@
     }
     paint();
     state.request = (async () => {
+      // Load files bundled with the website first. This works on Cloudflare Pages
+      // even when the public GitHub API is rate-limited, unavailable, or blocked.
       const meta = await readMetadata();
-      const metaMap = new Map(meta.filter(x => x && typeof x.file === 'string').map(x => [x.file, x]));
-      let filenames;
-      try {
-        const response = await fetch(API_URL + '&_=' + Date.now(), {
-          cache: 'no-store',
-          headers: {'Accept':'application/vnd.github+json'}
-        });
-        if (!response.ok) throw new Error('GitHub API ' + response.status);
-        const body = await response.json();
-        if (!Array.isArray(body)) throw new Error('응답 형식 오류');
-        filenames = body.filter(x => x && x.type === 'file' && AUDIO_EXT.test(x.name)).map(x => x.name);
-      } catch (err) {
-        // messages.json can also act as an offline list when the GitHub API is blocked.
-        if (!meta.length) throw err;
-        filenames = meta.map(x => x && x.file).filter(x => typeof x === 'string' && AUDIO_EXT.test(x));
+      const metaMap = new Map(meta.filter(x => x && typeof x.file === 'string')
+        .map(x => [x.file.normalize('NFC'), x]));
+      let filenames = [...new Set(meta
+        .map(x => x && x.file)
+        .filter(x => typeof x === 'string' && AUDIO_EXT.test(x)))];
+      if (!filenames.length) {
+        // Legacy fallback: directories without a messages.json can still load.
+        try {
+          const response = await fetch(API_URL + '&_=' + Date.now(), {
+            cache: 'no-store',
+            headers: {'Accept':'application/vnd.github+json'}
+          });
+          if (!response.ok) throw new Error('GitHub API ' + response.status);
+          const body = await response.json();
+          if (!Array.isArray(body)) throw new Error('응답 형식 오류');
+          filenames = body.filter(x => x && x.type === 'file' && AUDIO_EXT.test(x.name))
+            .map(x => x.name);
+        } catch (err) {
+          throw new Error('No bundled voicemail manifest and directory discovery failed: ' + err);
+        }
       }
-      state.items = filenames.map(file => normalize(file, metaMap.get(file) || {}));
+      state.items = filenames.map(file => normalize(file, metaMap.get(file.normalize('NFC')) || {}));
       state.loaded = true;
       state.error = '';
     })().catch(err => {
