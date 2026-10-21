@@ -189,17 +189,14 @@ removeLegacyRiskChat();
 document.addEventListener('click',handleClick,true);
 const app=document.querySelector('#app');
 if(app){
-  new MutationObserver(()=>injectEntry()).observe(app,{childList:true,subtree:true});
-}
-if(typeof window.back==='function'){
-  const previousBack=window.back;
-  window.back=function(){
-    if(typeof mode!=='undefined'&&mode==='kakao'&&requestView){
-      if(requestView==='room')renderList();else backToMain();
-      return;
+  new MutationObserver(()=>{
+    if(typeof mode!=='undefined'&&mode!=='kakao'&&requestView){
+      requestView='';
+      currentId='';
+      modalAction='';
     }
-    return previousBack.apply(this,arguments);
-  };
+    injectEntry();
+  }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('pageshow',()=>{removeLegacyRiskChat();injectEntry()});
 window.__KKT_REQUESTS__={
