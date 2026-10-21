@@ -12,6 +12,7 @@ on:
       - 'index.html'
       - 'credits.html'
       - 'site-notice.*'
+      - 'locales/**'
 
 permissions:
   contents: write
@@ -29,6 +30,8 @@ jobs:
           node --check notifications/notifications.js
           node --check settings/settings.js
           node --check site-notice.js
+          node --check locales/locale.js
+          node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('locales/ui-zh.json','utf8'));if(Object.keys(d).length<500||Object.entries(d).some(([k,v])=>typeof k!=='string'||typeof v!=='string'))throw Error('Chinese UI dictionary incomplete');const scenes=JSON.parse(fs.readFileSync('fromm/scenes.json','utf8')).scenes;const data=[...JSON.parse(fs.readFileSync('fromm/replies.json','utf8')).collections,...JSON.parse(fs.readFileSync('fromm/interactive.json','utf8')).collections];if(scenes.length!==6||scenes.some(s=>!s.dateLabelZh||!s.topicZh||s.messages.some(m=>!m.textZh)))throw Error('Missing Chinese fromm history');const rows=data.flatMap(g=>g.replies);if(rows.length!==631||rows.some(r=>typeof r.textZh!=='string'||!r.textZh.trim()))throw Error('Missing Chinese fan replies');console.log('Chinese alternate validated for',rows.length,'fan replies and',Object.keys(d).length,'UI labels');"
           node -e "const fs=require('fs');const n=JSON.parse(fs.readFileSync('site-notice.json','utf8'));if(typeof n.enabled!=='boolean'||typeof n.version!=='string'||typeof n.creator!=='string')throw Error('Invalid site notice metadata');for(const k of ['zh','ko']){const t=n[k];if(!t||typeof t.title!=='string'||typeof t.note!=='string'||typeof t.button!=='string'||typeof t.creatorLabel!=='string'||typeof t.updatesTitle!=='string'||!Array.isArray(t.updates)||t.updates.some(x=>typeof x!=='string'))throw Error('Invalid notice locale '+k);}console.log('Bilingual notice verified: '+n.creator)"
           node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('fromm/scenes.json','utf8'));const b=JSON.parse(fs.readFileSync('fromm/replies.json','utf8'));const c=JSON.parse(fs.readFileSync('fromm/interactive.json','utf8'));let total=0,zh=0;for(const s of a.scenes){const group=b.collections.find(x=>x.sceneId===s.id);if(!group||group.replies.length!==s.replyCount)throw Error('Reply mismatch: '+s.id);total+=group.replies.length;zh+=group.replies.filter(r=>r.lang==='zh-CN').length;}if(a.scenes.length!==6||total!==427||zh!==128)throw Error('Historical replies mismatch '+total+'/'+zh);const phrases=['요','모하니','밥먹었어?'];const ids=['t01','t02','t03'];let script=0,scriptZh=0;for(let i=0;i<3;i++){const group=c.collections[i];if(!group||group.sceneId!==ids[i]||group.phrase!==phrases[i]||group.replies.length<60)throw Error('Fixed turn missing '+i);script+=group.replies.length;scriptZh+=group.replies.filter(r=>r.lang==='zh-CN').length;}if(script!==204||scriptZh!==61)throw Error('Fixed script reply mismatch '+script+'/'+scriptZh);console.log('fromm verified: '+total+' historical, '+script+' scripted, '+(zh+scriptZh)+' Chinese');"
 
@@ -42,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/iphone-ios26-cloudflare.zip"
-          zip -q -r "$archive" index.html credits.html site-notice.json site-notice.css site-notice.js assets photos voicemail music fromm notifications settings
+          zip -q -r "$archive" index.html credits.html site-notice.json site-notice.css site-notice.js assets photos voicemail music fromm notifications settings locales
           unzip -tq "$archive"
           unzip -Z1 "$archive" | grep -Fx 'index.html'
           unzip -Z1 "$archive" | grep -Fx 'voicemail/voicemail.js'
@@ -58,6 +61,8 @@ jobs:
           unzip -Z1 "$archive" | grep -Fx 'notifications/notifications.css'
           unzip -Z1 "$archive" | grep -Fx 'settings/settings.js'
           unzip -Z1 "$archive" | grep -Fx 'settings/settings.css'
+          unzip -Z1 "$archive" | grep -Fx 'locales/locale.js'
+          unzip -Z1 "$archive" | grep -Fx 'locales/ui-zh.json'
           unzip -Z1 "$archive" | grep -Fx 'credits.html'
           unzip -Z1 "$archive" | grep -Fx 'site-notice.json'
           unzip -Z1 "$archive" | grep -Fx 'site-notice.css'
@@ -75,6 +80,6 @@ jobs:
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$archive" --clobber
           else
-            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, fromm with 3 fixed interactions, Chinese fan replies, iOS-style Instagram/KakaoTalk banners with a 5-second cadence gated by Settings Do Not Disturb mode, and editable startup announcement credited to imsryforyan." --latest=false
+            gh release create "$tag" "$archive" --target "$GITHUB_SHA" --title "Cloudflare Pages ZIP - ${GITHUB_SHA:0:12}" --notes "Ready for Cloudflare Pages Direct Upload. index.html is at the ZIP root. Includes assets, photos, voicemail, interactive Music, fromm with 3 fixed interactions, Chinese fan replies, iOS-style Instagram/KakaoTalk banners with a 5-second cadence gated by Settings Do Not Disturb mode, and fully bilingual Korean/Simplified-Chinese UI, chat content, fan replies, notifications, and editable startup announcement credited to imsryforyan." --latest=false
           fi
           echo "Download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/iphone-ios26-cloudflare.zip"
