@@ -45,6 +45,14 @@
     output=output.replace(/(\d{1,2})월\s*(\d{1,2})일(?:\s*(일요일|월요일|화요일|수요일|목요일|금요일|토요일))?/g,
       (_,m,d,day)=>m+'月'+d+'日'+(day?' '+weekday[day]:''));
     output=output.replace(/\b(오전|오후)\s*(\d{1,2}:\d{2})/g,(_,ampm,time)=>(ampm==='오전'?'上午':'下午')+time);
+    output=output.replace(/(\d{4})년\s*(\d{1,2})월(?!\s*\d+일)/g,'$1年$2月');
+    output=output.replace(/^좋아요\s*([\d,.]+)개$/,'$1个赞');
+    output=output.replace(/^댓글\s*([\d,.]+)개 모두 보기$/,'查看全部$1条评论');
+    output=output.replace(/^([\d,.]+)장 선택됨$/,'已选择$1张');
+    output=output.replace(/^([\d,.]+)장$/,'$1张');
+    output=output.replace(/^([\d,.]+)곡$/,'$1首歌曲');
+    output=output.replace(/^([\d,.]+)개$/,'$1条');
+    output=output.replace(/조회수\s*([\d.]+)만회/g,'播放量$1万次');
     output=output.replace(/(\d+)개 모두 보기/g,'查看全部$1条');
     output=output.replace(/(\d+)개/g,'$1条');
     output=output.replace(/(\d+)곡/g,'$1首');
