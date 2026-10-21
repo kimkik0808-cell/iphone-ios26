@@ -59,3 +59,44 @@
 .am-titleinfo small.am-source{color:#fb426d}
 @media(max-height:720px){.am-playing-art{width:min(58vw,208px);height:min(58vw,208px);margin-top:15px;margin-bottom:14px}.am-bigcontrols{margin:3px 0 12px}.am-player-meta{margin-bottom:12px}}
 @media(prefers-reduced-motion:reduce){.am-mini-line{transition:none}}
+
+/* iOS Music now-playing control reset v2 */
+.am-playerbar > button,
+.am-player-meta > button,
+.am-bigcontrols > button,
+.am-playerfeet > button {
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  background:transparent !important;
+  background-color:transparent !important;
+  background-image:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  outline:0;
+  text-shadow:none;
+  color:rgba(255,255,255,.94) !important;
+  padding:0 !important;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.am-playerbar > button { width:36px; height:36px; flex:none; }
+.am-playerbar > button svg {width:21px; height:21px;}
+.am-playerbar > span {color:rgba(255,255,255,.78);font-size:11.5px;letter-spacing:.2px;}
+.am-player-meta > .am-heart {width:42px;height:42px;flex:none;}
+.am-player-meta > .am-heart svg {width:24px;height:24px;}
+.am-bigcontrols {gap:24px;justify-content:space-between;padding:0 31px;}
+.am-bigcontrols > button {width:48px;height:58px;flex:none;}
+.am-bigcontrols > button.am-central {width:58px;height:66px;}
+.am-bigcontrols > button:not(.am-central) svg {width:33px;height:33px;}
+.am-bigcontrols > button.am-central svg {width:46px;height:46px;}
+.am-playerfeet {padding:4px 17px 0;justify-content:space-between;}
+.am-playerfeet > button {width:38px;height:38px;flex:none;}
+.am-playerfeet > button svg {width:22px;height:22px;}
+.am-playerbar > button:active,
+.am-player-meta > button:active,
+.am-bigcontrols > button:active,
+.am-playerfeet > button:active {opacity:.55;}
