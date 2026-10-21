@@ -3,8 +3,52 @@
 'use strict';
 if(window.__KKT_REQUESTS_LOADED__)return;
 window.__KKT_REQUESTS_LOADED__=true;
-const conversations=Array.isArray(window.KKT_REQUEST_CONVERSATIONS)?window.KKT_REQUEST_CONVERSATIONS:[];
-if(!conversations.length)return;
+// The 50 scripted senders are hidden templates; delivery is driven by banners.
+const templates=Array.isArray(window.KKT_REQUEST_CONVERSATIONS)?window.KKT_REQUEST_CONVERSATIONS:[];
+if(!templates.length)return;
+const DELIVERY_KEY='jh_kkt_request_delivered_v1';
+const deliveryCounts=(()=>{
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(DELIVERY_KEY)||'null')||{}}catch{}
+  return Object.fromEntries(templates.map(item=>[
+    item.id,Math.min(item.messages.length,Math.max(0,Math.floor(Number(saved[item.id])||0)))
+  ]));
+})();
+const conversations=templates.map(item=>({
+  ...item,
+  messages:item.messages.slice(0,deliveryCounts[item.id]).map(message=>({...message}))
+}));
+const deliveredTotal=()=>conversations.reduce((n,item)=>n+item.messages.length,0);
+const saveDeliveries=()=>{try{localStorage.setItem(DELIVERY_KEY,JSON.stringify(deliveryCounts))}catch{}};
+function peekNextDelivery(){
+  const start=deliveredTotal()%templates.length;
+  for(let offset=0;offset<templates.length;offset++){
+    const source=templates[(start+offset)%templates.length];
+    const index=deliveryCounts[source.id];
+    if(index<source.messages.length){
+      return {id:source.id,name:source.name,text:source.messages[index].text,index};
+    }
+  }
+  return null;
+}
+function deliverNext(){
+  const incoming=peekNextDelivery();
+  if(!incoming)return null;
+  const room=conversations.find(item=>item.id===incoming.id);
+  if(!room)return null;
+  const time=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
+  room.messages.push({text:incoming.text,time});
+  room.latestTime='방금';
+  deliveryCounts[room.id]=room.messages.length;
+  saveDeliveries();
+  if(requestView==='list'){
+    listScroll=document.querySelector('#krq-list')?.scrollTop||0;
+    renderList();
+  }else if(requestView==='room'&&currentId===room.id){
+    renderRoom(room.id);
+  }else refreshEntryCount();
+  return incoming;
+}
 const READ_KEY='jh_kkt_request_read_v1';
 const ACTION_KEY='jh_kkt_request_actions_v1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -56,7 +100,20 @@ function xxxText(value){
 const xxxNextMessage=chat=>XXX_SEQUENCE[Number.isInteger(chat?.scriptStep)?chat.scriptStep:1]||null;
 const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))}catch(e){}};
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
-const unreadCount=()=>conversations.reduce((n,item)=>n+(readState[item.id]?0:1),0);
+const seenCount=item=>typeof readState[item.id]==='number'?readState[item.id]:0;
+const newMessages=item=>Math.max(0,item.messages.length-seenCount(item));
+const unreadCount=()=>conversations.reduce((n,item)=>n+(newMessages(item)>0?1:0),0);
+const visibleConversations=()=>conversations.filter(item=>item.messages.length>0);
+function refreshEntryCount(){
+  const entry=document.querySelector('.krq-entry');
+  if(!entry)return;
+  const count=unreadCount();
+  const bubble=entry.querySelector('.krq-entry-count');
+  if(count){
+    if(bubble)bubble.textContent=String(count);
+    else entry.insertAdjacentHTML('beforeend','<i class="krq-entry-count">'+count+'</i>');
+  }else bubble?.remove();
+}
 const current=()=>conversations.find(item=>item.id===currentId);
 const toneColors=[
   ['#d5d0f5','#7466bd'],['#c9e8df','#4d9d8d'],['#c9e1f5','#4d8fc5'],['#f0d2dc','#be718c'],
@@ -121,7 +178,8 @@ function injectEntry(){
   if(api?.tab!=='chats'||api?.view)return;
   const root=document.querySelector('#kkt15');
   const scroll=root?.querySelector('.k15-scroll');
-  if(!scroll||scroll.querySelector('.krq-entry'))return;
+  if(!scroll)return;
+  if(scroll.querySelector('.krq-entry')){refreshEntryCount();return;}
   const search=scroll.querySelector('.k15-search');
   if(!search)return;
   search.insertAdjacentHTML('afterend',entryHTML());
@@ -132,12 +190,12 @@ function renderList(){
   modalAction='';
   const app=document.querySelector('#appcontent');
   if(!app)return;
-  const rows=conversations.map(item=>{
+  const rows=visibleConversations().slice().reverse().map(item=>{
     const latest=item.messages[item.messages.length-1];
-    const unread=!readState[item.id];
-    return '<button class="krq-row" type="button" data-krq="open-room" data-id="'+esc(item.id)+'">'+avatar(item)+'<span class="krq-row-main"><strong>'+esc(item.name)+'</strong><p>'+esc(latest.text)+'</p></span><span class="krq-row-meta"><time>'+esc(item.latestTime)+'</time>'+(unread?'<i class="krq-unread">'+item.messages.length+'</i>':'')+'</span></button>';
+    const unread=newMessages(item);
+    return '<button class="krq-row" type="button" data-krq="open-room" data-id="'+esc(item.id)+'">'+avatar(item)+'<span class="krq-row-main"><strong>'+esc(item.name)+'</strong><p>'+esc(latest.text)+'</p></span><span class="krq-row-meta"><time>'+esc(item.latestTime)+'</time>'+(unread?'<i class="krq-unread">'+unread+'</i>':'')+'</span></button>';
   }).join('');
-  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>'+esc(unknownTitle())+'</strong><small>'+unreadCount()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">메시지 요청 '+conversations.length+'개</div>'+rows+'</main></section>';
+  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>'+esc(unknownTitle())+'</strong><small>'+unreadCount()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">'+(isZh()?'消息请求 ':'메시지 요청 ')+visibleConversations().length+(isZh()?' 个':'개')+'</div>'+(rows||'<div class="krq-summary">'+(isZh()?'还没有收到陌生消息':'아직 도착한 메시지 요청이 없습니다')+'</div>')+'</main></section>';
   requestAnimationFrame(()=>{const list=document.querySelector('#krq-list');if(list)list.scrollTop=listScroll});
 }
 function getAction(id){return actionState[id]||{added:false,unblocked:false,reported:false}}
@@ -159,13 +217,14 @@ function renderRoom(id){
   requestView='room';
   currentId=id;
   modalAction='';
-  readState[id]=true;
+  if(!item.messages.length){renderList();return}
+  readState[id]=item.messages.length;
   saveRead();
   const app=document.querySelector('#appcontent');
   if(!app)return;
   const messages=item.messages.map((message,index)=>{
     const first=index===0;
-    return '<div class="krq-message-row '+(first?'':'follow')+'">'+(first?avatar(item,true):'')+'<div class="krq-message-block">'+(first?'<div class="krq-sender">'+esc(item.name)+'</div>':'')+'<div class="krq-bubble-line"><div class="krq-bubble">'+esc(message.text)+'</div><time>'+esc(message.time)+'</time></div></div></div>';
+    return '<div class="krq-message-row '+(first?'':'follow')+'">'+(first?avatar(item,true):'')+'<div class="krq-message-block">'+(first?'<div class="krq-sender">'+esc(item.name)+'</div>':'')+'<div class="krq-bubble-line"><div class="krq-bubble">'+esc(message.text)+'</div><time>'+esc(isZh()?String(message.time).replace(/^오전 /,'上午 ').replace(/^오후 /,'下午 '):message.time)+'</time></div></div></div>';
   }).join('');
   app.innerHTML='<section id="krq-root"><header class="krq-room-head"><div class="krq-room-top"><button type="button" aria-label="뒤로" data-krq="back-list">‹</button><div class="krq-room-name">'+esc(item.name)+'</div></div>'+actionButtons(item)+'</header><main class="krq-chat" id="krq-chat"><div class="krq-date"><span>오늘</span></div>'+messages+'</main><div class="krq-empty-input"><span>메시지를 입력하세요</span></div>'+modalHTML(item)+'</section>';
   requestAnimationFrame(()=>{const chat=document.querySelector('#krq-chat');if(chat)chat.scrollTop=chat.scrollHeight});
@@ -819,7 +878,9 @@ window.addEventListener('pageshow',()=>{removeLegacyRiskChat();injectEntry()});
 window.__KKT_REQUESTS__={
   openList,
   openConversation:renderRoom,
-  get data(){return conversations},
+  peekNext:peekNextDelivery,
+  deliverNext,
+  get data(){return visibleConversations()},
   get unread(){return unreadCount()},
   get readState(){return {...readState}},
   get view(){return requestView}
