@@ -494,6 +494,7 @@ let aiTyping=false;
 let aiError='';
 let aiController=null;
 let aiSending=false;
+let aiRequestSequence=0;
 function ensureAiChats(){
   const data=window.__KKT15_TEST__?.data;
   if(!Array.isArray(data))return;
@@ -530,7 +531,7 @@ function injectAiStyles(){
   if(document.querySelector('#kai-styles'))return;
   const style=document.createElement('style');
   style.id='kai-styles';
-  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}.k15-replay-bar{align-items:center;justify-content:center}.k15-replay-button{background:#fee500;color:#252525;border:0;border-radius:18px;padding:9px 22px;font-size:13px;font-weight:650}';
+  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}.k15-replay-bar{align-items:center;justify-content:center}.k15-replay-button{background:#fee500;color:#252525;border:0;border-radius:18px;padding:9px 22px;font-size:13px;font-weight:650}.kai-retry{display:block;margin:12px auto 14px;padding:10px 17px;border:0;border-radius:14px;background:#fee500;color:#252525;font-size:13px;font-weight:650}';
   document.head.appendChild(style);
 }
 function aiMessages(item){
@@ -541,6 +542,14 @@ function aiMessages(item){
   }).join('');
 }
 function renderAiRoom(id){
+  if(aiView && aiView!==id){
+    aiRequestSequence++;
+    aiController?.abort();
+    aiController=null;
+    aiTyping=false;
+    aiSending=false;
+    aiError='';
+  }
   ensureAiChats();
   const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===id);
   if(!item||!AI_CHAT_IDS.has(id))return;
@@ -549,10 +558,14 @@ function renderAiRoom(id){
   saveKktData();
   const app=document.querySelector('#appcontent');
   if(!app)return;
-  app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-ai-chat="back">‹</button><h1 class="k15-roomtitle">'+esc(item.name)+'</h1><span class="k15-grow"></span><div class="k15-head-actions"><button class="k15-ico" type="button">•••</button></div></header><main class="k15-chatbody" id="k15-chatbody">'+aiMessages(item)+(aiTyping?'<div class="k15-message">'+aiAvatar(item)+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'')+(aiError?'<div class="kai-error">'+esc(aiError)+'</div>':'')+'</main><form class="k15-input kai-form" id="kai-form"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input id="kai-input" autocomplete="off" enterkeyhint="send" maxlength="160" placeholder="메시지를 입력하세요"><button class="k15-send" type="submit" aria-label="전송">↑</button></label></form></section></div>';
+  const latest=item.messages.filter(m=>m[0]==='mine'||m[0]==='other').at(-1);
+  const retryAvailable=latest?.[0]==='mine'&&!aiSending;
+  const retryHTML=retryAvailable?'<button type="button" class="kai-retry" data-ai-chat="retry">'+(isZh()?'↻ 重试上一条消息':'↻ 마지막 메시지 다시 시도')+'</button>':'';
+  app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-ai-chat="back">‹</button><h1 class="k15-roomtitle">'+esc(item.name)+'</h1><span class="k15-grow"></span><div class="k15-head-actions"><button class="k15-ico" type="button">•••</button></div></header><main class="k15-chatbody" id="k15-chatbody">'+aiMessages(item)+(aiTyping?'<div class="k15-message">'+aiAvatar(item)+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'')+(aiError?'<div class="kai-error">'+esc(aiError)+'</div>':'')+retryHTML+'</main><form class="k15-input kai-form" id="kai-form"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input id="kai-input" autocomplete="off" enterkeyhint="send" maxlength="160" placeholder="메시지를 입력하세요"><button class="k15-send" type="submit" aria-label="전송">↑</button></label></form></section></div>';
   requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
 }
 function closeAiRoom(){
+  aiRequestSequence++;
   aiController?.abort();
   aiController=null;
   aiView='';
@@ -734,66 +747,119 @@ async function requestAiReply(item,userText){
     .slice(0,-1)
     .slice(-12)
     .map(message=>({role:message[0]==='mine'?'user':'model',text:message[1]}));
-  aiController=new AbortController();
-  const timeout=setTimeout(()=>aiController?.abort(),18000);
+  const controller=new AbortController();
+  aiController=controller;
+  const timeout=setTimeout(()=>controller.abort(),36000);
   try{
-    const response=await fetch(endpoint,{
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body:JSON.stringify({chatId:item.id,message:userText,history}),
-      signal:aiController.signal
-    });
+    let response;
+    try{
+      response=await fetch(endpoint,{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({chatId:item.id,message:userText,history}),
+        signal:controller.signal
+      });
+    }catch(error){
+      throw new Error(controller.signal.aborted?'upstream_timeout':'upstream_network');
+    }
+    const type=response.headers.get('content-type')||'';
+    if(!type.includes('application/json'))
+      throw new Error(response.status===404?'backend_missing':'backend_unavailable');
     const result=await response.json().catch(()=>({}));
-    if(!response.ok||!result.reply)throw new Error(result.error||'ai_request_failed');
-    return String(result.reply).trim();
+    if(!response.ok)
+      throw new Error(result.error||(
+        response.status===429?'quota_exceeded':
+        response.status===404?'backend_missing':
+        response.status===503?'model_busy':'request_failed'));
+    const reply=typeof result.reply==='string'?result.reply.trim():'';
+    if(!reply)throw new Error('empty_reply');
+    return reply;
   }finally{
     clearTimeout(timeout);
+    if(aiController===controller)aiController=null;
   }
 }
+function aiFailureText(error){
+  const code=String(error?.message||'request_failed');
+  const descriptions={
+    ai_not_configured:['Gemini 密钥尚未在 Cloudflare 配置。','Cloudflare에 Gemini API 키가 설정되지 않았습니다.'],
+    key_or_region_error:['Gemini 密钥无效、权限不足或当前地区不可用。','Gemini API 키, 권한 또는 지역을 확인해 주세요.'],
+    quota_exceeded:['Gemini 已达到请求或额度限制，请稍后再试。','Gemini 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.'],
+    model_unavailable:['当前模型不可用，请检查 Cloudflare 接口部署。','모델을 사용할 수 없습니다. Cloudflare 배포를 확인해 주세요.'],
+    backend_missing:['Cloudflare 的 Gemini 接口尚未部署。','Cloudflare Gemini API가 아직 배포되지 않았습니다.'],
+    backend_unavailable:['Cloudflare 返回了异常页面，请检查部署。','Cloudflare 배포 상태를 확인해 주세요.'],
+    upstream_timeout:['Gemini 响应超时，可以点击重试。','Gemini 응답 시간이 초과되었습니다. 다시 시도해 주세요.'],
+    upstream_network:['无法连接 Gemini 服务，请检查网络后重试。','Gemini 연결에 실패했습니다. 네트워크를 확인해 주세요.'],
+    content_blocked:['本次消息无法生成回复。','이 메시지에는 답변을 생성할 수 없습니다.'],
+    empty_reply:['Gemini 没有返回有效文本，可以重试。','Gemini에서 답변 내용이 오지 않았습니다. 다시 시도해 주세요.'],
+    model_busy:['Gemini 暂时繁忙，可以稍后重试。','Gemini가 일시적으로 혼잡합니다. 잠시 후 다시 시도해 주세요.']
+  };
+  const text=descriptions[code]||['回复暂时失败，请检查 Cloudflare 部署或稍后重试。','답장을 불러오지 못했습니다. 배포 상태를 확인하거나 잠시 후 다시 시도해 주세요.'];
+  return text[isZh()?0:1];
+}
 const aiWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function handleAiSubmit(event){
+async function runAiReply(item,userText){
+  if(aiSending||aiView!==item.id)return;
+  aiSending=true;
+  aiError='';
+  aiTyping=false;
+  const seq=++aiRequestSequence;
+  const active=()=>seq===aiRequestSequence&&aiView===item.id;
+  renderAiRoom(item.id);
+  const pending=requestAiReply(item,userText).then(reply=>({reply}),error=>({error}));
+  try{
+    await aiWait(2000);
+    if(!active())return;
+    const mine=item.messages.at(-1);
+    if(mine?.[0]==='mine'&&mine[4]==='unread')mine[4]='read';
+    aiTyping=true;
+    saveKktData();
+    renderAiRoom(item.id);
+    const typingStarted=Date.now();
+    const result=await pending;
+    const remaining=Math.max(0,3000-(Date.now()-typingStarted));
+    if(remaining)await aiWait(remaining);
+    if(!active())return;
+    aiTyping=false;
+    if(result.error)aiError=aiFailureText(result.error);
+    else{
+      item.messages.push(['other',result.reply,aiTime()]);
+      item.preview=result.reply;
+      item.time='방금';
+      aiError='';
+    }
+    saveKktData();
+  }finally{
+    if(active()){
+      aiSending=false;
+      aiTyping=false;
+      aiController=null;
+      renderAiRoom(item.id);
+    }
+  }
+}
+function retryLastAiReply(){
+  if(aiSending||!aiView)return;
+  const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===aiView);
+  if(!item)return;
+  const last=item.messages.filter(m=>m[0]==='mine'||m[0]==='other').at(-1);
+  if(last?.[0]!=='mine'||!String(last[1]||'').trim())return;
+  void runAiReply(item,last[1]);
+}
+function handleAiSubmit(event){
   if(event.target?.id!=='kai-form')return;
   event.preventDefault();
   event.stopPropagation();
   if(aiSending||!aiView)return;
-  const input=document.querySelector('#kai-input');
-  const textValue=input?.value.trim();
-  if(!textValue)return;
+  const userText=document.querySelector('#kai-input')?.value.trim();
+  if(!userText)return;
   const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===aiView);
   if(!item)return;
-  aiSending=true;
-  aiError='';
-  item.messages.push(['mine',textValue,aiTime(),'','unread']);
-  item.preview=textValue;
+  item.messages.push(['mine',userText,aiTime(),'','unread']);
+  item.preview=userText;
   item.time='방금';
   saveKktData();
-  renderAiRoom(aiView);
-  const replyPromise=requestAiReply(item,textValue);
-  await aiWait(2000);
-  const mine=[...item.messages].reverse().find(message=>message[0]==='mine'&&message[4]==='unread');
-  if(mine)mine[4]='read';
-  aiTyping=true;
-  saveKktData();
-  renderAiRoom(aiView);
-  try{
-    const reply=await replyPromise;
-    await aiWait(850);
-    if(!aiView)return;
-    aiTyping=false;
-    item.messages.push(['other',reply,aiTime()]);
-    item.preview=reply;
-    item.time='방금';
-    saveKktData();
-    renderAiRoom(aiView);
-  }catch(error){
-    if(!aiView)return;
-    aiTyping=false;
-    aiError='답장을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
-    renderAiRoom(aiView);
-  }finally{
-    aiSending=false;
-    aiController=null;
-  }
+  void runAiReply(item,userText);
 }
 function restrictReadOnlyRooms(){
   if(aiView||requestView)return;
@@ -812,6 +878,9 @@ function handleClick(event){
     const aiId=aiButton.dataset.id;
     if(aiButton.dataset.aiChat==='back'){
       event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();closeAiRoom();return;
+    }
+    if(aiButton.dataset.aiChat==='retry'){
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();retryLastAiReply();return;
     }
     if(aiId&&AI_CHAT_IDS.has(aiId)){
       event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();renderAiRoom(aiId);return;
