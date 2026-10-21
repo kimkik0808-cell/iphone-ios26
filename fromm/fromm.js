@@ -33,20 +33,47 @@
   let visibleCount = 20;
   let chatScrollTop = null;
   let replyScrollTop = 0;
-  let sheet = false;
   let currentDraft = '';
+  const pendingReplies = new Set();
+  const awaiting = new Map();
+  let pendingTimer = new Map();
   let local = [];
   try {
     const saved = JSON.parse(localStorage.getItem('fromm26_artist_extra') || '[]');
-    if (Array.isArray(saved)) local = saved.filter(x => typeof x.text === 'string').slice(-40);
+    if (Array.isArray(saved)) local = saved.filter(x => typeof x.text === 'string').slice(-40).map(x => ({ ...x, id: x.id || `sent-legacy-${Date.now()}-${Math.random().toString(36).slice(2)}`, replyScene: x.replyScene || '' }));
   } catch {}
 
   const isActive = () => typeof mode !== 'undefined' && mode === 'fromm';
   const getScene = () => scenes.find(x => x.id === selectedId);
+  const activeLocal = () => local.find(x => x.id === selectedId);
+  const activeThread = () => getScene() || activeLocal();
+  const selectedCollection = () => {
+    const custom = activeLocal();
+    return custom ? custom.replyScene : selectedId;
+  };
   const getReplies = () => {
-    const rows = collections.get(selectedId) || [];
+    const rows = collections.get(selectedCollection()) || [];
     return sort === 'new' ? [...rows].reverse() : rows;
   };
+  function chooseReplyScene(messageText) {
+    const value = String(messageText || '').toLowerCase().replace(/\s+/g, '');
+    if (value === '요' || value === 'yo' || value === '안녕' || value === '왔어' || value === '나왔어') return 's05';
+    if (/먹|배고|음식|메뉴|밥|점심|저녁|야식|맛집|치킨|라면/.test(value)) return 's02';
+    if (/무대|공연|춤|직캠|노래|팬미팅|콘서트|리허설/.test(value)) return 's03';
+    if (/사진|셀카|거울|포토|얼굴|찍었/.test(value)) return 's04';
+    if (/자자|잘자|잘자요|졸려|굿나잇|꿈|밤늦|잠들|내일봐/.test(value)) return 's06';
+    if (/오늘|뭐해|어땠|하루|학교|회사|일|퇴근|공부|운동/.test(value)) return 's01';
+    return 's05';
+  }
+  const koreanTime = () => new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit', hour12: true
+  }).format(new Date());
+  function persistLocal() {
+    try { localStorage.setItem('fromm26_artist_extra', JSON.stringify(local)); } catch {}
+  }
+  function replyCard(id, count, previews, waiting = false) {
+    return `<button class="fm-replycard ${waiting ? 'fm-waiting' : ''}" data-fm="${waiting ? 'waiting' : 'open'}" data-scene="${escape(id)}" ${waiting ? 'disabled aria-label="답장 기다리는 중"' : `aria-label="${count}개의 답장 보기"`}><div class="fm-cardtop"><b>▤ &nbsp;답장 모아보기</b><span>${waiting ? '답장 도착 중…' : count + '개 ›'}</span></div><div class="fm-preview">${waiting ? '팬들이 메시지를 확인하고 있어요…' : escape(previews.join(' · '))}</div></button>`;
+  }
 
   function header(title, right) {
     return `<header class="fm-top"><button class="fm-topbtn" data-fm="back" aria-label="뒤로">${svg('back')}</button><div class="fm-heading"><strong>${escape(title)}</strong>${title === '재현' ? '<small>fromm · 아티스트</small>' : ''}</div>${right || '<span class="fm-emptybtn"></span>'}</header>`;
@@ -60,16 +87,20 @@
   function chatHtml() {
     const days = scenes.map(scene => {
       const messages = scene.messages.map(m => {
-        const card = m.replies
-          ? `<button class="fm-replycard" data-fm="open" data-scene="${escape(scene.id)}" aria-label="${scene.replyCount}개의 답장 보기"><div class="fm-cardtop"><b>▤ &nbsp;답장 모아보기</b><span>${scene.replyCount}개 ›</span></div><div class="fm-preview">${escape(scene.preview.join(' · '))}</div></button>`
-          : '';
+        const card = m.replies ? replyCard(scene.id, scene.replyCount, scene.preview) : '';
         return message(m) + card;
       }).join('');
       return `<section class="fm-scene"><div class="fm-date">${escape(scene.dateLabel)}</div>${messages}</section>`;
     }).join('');
-    const extras = local.map(m => message(m)).join('');
-    const more = extras ? `<section class="fm-scene"><div class="fm-date">내가 보낸 메시지 · 체험용</div>${extras}</section>` : '';
-    return `<div class="fm-shell">${header('재현', `<button class="fm-topbtn" data-fm="menu" aria-label="메뉴">${svg('dots')}</button>`)}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="메시지 입력" rows="1" maxlength="300">${escape(currentDraft)}</textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기">${svg('send')}</button></div><div class="fm-note">비공식 팬메이드 체험 · 실제 팬에게 전송되지 않습니다</div>${sheetHtml()}</div>`;
+    const extras = local.map(m => {
+      const scene = scenes.find(s => s.id === m.replyScene);
+      const previews = scene ? scene.preview : [];
+      const replyBlock = m.replyScene && scene ? replyCard(m.id, scene.replyCount, previews) :
+        replyCard(m.id, 0, [], true);
+      return message(m) + replyBlock;
+    }).join('');
+    const more = extras ? `<section class="fm-scene"><div class="fm-date">내가 보낸 메시지</div>${extras}</section>` : '';
+    return `<div class="fm-shell">${header('재현', '<span class="fm-emptybtn"></span>')}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="메시지 입력" rows="1" maxlength="300">${escape(currentDraft)}</textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기">${svg('send')}</button></div></div>`;
   }
 
   function fanRow(item, i) {
@@ -80,15 +111,12 @@
   }
 
   function repliesHtml() {
-    const scene = getScene();
+    const scene = activeThread();
     if (!scene) return '<div class="fm-shell"><div class="fm-status">답장 정보를 찾을 수 없습니다.</div></div>';
     const rows = getReplies();
-    const anchor = scene.messages.find(m => m.id === scene.anchor);
-    return `<div class="fm-shell">${header('답장 모아보기', '<span class="fm-emptybtn"></span>')}<div class="fm-origin"><small>재현 · ${escape(anchor?.time || '')}</small><strong>${escape(anchor?.text || scene.topic)}</strong></div><div class="fm-sortbar"><b>답장 ${rows.length}개</b><button data-fm="sort">${sort === 'new' ? '최신순' : '오래된순'} ⌄</button></div><div class="fm-replies" id="fm-replies-list">${rows.slice(0, visibleCount).map(fanRow).join('')}${visibleCount < rows.length ? '<button class="fm-more" data-fm="more">답장 더 보기 ↓</button>' : ''}</div>${sheetHtml()}</div>`;
-  }
-
-  function sheetHtml() {
-    return sheet ? `<div class="fm-mask" data-fm="dismiss"><div class="fm-sheet"><h3>fromm · 아티스트</h3><p>재현의 가상 fromm 화면입니다. 6개의 팬 답장 모음은 창작된 내용이며, 실제 이용자의 메시지나 비공개 대화가 아닙니다.</p><button data-fm="dismiss">확인</button></div></div>` : '';
+    const custom = activeLocal();
+    const anchor = custom || scene.messages.find(m => m.id === scene.anchor);
+    return `<div class="fm-shell">${header('답장 모아보기', '<span class="fm-emptybtn"></span>')}<div class="fm-origin"><small>재현 · ${escape(anchor?.time || '')}</small><strong>${escape(anchor?.text || scene.topic)}</strong></div><div class="fm-sortbar"><b>답장 ${rows.length}개</b><button data-fm="sort">${sort === 'new' ? '최신순' : '오래된순'} ⌄</button></div><div class="fm-replies" id="fm-replies-list">${rows.slice(0, visibleCount).map(fanRow).join('')}${visibleCount < rows.length ? '<button class="fm-more" data-fm="more">답장 더 보기 ↓</button>' : ''}</div></div>`;
   }
 
   function draw(opts = {}) {
@@ -153,7 +181,6 @@
   }
 
   function backFromm() {
-    if (sheet) { sheet = false; draw({ preserveReplies: true }); return; }
     if (view === 'replies') { view = 'chat'; draw(); return; }
     closeApp();
   }
@@ -195,29 +222,41 @@
       draw({ preserveReplies: true });
       return;
     }
-    if (action === 'menu') { sheet = true; draw({ preserveReplies: true }); return; }
-    if (action === 'dismiss') {
-      if (event.target.closest('.fm-sheet') && event.target.classList.contains('fm-mask')) return;
-      sheet = false;
-      draw({ preserveReplies: true });
-      return;
-    }
+    if (action === 'menu') { return; }
+    if (action === 'waiting') { return; }
     if (action === 'attachment') {
-      sheet = true;
-      draw();
+      // File attachments aren't simulated yet; leave the chat uninterrupted.
+      frame.querySelector('#fm-draft')?.focus();
       return;
     }
     if (action === 'send') {
       const field = frame.querySelector('#fm-draft');
       const value = field?.value.trim();
       if (!value) return;
-      const now = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date());
-      local.push({ text: value, time: now });
+      const id = 'sent-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      const record = { id, text: value, time: koreanTime(), replyScene: '' };
+      local.push(record);
       local = local.slice(-40);
-      try { localStorage.setItem('fromm26_artist_extra', JSON.stringify(local)); } catch {}
+      persistLocal();
       currentDraft = '';
       chatScrollTop = null;
       draw();
+      // Local simulation: as soon as an artist sends a message, fan replies begin arriving.
+      // Reuse an appropriate pre-authored collection; never contact the real fromm service.
+      pendingReplies.add(id);
+      const timer = setTimeout(() => {
+        pendingReplies.delete(id);
+        pendingTimer.delete(id);
+        const item = local.find(x => x.id === id);
+        if (!item) return;
+        item.replyScene = chooseReplyScene(item.text);
+        persistLocal();
+        if (isActive() && view === 'chat') {
+          chatScrollTop = null;
+          draw();
+        }
+      }, 1000);
+      pendingTimer.set(id, timer);
     }
   }, true);
 
