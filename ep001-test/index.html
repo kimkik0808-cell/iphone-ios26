@@ -874,4 +874,20 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao'){t
  // KKT entry handled by original openApp.
 })();
 </script>
+<script id="ep001-sole-renderer">
+(function(){
+ const frame=document.getElementById('appcontent');
+ if(!frame)return;
+ let running=false;
+ const enforce=()=>{
+  const k=window.__KKT15_TEST__;
+  if(!k||k.mode!=='kakao'||frame.querySelector('#kkt15')||running)return;
+  running=true;
+  try{k.render()}finally{running=false}
+ };
+ new MutationObserver(enforce).observe(frame,{childList:true});
+ document.addEventListener('click',()=>setTimeout(enforce,0),true);
+ setInterval(enforce,300);
+})();
+</script>
 </body></html>
