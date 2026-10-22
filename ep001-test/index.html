@@ -819,6 +819,7 @@ const epContact15=()=>data15.find(x=>x.id==='xxx');
 function epSync15(){if(!ep15)return;const x=epContact15();if(!x)return;const messages=ep15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);x.messages=messages.map(m=>m[0]==='mine'?[...m,'','read']:m);x.preview=messages.at(-1)?.[1]||'';x.time=messages.at(-1)?.[2]||'';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;}
 epSync15();
 try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}
+window.__EP001_DIAG__={ready:true,episode:!!ep15,cursor:epState15.cursor,contact:epContact15()?.messages?.length||0};
 let epTimer15=0,epToken15=0;
 function epPause15(){++epToken15;clearTimeout(epTimer15);clearTimeout(typeTimer15);typing15=false;keyboard15=false;draft15='';}window.__KKT_EP_PAUSE__=epPause15;
 function epPlay15(){if(!ep15||chat15!=='xxx'||view15!=='room'||epState15.done)return;epPause15();const token=++epToken15;const active=()=>token===epToken15&&mode==='kakao'&&chat15==='xxx'&&view15==='room'&&!document.hidden;const wait=(fn,ms)=>{epTimer15=setTimeout(()=>{if(active())fn()},ms)};
@@ -847,6 +848,7 @@ function render15(){if(typeof mode==='undefined'||mode!=='kakao')return;document
 function click15(e){if(mode!=='kakao')return;let b=e.target.closest('[data-k15]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();let a=b.dataset.k15,v=b.dataset.v,id=b.dataset.id;if(a==='tab'){epPause15();tab15=v;view15='';keyboard15=false;render15()}else if(a==='chat'){chat15=id;let x=data15.find(c=>c.id===id);if(x)x.unread=0;save15();view15='room';blocked15=false;keyboard15=false;draft15='';typing15=false;render15();if(id==='xxx')epPlay15()}else if(a==='back'){epPause15();clearInterval(typeTimer15);clearTimeout(replyTimer15);view15='';keyboard15=false;draft15='';typing15=false;render15()}else if(a==='friend'){let x=data15.find(c=>c.id===id);if(x){chat15=id;x.unread=0;view15='room';render15();if(id==='xxx')epPlay15()}else toast('프로필을 확인했습니다')}else if(a==='compose'||a==='key'){if(chat15!=='xxx'&&!draft15)typeFixed15()}else if(a==='block'){blocked15=true;toast('신고 및 차단 처리되었습니다');render15()}else if(a==='report'){toast('매니저에게 대화 내용을 공유했습니다')}else if(a==='call'||a==='video'){toast('통화 기능 시연')}else if(a==='find'){let q=document.querySelector('#k15-search');if(q)q.focus();else toast('검색')}else if(a==='add')toast('새 채팅 만들기') ;else if(a==='attach')toast('사진 · 동영상 · 파일 첨부');else toast('화면 시연 기능입니다')}
 S.addEventListener('click',click15,true);S.addEventListener('input',e=>{if(mode==='kakao'&&e.target.id==='k15-search'){query15=e.target.value;let p=e.target.selectionStart;render15();let q=document.querySelector('#k15-search');if(q){q.focus();q.setSelectionRange(p,p)}}},true);S.addEventListener('submit',e=>{if(mode!=='kakao'||e.target.id!=='k15-form')return;e.preventDefault();e.stopImmediatePropagation();let x=data15.find(c=>c.id===chat15),t=draft15.trim();if(!t||t!==x?.scriptReply||x.scriptDone)return;clearTimeout(typeTimer15);let now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date()),sent=['mine',t,now,'','unread'];x.messages.push(sent);x.preview=t;x.time='방금';draft15='';keyboard15=false;save15();render15();replyTimer15=setTimeout(()=>{sent[4]='read';typing15=true;save15();render15();replyTimer15=setTimeout(()=>{typing15=false;if(x.scriptNext){let at=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());x.messages.push(['other',x.scriptNext,at]);x.preview=x.scriptNext;x.time='방금'}x.scriptDone=true;save15();render15()},1800)},1200)},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)epPause15();else if(mode==='kakao'&&view15==='room'&&chat15==='xxx')epPlay15()});
+window.__EP001_DIAG__.renderHook=true;
 const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao'){tab15='chats';view15='';render15()}else prevRender15()};back=function(){if(mode==='kakao'&&view15){epPause15();view15='';render15()}else prevBack15()};window.__KKT15_TEST__={get data(){return data15},get contacts(){return contacts.map(c=>({...c}))},render:render15,get tab(){return tab15},get view(){return view15}};if(mode==='kakao')render15();
 })();
 </script>
@@ -861,4 +863,10 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao'){t
 <script src="./kakao/shop-sms.js?v=2"></script>
 <script src="./kakao/shop.js?v=2"></script>
 <script src="./site-notice.js?v=7"></script>
+<script>
+(function(){
+ const out=document.createElement('div');out.id='ep001-runtime-status';out.style.cssText='position:fixed;top:90px;left:8px;right:8px;z-index:2147483647;background:#101828;color:#fff;padding:7px 10px;border:2px solid #ffe84a;border-radius:8px;font:12px Arial,sans-serif;pointer-events:none';
+ const check=()=>{const d=window.__EP001_DIAG__, k=window.__KKT15_TEST__;let t='EP001 DIAG: '+(d?'INIT OK':'INIT MISSING')+' / '+(k?'KKT15 OK':'KKT15 MISSING')+' / '+(d?.episode?'DATA OK':'DATA MISSING')+' / '+(d?.renderHook?'HOOK OK':'HOOK MISSING');if(k){t+=' / '+k.view;const x=k.data?.find?.(a=>a.id==='xxx');t+=' / XXX '+(x?.messages?.length||0)}out.textContent=t};document.body.appendChild(out);check();setInterval(check,1000);
+})();
+</script>
 </body></html>
