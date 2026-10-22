@@ -598,6 +598,36 @@ const ig15style=document.createElement("style");ig15style.textContent=`
 
 .ig14-systemline{text-align:center;color:#9a9aa4;font-size:12px;margin:22px 0 16px;display:flex;align-items:center;gap:12px}.ig14-systemline:before,.ig14-systemline:after{content:"";height:1px;background:#35353a;flex:1}
 .ig14-sharedpost{display:block!important;text-align:left;border-radius:14px;background:#181818;border:1px solid #333;color:#fff;overflow:hidden;width:min(238px,72vw)}.ig14-postcover{aspect-ratio:1}.ig14-reelcover img{width:100%;height:100%;object-fit:cover}.ig14-sharedpost .ig14-reelfooter{color:white}
+
+/* Local mock Reel snapshots, no embedded external video or network requests */
+.ig26-card{width:min(210px,69vw)!important;background:#17171a!important}
+.ig26-card .ig14-reelcover{aspect-ratio:9/16!important;overflow:hidden;position:relative}
+.ig26-card .ig14-reelbadge{z-index:3;top:9px;right:9px;background:#0009}
+.ig26-scene{height:100%;width:100%;position:relative;isolation:isolate;color:#fff;overflow:hidden;text-shadow:0 1px 5px #000a}
+.ig26-scene:before{content:"";position:absolute;inset:-12%;z-index:-2;background:linear-gradient(150deg,#cfb6ca,#7b8bc3,#454056);filter:blur(19px)}
+.ig26-scene:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(#0007,transparent 38%,transparent 55%,#000d)}
+.ig26-top{font-size:10px;letter-spacing:1.5px;font-weight:800;display:flex;justify-content:space-between;padding:12px}
+.ig26-subject{position:absolute;inset:19% 0 27%;display:grid;place-content:center;text-align:center;transform:rotate(-4deg)}
+.ig26-subject span{font-size:91px;line-height:1.12;filter:drop-shadow(0 10px 14px #0004)}
+.ig26-subject small{font-size:9px;font-weight:800;letter-spacing:1.5px;margin-top:10px}
+.ig26-title{position:absolute;bottom:18%;left:10px;right:36px;font-size:17px;font-weight:900;line-height:1.25}
+.ig26-side{position:absolute;bottom:21%;right:8px;font-size:20px;line-height:1.8}
+.ig26-play{position:absolute;top:48%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:48px;height:48px;padding-left:3px;border-radius:50%;background:#0007;border:1px solid #fff5;font-size:20px}
+.ig26-by{position:absolute;bottom:10px;left:10px;font-weight:700;font-size:10px}
+.ig26-reaction{background:radial-gradient(ellipse,#e5a284,#8a4c6e 63%,#40334d)}
+.ig26-reaction:before{background:linear-gradient(35deg,#ffd7a9,#f18c91,#875a9a)}
+.ig26-reaction .ig26-subject span{font-size:110px;transform:rotate(7deg)}
+.ig26-studio{background:repeating-linear-gradient(90deg,#292e3a 0 26px,#495366 26px 30px)}
+.ig26-studio:before{background:linear-gradient(140deg,#dcc9c1,#8299ba,#1c2740)}
+.ig26-cozy{background:radial-gradient(ellipse,#ffe2ad,#c49566 53%,#543c40)}
+.ig26-cozy:before{background:linear-gradient(80deg,#ffecac,#cd8e5c,#b97761)}
+.ig26-cozy .ig26-subject span{font-size:117px}
+.ig26-mirror{background:linear-gradient(110deg,#b3a698,#5c5e61,#222931)}
+.ig26-mirror:before{inset:13% 19% 22%;filter:none;border:6px solid #ddceb8;background:linear-gradient(140deg,#aaa8a1,#50565b);opacity:.7}
+.ig26-duo{background:linear-gradient(120deg,#c5a4bc,#7d76a7,#2b3455)}
+.ig26-duo:before{background:linear-gradient(55deg,#e9b8c5,#9196c1,#a7cbbd)}
+.ig26-duo .ig26-subject span{font-size:51px;white-space:nowrap}
+.ig26-card .ig14-reelfooter{padding:9px 10px!important}
 `;document.head.appendChild(ig15style);
 
 (function(){
@@ -636,16 +666,16 @@ let state;try{state=Object.assign(fresh(),JSON.parse(localStorage.getItem('jh_ig
 // Private account's confirmed fictional DM archive. Seed once by stable message IDs, preserving saved chats.
 const IG_APPROVED_20261022={
  sw0412:[
-  {id:'ig26sw01',who:'other',type:'reel',reel:{cover:'coffee',user:'Instagram',caption:'릴스 공유'}},
-  {id:'ig26sw02',who:'other',type:'reel',reel:{cover:'beach',user:'Instagram',caption:'릴스 공유'}},
-  {id:'ig26sw03',who:'other',type:'reel',reel:{cover:'skyline',user:'Instagram',caption:'릴스 공유'}},
-  {id:'ig26sw04',who:'mine',type:'reel',reel:{cover:'flowers',user:'Instagram',caption:'릴스 공유'}},
+  {id:'ig26sw01',who:'other',type:'reel',reel:{theme:'meme',user:'meme.zip.kr',caption:'이거 보고 안 웃으면 인정ㅋㅋ',overlay:'ㅋㅋㅋㅋ 이 표정 뭐야'}},
+  {id:'ig26sw02',who:'other',type:'reel',reel:{theme:'dance',user:'move.daily',caption:'요즘 뜨는 댄스 챌린지',overlay:'이거 같이 찍을 사람?'}},
+  {id:'ig26sw03',who:'other',type:'reel',reel:{theme:'pet',user:'puppy.archive',caption:'강아지 반응 진짜ㅋㅋ',overlay:'산책 가자고 했더니'}},
+  {id:'ig26sw04',who:'mine',type:'reel',reel:{theme:'fashion',user:'fit.archive',caption:'요즘 데일리룩 모음',overlay:'오늘의 OOTD'}},
   {id:'ig26sw05',type:'system',text:'이틀 후',textZh:'两天后'},
   {id:'ig26sw06',who:'mine',text:'죽었냐?',textZh:'你死了吗？'},
   {id:'ig26sw07',who:'other',text:'?',textZh:'？'}
  ],
  youngjjjj:[
-  {id:'ig26yj01',who:'other',type:'reel',reel:{cover:'coffee',user:'Instagram',caption:'릴스 공유'}},
+  {id:'ig26yj01',who:'other',type:'reel',reel:{theme:'duo',user:'trend.makers',caption:'둘이 찍는 요즘 챌린지',overlay:'친구랑 찍어봐 📸'}},
   {id:'ig26yj02',who:'other',text:'이거 요즘 유행이던데 다음에 만나면 찍자',textZh:'这个最近很流行，下次见面一起拍吧'},
   {id:'ig26yj03',who:'mine',text:'밥 사주면 찍어줄게',textZh:'请我吃饭我就陪你拍'}
  ],
@@ -662,6 +692,9 @@ const IG_APPROVED_20261022={
   const known=new Set(existing.filter(x=>x&&typeof x==='object'&&x.id).map(x=>x.id));
   const missing=script.filter(x=>!known.has(x.id));
   if(missing.length){state.messages[id]=[...missing,...existing];changed=true;}
+  // Refresh only previously seeded Reel cards without resetting visitor messages.
+  const previewMap=new Map(script.filter(m=>m.type==='reel').map(m=>[m.id,m.reel]));
+  for(const m of state.messages[id]){const cover=previewMap.get(m?.id);if(cover&&JSON.stringify(m.reel)!==JSON.stringify(cover)){m.reel={...cover};changed=true;}}
  }
  if(changed){try{localStorage.setItem('jh_ig14',JSON.stringify(state))}catch(e){console.warn('[IG] Could not persist seeded DM archive',e);}}
 })();
@@ -690,7 +723,8 @@ function profile(pid=id()){
  function accounts(){let item=(which,name,sub,pic)=>b('switch',pic+`<span><b>${name}</b><small>${sub}</small></span><b>${acct()===which?'✓':''}</b>`,'ig14-accountrow',`data-v="${which}"`);return `${head('계정 전환','',true)}<main class="scroll ig14-accountsheet">${item('public',ME,'공개 계정 · 인증',av('jh_avatar'))}${item('private',PRIVATE,'비공개 계정',def())}</main>`}
 function inbox(){let rows=acct()==='public'?[]:privateChats;return `${head(b('accounts',id()+' ⌄','title'),b('noop',ico('plus'),'ig14-icon'))}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input placeholder="검색"></label><div class="ig14-listtitle"><b>메시지</b><span class="ig14-grow"></span>${acct()==='public'?b('requests','요청','ig14-blue'):''}</div>${rows.length?rows.map(c=>{let m=state.messages[c.id]||[],last=m.at(-1),preview=last?.type==='reel'?(igLanguage()==='zh'?'分享了 Reels':'릴스를 보냈습니다'):last?.type==='post'?(igLanguage()==='zh'?'分享了帖子':'게시물을 보냈습니다'):last?.type==='system'?(igLanguage()==='zh'?(last.textZh||last.text):last.text):(igLanguage()==='zh'?(last?.textZh||last?.text):last?.text)||'메시지 없음';return `<div class="ig14-row">${b('contactprofile',def(),'','data-id="'+c.id+'" aria-label="'+esc(c.name)+' 프로필"')}${b('chat',`<span class="ig14-rowtext"><b>${esc(c.name)}</b><small>${esc(preview)}</small></span>`,'ig14-rowopen',`data-id="${c.id}"`)}</div>`}).join(''):'<div class="ig14-empty"><b>메시지가 없습니다</b></div>'}</main>${tabs()}`}
 function requests(){return `${head('메시지 요청','',true)}<main class="scroll"><p class="ig14-requestnote">요청을 수락하기 전에는 상대방에게 읽음 표시가 전송되지 않습니다.</p>${fanRequests.map(x=>b('request',def()+`<span class="ig14-rowtext"><b>${x.name}</b><small>${x.text} · ${x.at}</small></span>`,'ig14-row',`data-id="${x.id}"`)).join('')}</main>`}
-function reelMessage(m){let r=m.reel||{};return `<div class="ig14-reelshare"><div class="ig14-reelcover">${r.cover?img(r.cover):''}<span class="ig14-reelbadge">${ico('reel',18,true)}</span></div><div class="ig14-reelfooter"><b>${esc(r.user||'Instagram')}</b><small>${esc(r.caption||'릴스')}</small></div></div>`}
+const igScenes={meme:['😳','ㅋㅋㅋㅋ','reaction'],dance:['🕺','DANCE CHALLENGE','studio'],pet:['🐶','DOG MOMENT','cozy'],fashion:['🧥','STYLE CHECK','mirror'],duo:['🕺 🕺','TOGETHER TREND','duo']};
+function reelMessage(m){const r=m.reel||{},scene=igScenes[r.theme];let art=scene?`<div class="ig26-scene ig26-${scene[2]}"><div class="ig26-top">REELS <span>•••</span></div><div class="ig26-subject"><span>${scene[0]}</span><small>${scene[1]}</small></div><div class="ig26-title">${esc(r.overlay||'')}</div><div class="ig26-side">♡<br>♧<br>➤</div><div class="ig26-play">▶</div><div class="ig26-by">@${esc(r.user||'reels')}</div></div>`:r.cover?img(r.cover):'<span>릴스</span>';return `<div class="ig14-reelshare ig26-card"><div class="ig14-reelcover">${art}<span class="ig14-reelbadge">${ico('reel',18,true)}</span></div><div class="ig14-reelfooter"><b>${esc(r.user||'Instagram')}</b><small>${esc(r.caption||'릴스')}</small></div></div>`}
 function sharedPost(m){const p=getPost(m.post);if(!p)return '<div class="ig14-bubble">게시물을 공유했습니다</div>';return b('sharedpost',`<div class="ig14-reelcover ig14-postcover">${img(p.photos[0])}<span class="ig14-reelbadge">${ico('grid',17)}</span></div><div class="ig14-reelfooter"><b>${esc(p.user)}${p.verified?verified():''}</b><small>${esc(p.caption||'게시물')}</small></div>`,'ig14-reelshare ig14-sharedpost',`data-id="${esc(p.id)}"`)}
 function messageHTML(m){const item=typeof m==='string'?{who:'other',text:m}:m;if(item.type==='system')return `<div class="ig14-systemline">${esc(igLanguage()==='zh'?(item.textZh||item.text):item.text)}</div>`;const mine=item.who==='mine',body=item.type==='reel'?reelMessage(item):item.type==='post'?sharedPost(item):`<div class="ig14-bubble">${esc(igLanguage()==='zh'?(item.textZh||item.text||''):(item.text||''))}</div>`;return `<div class="ig14-message ${mine?'mine':''}">${body}${item.time?`<small class="ig14-msgtime">${esc(item.time)}</small>`:''}</div>`}
 function conversationHead(c){return `<div class="ig14-head">${b('back',ico('back'),'ig14-icon')}${b('contactprofile',def()+`<span><b>${esc(c.name)}</b><small>Instagram</small></span>`,'ig14-chathead-profile',`data-id="${c.id}"`)}<span class="ig14-grow"></span>${b('noop',ico('phone',23),'ig14-icon')}${b('noop',ico('video',24),'ig14-icon')}</div>`}
