@@ -1,0 +1,48 @@
+/* iPhone Messages bridge for fictional KakaoPay purchases. Runs after core app. */
+(function(){
+'use strict';
+if(window.__IPHONE_SMS__)return;
+const existing=new Set();
+function esc(s){return String(s??'');}
+function balance(n){return Math.max(0,Number(n)||0).toLocaleString('ko-KR')+'원';}
+function update(receipts){
+ if(!Array.isArray(receipts)||typeof texts==='undefined'||!Array.isArray(texts))return;
+ const openChat=(typeof mode!=='undefined'&&mode==='messages'&&sub==='chat')?texts[currentThread]:null;
+ let added=0;
+ for(const e of receipts.slice().sort((a,b)=>(a.at||0)-(b.at||0))){
+  if(!e||typeof e.id!=='string'||existing.has(e.id)||!['purchase','gift'].includes(e.type))continue;
+  existing.add(e.id);
+  const gift=e.type==='gift',name=gift?'카카오 선물하기':'카카오페이';
+  const message=gift?
+   '[카카오 선물하기]\n'+esc(e.recipient||'친구')+'님에게 '+esc(e.item||'선물')+' 선물 발송 완료\n주문번호 '+e.id.replace(/-gift$/,''):
+   '[카카오페이 결제 완료]\n상품 '+esc(e.item||'선물')+'\n결제 금액 '+balance(e.price)+'\n결제 후 잔액 '+balance(e.balance)+'\n주문번호 '+e.id;
+  let thread=texts.find(t=>t.shopSender===name);
+  if(!thread){
+   thread={name,initial:'K',color:'#f9dd49',preview:'',time:'방금',chat:[],unread:false,shopSender:name};
+   texts.unshift(thread);
+  }
+  thread.chat.push(['other',message]);
+  thread.preview=message.split('\n')[0];
+  thread.time='방금';thread.unread=true;added++;
+ }
+ if(openChat)currentThread=texts.indexOf(openChat);
+ if(added&&typeof mode!=='undefined'&&mode==='messages'&&typeof render==='function')render();
+}
+function notify(event){
+ if(!event||window.__IOS26_NOTIFICATIONS__?.enabled===false||document.hidden)return;
+ const old=document.getElementById('kshop-sms-banner');if(old)old.remove();
+ const el=document.createElement('button');
+ el.type='button';el.id='kshop-sms-banner';
+ el.setAttribute('aria-label','카카오페이 결제 알림');
+ el.innerHTML='<span class="ks-sms-app">메시지 · 지금</span><strong>'+ (event.type==='gift'?'카카오 선물하기':'카카오페이')+
+ '</strong><span>'+ (event.type==='gift'?'선물이 전송되었습니다':'결제가 완료되었습니다')+'</span>';
+ document.body.appendChild(el);
+ el.addEventListener('click',()=>{
+  el.remove();
+  if(typeof isLocked!=='undefined'&&isLocked)return;
+  if(typeof openApp==='function')openApp('messages');
+ });
+ setTimeout(()=>el.remove(),4200);
+}
+window.__IPHONE_SMS__={sync:update,notify};
+})();
