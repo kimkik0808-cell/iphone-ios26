@@ -241,14 +241,44 @@ const phoneCalls=[
  {id:'us',name:'+1 (917) 555-0184',number:'+1 (917) 555-0184',time:'10월 9일',dir:'missed',detail:'부재중 전화 · 미국',lines:[['mine','Hello?'],['other','Sorry, wrong number.'],['mine','Okay.']]}
 ];
 let activeCall=null,callTimers=[],callSeconds=0,callLineIndex=0,callConnected=false,callEnding=false;
-function clearCallTimers(){callTimers.forEach(clearTimeout);callTimers=[]}
+let callLineAudio=null;
+function stopCallLineAudio(){if(!callLineAudio)return;callLineAudio.onended=null;callLineAudio.onerror=null;callLineAudio.pause();callLineAudio.removeAttribute('src');callLineAudio.load();callLineAudio=null}
+function clearCallTimers(){stopCallLineAudio();callTimers.forEach(clearTimeout);callTimers=[]}
+function finishPhoneCall(){if(mode!=='phone'||sub!=='call'||!activeCall)return;const el=$('#callstatus');if(el)el.textContent='통화 종료됨';callTimers.push(setTimeout(()=>{if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render()}},1300))}
+function playPhoneLineAudio(index,last){
+ stopCallLineAudio();
+ if(!['xxx','sunwoo','youngjae'].includes(activeCall?.id)){if(last)callTimers.push(setTimeout(finishPhoneCall,700));return}
+ const call=activeCall;
+ const audio=new Audio('./call-audio/'+call.id+'-'+String(index+1).padStart(2,'0')+'.mp3');
+ callLineAudio=audio;
+ audio.preload='auto';
+ let settled=false;
+ const complete=(failed)=>{if(settled||callLineAudio!==audio||activeCall!==call)return;settled=true;if(last){if(failed)callTimers.push(setTimeout(finishPhoneCall,700));else finishPhoneCall()}};
+ audio.onended=()=>complete(false);
+ audio.onerror=()=>complete(true);
+ try{const promise=audio.play();if(promise&&typeof promise.catch==='function')promise.catch(()=>complete(true))}catch{complete(true)}
+}
+
 function phoneContactCall(name){const known=phoneCalls.find(x=>x.name===name);if(known)return known;const c=phoneContacts.find(x=>x.name===name);return{id:'contact-'+name,name,number:c?.number||name,time:'',dir:'out',detail:'휴대전화',lines:[['mine','지금 잠깐 통화 가능해?'],['other','응 괜찮아 무슨 일이야'],['mine','아니 그냥 확인할 게 있어서 이따 다시 연락할게']]}}
 function phoneDigits(v){return String(v||'').replace(/\D/g,'')}
 function phoneDialCall(value){const digits=phoneDigits(value);return phoneCalls.find(x=>phoneDigits(x.number)===digits)||null}
 function recordDialedCall(call){const i=phoneCalls.findIndex(x=>x.id===call.id);if(i>-1)phoneCalls.splice(i,1);const recent={...call,time:'방금',dir:'out',detail:'발신 통화'};phoneCalls.unshift(recent);return recent}
 function startPhoneCall(call){clearCallTimers();activeCall=call;dial=call.number||call.name;callSeconds=0;callLineIndex=0;callConnected=false;callEnding=false;sub='call';render();startCallPlayback()}
 function startCallPlayback(){if(mode!=='phone'||sub!=='call'||!activeCall)return;const status=$('#callstatus');if(!status)return;status.textContent='연결 중…';const connected=setTimeout(()=>{if(mode!=='phone'||sub!=='call')return;callConnected=true;status.textContent='00:00';const tick=setInterval(()=>{if(mode!=='phone'||sub!=='call'){clearInterval(tick);return}callSeconds++;const m=String(Math.floor(callSeconds/60)).padStart(2,'0'),s=String(callSeconds%60).padStart(2,'0');const el=$('#callstatus');if(el&&!callEnding)el.textContent=`${m}:${s}`},1000);callTimers.push(tick)},450);callTimers.push(connected)}
-function advancePhoneCall(){if(mode!=='phone'||sub!=='call'||!activeCall||!callConnected||callEnding)return;const list=$('#calllines'),line=activeCall.lines[callLineIndex];if(!list||!line)return;const hint=$('#calltaphint'),wait=$('#callwait');if(hint)hint.remove();if(wait)wait.remove();const who=line[0]==='mine'?'나':activeCall.name;list.insertAdjacentHTML('beforeend',`<div class="call-line ${line[0]==='mine'?'mine':''}"><b>${escapeHTML(who)}</b>${escapeHTML(line[1])}</div>`);callLineIndex++;if(callLineIndex<activeCall.lines.length)list.insertAdjacentHTML('beforeend','<div class="call-wait" id="callwait"><i></i><i></i><i></i></div>');list.scrollTop=list.scrollHeight;if(callLineIndex>=activeCall.lines.length){callEnding=true;callTimers.push(setTimeout(()=>{if(mode!=='phone'||sub!=='call')return;const el=$('#callstatus');if(el)el.textContent='통화 종료됨'},700));callTimers.push(setTimeout(()=>{if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render()}},2000))}}
+function advancePhoneCall(){
+ if(mode!=='phone'||sub!=='call'||!activeCall||!callConnected||callEnding)return;
+ const list=$('#calllines'),line=activeCall.lines[callLineIndex];if(!list||!line)return;
+ const hint=$('#calltaphint'),wait=$('#callwait');if(hint)hint.remove();if(wait)wait.remove();
+ const who=line[0]==='mine'?'나':activeCall.name;
+ list.insertAdjacentHTML('beforeend',`<div class="call-line ${line[0]==='mine'?'mine':''}"><b>${escapeHTML(who)}</b>${escapeHTML(line[1])}</div>`);
+ const index=callLineIndex++;
+ const last=callLineIndex>=activeCall.lines.length;
+ if(!last)list.insertAdjacentHTML('beforeend','<div class="call-wait" id="callwait"><i></i><i></i><i></i></div>');
+ list.scrollTop=list.scrollHeight;
+ if(last)callEnding=true;
+ playPhoneLineAudio(index,last);
+}
+
 const smsTimes=['방금','1분 전','3분 전','7분 전','12분 전','18분 전','25분 전','39분 전','오전 9:18','오전 8:47','오전 8:12','어제','어제','어제','월요일','월요일','일요일','토요일','10월 18일','10월 17일','10월 16일','10월 15일','10월 13일','10월 11일'];
 const smsRand=n=>Math.floor(Math.random()*n),smsCode=()=>String(smsRand(900000)+100000),smsPhone=()=>`010-${String(smsRand(9000)+1000)}-${String(smsRand(9000)+1000)}`;
 const smsEntry=(name,initial,color,messages,extra={})=>({name,initial,color,messages,...extra});
