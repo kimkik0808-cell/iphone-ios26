@@ -48,7 +48,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add photos/manifest.json
-          find photos -maxdepth 1 -type f -iname '*.jpg' -print0 | xargs -0 -r git add --
+          find photos -type f -iname '*.jpg' -print0 | xargs -0 -r git add --
           if git diff --cached --quiet; then
             echo "사진 목록 변경 없음"
           else
