@@ -248,13 +248,18 @@ function finishPhoneCall(){if(mode!=='phone'||sub!=='call'||!activeCall)return;c
 // Only these xxx recordings exist. The other speaker has no audio files.
 const xxxCallVoiceIndices=new Set([0,2,4,6]);
 function callVoiceFile(index){
- if(!activeCall||activeCall.lines?.[index]?.[0]!=='mine')return '';
+ if(!activeCall||!activeCall.lines?.[index])return '';
+ // Sunwoo conversation has recordings for BOTH speakers, in transcript order.
+ if(activeCall.id==='sunwoo')
+  return 'sunwoo-'+String(index+1).padStart(2,'0')+'.mp3';
+ // xxx and Youngjae calls only have Hyunjae's lines.
+ if(activeCall.lines[index][0]!=='mine')return '';
  if(activeCall.id==='xxx'){
   if(!xxxCallVoiceIndices.has(index))return '';
   return 'xxx-'+String(index+1).padStart(2,'0')+'.m4a';
  }
- if(activeCall.id==='sunwoo'||activeCall.id==='youngjae')
-  return activeCall.id+'-'+String(index+1).padStart(2,'0')+'.mp3';
+ if(activeCall.id==='youngjae')
+  return 'youngjae-'+String(index+1).padStart(2,'0')+'.mp3';
  return '';
 }
 function callVoiceStatus(index,label){
