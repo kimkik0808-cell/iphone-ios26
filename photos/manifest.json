@@ -1,6 +1,13 @@
 {
-  "version": "e18246d6f9a1",
+  "version": "e14eb4c794ce",
   "photos": [
+    {
+      "id": "photos/deleted/@r07qxo  - R⤓Download.jpeg:a4c60425ba08",
+      "name": "@r07qxo  - R⤓Download.jpeg",
+      "src": "photos/deleted/%40r07qxo%20%20-%20R%E2%A4%93Download.jpeg?v=a4c60425ba08",
+      "date": null,
+      "deleted": true
+    },
     {
       "id": "photos/IMG_6379.jpeg:86dd1a3f8150",
       "name": "IMG_6379.jpeg",
