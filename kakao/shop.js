@@ -176,6 +176,38 @@ function smsEvents(){
  });
 }
 function syncSMS(){window.__IPHONE_SMS__?.sync?.(smsEvents());}
+const giftReplyPending=new Set();
+const giftFallback=(id,p)=>{
+ const item=p.kind==='카페'?'커피':p.kind==='푸드'||p.kind==='디저트'?'맛있는 거':p.ko;
+ const fixed={
+  xxx:`${item}까지 왜 보내ㅋㅋ 그래도 잘 받을게 고마워`,
+  yh:`야 ${item} 고맙다 ㅋㅋ 다음엔 같이 먹자`,
+  jy:`${item} 고마워 잘 받을게`,
+  sw:`형 갑자기 ${item} 뭐예요ㅋㅋ 잘 받을게요`,
+  q:`형 ${item} 고마워요 ㅋㅋ 잘 받을게요`,
+  manager:`재현아 ${item} 고맙다 잘 받을게`,
+  stylist:`재현 씨 ${item} 감사합니다 잘 쓸게요`,
+  pd:`${item} 감사합니다 잘 받겠습니다`,
+  nuna:`갑자기 웬 ${item}이야ㅋㅋ 잘 받을게 고마워`
+ };
+ return fixed[id]||`${item} 고마워 잘 받을게`;
+};
+function scheduleGiftReply(o,id,p,chat){
+ if(!o||o.replyDone||giftReplyPending.has(o.id)||!chat)return;
+ giftReplyPending.add(o.id);
+ setTimeout(()=>{
+  const reply=giftFallback(id,p);
+  const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
+  if(!chat.messages.some(message=>message[5]==='gift-reply:'+o.id)){
+   chat.messages.push(['other',reply,now,'','', 'gift-reply:'+o.id]);
+   chat.preview=reply;chat.time='방금';chat.unread=(chat.unread||0)+1;
+  }
+  o.replyDone=true;o.replyText=reply;o.repliedAt=Date.now();save();
+  try{localStorage.setItem('jh_kkt15',JSON.stringify(window.__KKT15_TEST__?.data||[]))}catch{}
+  giftReplyPending.delete(o.id);
+  window.__KKT15_TEST__?.render?.();
+ },900+Math.floor(Math.random()*900));
+}
 function assignGift(o,id){
  if(!o||o.recipient||!contacts().some(c=>c.id===id))return false;
  o.recipient=id;o.giftedAt=Date.now();save();
@@ -195,6 +227,7 @@ function assignGift(o,id){
    chat.preview=text;chat.time='방금';
    try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
   }
+  scheduleGiftReply(o,id,p,chat);
  }
  syncSMS();
  if(intent==='after')window.__IPHONE_SMS__?.notify?.({type:'gift',recipient:id});
@@ -214,7 +247,13 @@ function restoreGiftChats(){
    list.push(c);
   }
   if(!Array.isArray(c.messages))c.messages=[];
-  if(c.messages.some(m=>m[5]==='gift:'+o.id))continue;
+  if(c.messages.some(m=>m[5]==='gift:'+o.id)){
+   if(o.replyDone&&o.replyText&&!c.messages.some(m=>m[5]==='gift-reply:'+o.id)){
+    const replyTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.repliedAt||o.giftedAt||o.at));
+    c.messages.push(['other',o.replyText,replyTime,'','', 'gift-reply:'+o.id]);c.preview=o.replyText;
+   }
+   continue;
+  }
   const msg='🎁 [선물하기] '+p.ko+' · '+money(o.price)+'\n선물을 보냈어요!';
   const restoredTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.giftedAt||o.at));
   c.messages.push(['mine',msg,restoredTime,'','read','gift:'+o.id]);c.preview=msg;c.time='방금';
