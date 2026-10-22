@@ -101,3 +101,36 @@
  #site-announcement-overlay .site-announcement-top{margin-right:33px;}
  #site-announcement-overlay .site-announcement-languages button{padding:5px 6px;font-size:11px;}
 }
+
+/* Expandable update history */
+#site-announcement-overlay .site-announcement-history-toggle{
+ width:100%;min-height:42px;margin:15px 0 0;border:1px solid #eadfe5;border-radius:13px;
+ background:#fff8fa;color:#df4e77;font:700 13px -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+ cursor:pointer;padding:10px 14px;
+}
+#site-announcement-overlay .site-announcement-history-toggle::after{
+ content:"⌄";display:inline-block;margin-left:7px;font-size:14px;transition:transform .18s ease;
+}
+#site-announcement-overlay .site-announcement-history-toggle[aria-expanded="true"]::after{transform:rotate(180deg)}
+#site-announcement-overlay .site-announcement-history{margin-top:14px}
+#site-announcement-overlay .site-announcement-history-title{
+ margin:0 0 9px;font-size:13.5px;color:#38313b;font-weight:730;
+}
+#site-announcement-overlay .site-announcement-history-card{
+ border:1px solid #eee6eb;border-radius:14px;background:#faf8fa;padding:13px 13px 12px;
+}
+#site-announcement-overlay .site-announcement-history-head{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;
+}
+#site-announcement-overlay .site-announcement-history-head strong{font-size:13px;color:#4b434d}
+#site-announcement-overlay .site-announcement-history-head span{font-size:10.5px;color:#9a929b;white-space:nowrap}
+#site-announcement-overlay .site-announcement-history-list{
+ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;
+}
+#site-announcement-overlay .site-announcement-history-list li{
+ position:relative;padding-left:13px;font-size:11.5px;line-height:1.48;color:#69616b;
+}
+#site-announcement-overlay .site-announcement-history-list li::before{
+ content:"•";position:absolute;left:1px;color:#e4577e;font-weight:800;
+}
+#site-announcement-overlay .site-announcement-history-toggle:active{opacity:.72}
