@@ -6,6 +6,10 @@ const { execFileSync } = require('child_process');
 const root = path.resolve(__dirname, '..');
 const dir = path.join(root, 'photos');
 const allowed = /\.(?:jpe?g|png|webp|gif)$/i;
+const folders = [
+  { absolute: dir, relative: 'photos', deleted: false },
+  { absolute: path.join(dir, 'deleted'), relative: 'photos/deleted', deleted: true }
+];
 
 function hashFile(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -22,23 +26,31 @@ function committedAt(relativePath) {
   }
 }
 
-const seenNames = new Set();
+const candidates = folders.flatMap(folder => {
+  if (!fs.existsSync(folder.absolute)) return [];
+  return fs.readdirSync(folder.absolute, { withFileTypes: true })
+    .filter(entry => entry.isFile() && allowed.test(entry.name))
+    .map(entry => ({ ...folder, name: entry.name }));
+});
+
+const seenPaths = new Set();
 const seenContent = new Set();
-const photos = fs.readdirSync(dir, { withFileTypes: true })
-  .filter(entry => entry.isFile() && allowed.test(entry.name))
+const photos = candidates
   .map(entry => {
-    const key = entry.name.toLocaleLowerCase('en-US');
-    const file = path.join(dir, entry.name);
+    const relativePath = `${entry.relative}/${entry.name}`;
+    const key = relativePath.toLocaleLowerCase('en-US');
+    const file = path.join(entry.absolute, entry.name);
     const sha = hashFile(file);
-    if (seenNames.has(key) || seenContent.has(sha)) return null;
-    seenNames.add(key);
+    if (seenPaths.has(key) || seenContent.has(sha)) return null;
+    seenPaths.add(key);
     seenContent.add(sha);
     return {
-      id: `${entry.name}:${sha.slice(0, 12)}`,
+      id: `${relativePath}:${sha.slice(0, 12)}`,
       name: entry.name,
-      src: `photos/${encodeURIComponent(entry.name)}?v=${sha.slice(0, 12)}`,
+      src: `${entry.relative.split('/').map(encodeURIComponent).join('/')}/${encodeURIComponent(entry.name)}?v=${sha.slice(0, 12)}`,
       date: null,
-      uploaded: committedAt(`photos/${entry.name}`),
+      ...(entry.deleted ? { deleted: true } : {}),
+      uploaded: committedAt(relativePath),
       sha
     };
   })
@@ -49,4 +61,5 @@ const photos = fs.readdirSync(dir, { withFileTypes: true })
 const version = crypto.createHash('sha256').update(JSON.stringify(photos)).digest('hex').slice(0, 12);
 const output = `${JSON.stringify({ version, photos }, null, 2)}\n`;
 fs.writeFileSync(path.join(dir, 'manifest.json'), output);
-console.log(`Generated photos/manifest.json with ${photos.length} unique browser-compatible photos.`);
+const deletedCount = photos.filter(photo => photo.deleted).length;
+console.log(`Generated photos/manifest.json with ${photos.length} photos (${deletedCount} recently deleted).`);
