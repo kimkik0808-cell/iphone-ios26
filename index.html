@@ -247,16 +247,32 @@ function clearCallTimers(){stopCallLineAudio();callTimers.forEach(clearTimeout);
 function finishPhoneCall(){if(mode!=='phone'||sub!=='call'||!activeCall)return;const el=$('#callstatus');if(el)el.textContent='통화 종료됨';callTimers.push(setTimeout(()=>{if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render()}},1300))}
 function playPhoneLineAudio(index,last){
  stopCallLineAudio();
- if(!['xxx','sunwoo','youngjae'].includes(activeCall?.id)){if(last)callTimers.push(setTimeout(finishPhoneCall,700));return}
  const call=activeCall;
- const audio=new Audio('./call-audio/'+call.id+'-'+String(index+1).padStart(2,'0')+'.mp3');
+ const line=call?.lines?.[index];
+ // Only Jaehyun's recorded lines: the other speaker has no audio.
+ if(!line||line[0]!=='mine'||!['xxx','sunwoo','youngjae'].includes(call?.id)){
+  if(last)callTimers.push(setTimeout(finishPhoneCall,700));
+  return;
+ }
+ const file=call.id+'-'+String(index+1).padStart(2,'0')+(call.id==='xxx'?'.m4a':'.mp3');
+ const audio=new Audio('./call-audio/'+file);
  callLineAudio=audio;
  audio.preload='auto';
  let settled=false;
- const complete=(failed)=>{if(settled||callLineAudio!==audio||activeCall!==call)return;settled=true;if(last){if(failed)callTimers.push(setTimeout(finishPhoneCall,700));else finishPhoneCall()}};
+ const complete=failed=>{
+  if(settled||callLineAudio!==audio||activeCall!==call)return;
+  settled=true;
+  if(last){
+   if(failed)callTimers.push(setTimeout(finishPhoneCall,700));
+   else finishPhoneCall();
+  }
+ };
  audio.onended=()=>complete(false);
  audio.onerror=()=>complete(true);
- try{const promise=audio.play();if(promise&&typeof promise.catch==='function')promise.catch(()=>complete(true))}catch{complete(true)}
+ try{
+  const promise=audio.play();
+  if(promise&&typeof promise.catch==='function')promise.catch(()=>complete(true));
+ }catch{complete(true)}
 }
 
 function phoneContactCall(name){const known=phoneCalls.find(x=>x.name===name);if(known)return known;const c=phoneContacts.find(x=>x.name===name);return{id:'contact-'+name,name,number:c?.number||name,time:'',dir:'out',detail:'휴대전화',lines:[['mine','지금 잠깐 통화 가능해?'],['other','응 괜찮아 무슨 일이야'],['mine','아니 그냥 확인할 게 있어서 이따 다시 연락할게']]}}
