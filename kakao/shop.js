@@ -15,6 +15,10 @@ const PRODUCTS=[
  {id:'tea',ko:'티 & 쿠키 세트',zh:'茶饮与曲奇礼盒',kind:'카페',emoji:'🍵',price:16900,bg:'#dfefe4',desc:'쉬는 날의 여유.'}
 ];
 const t=(ko,zh)=>window.IphoneLocale?.language==='zh'?zh:ko;
+const categoryName=name=>t(name,({
+  '카페':'咖啡','디저트':'甜点','푸드':'美食','문화':'娱乐',
+  '라이프':'生活','뷰티':'美妆','쿠폰':'礼券'
+})[name]||name);
 const money=n=>Math.max(0,Math.floor(Number(n)||0)).toLocaleString('ko-KR')+'원';
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const getItem=id=>PRODUCTS.find(p=>p.id===id);
@@ -75,14 +79,14 @@ function catalog(){
  '<strong>'+money(balance())+'</strong>'+button('wallet',t('잔액 · 결제 내역 보기 ›','查看余额与交易 ›'),'ks-light')+'</section>'+
  '<div class="ks-section"><h2>'+t('마음을 전하는 선물','把心意送给朋友')+'</h2><p>'+t('친구에게 보내거나 직접 구매해 보세요.','可自行购买，也可以赠送好友。')+'</p></div>'+
  '<div class="ks-categories">'+chips.map(c=>'<button class="'+(c===category?'chosen':'')+'" data-kshop="category" data-id="'+c+'">'+
- safe(c==='전체'?t('전체','全部'):c)+'</button>').join('')+'</div>'+
+ safe(c==='전체'?t('전체','全部'):categoryName(c))+'</button>').join('')+'</div>'+
  '<div class="ks-grid">'+visible.map(productCard).join('')+'</div>'+
  button('orders',t('선물함 · 구매 내역','礼物盒 · 购买记录'),'ks-outline');
 }
 function detail(){
  const p=getItem(selected);if(!p)return catalog();
  return '<div class="ks-detail-art" style="background:'+p.bg+'">'+p.emoji+'</div>'+
- '<div class="ks-section"><small>'+safe(p.kind)+'</small><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(p.price)+'</strong><p>'+safe(t(p.desc,'虚拟电子礼券。购买后可赠送 KakaoTalk 联系人。'))+'</p></div>'+
+ '<div class="ks-section"><small>'+safe(categoryName(p.kind))+'</small><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(p.price)+'</strong><p>'+safe(t(p.desc,'虚拟电子礼券。购买后可赠送 KakaoTalk 联系人。'))+'</p></div>'+
  '<div class="ks-infocard">'+t('모바일 교환권 · 구매 후 선물 가능','电子礼券 · 购买后可赠送')+'</div>'+
  button('checkout',t('구매하기','立即购买'),'ks-primary')+
  button('choose-before',t('친구에게 선물하기','购买并送给好友'),'ks-outline');
@@ -275,7 +279,6 @@ window.__KKT_SHOP__={
  balanceText:()=>money(balance()),
  get orders(){return state.orders.map(o=>({...o}))},
  open, getProducts:()=>PRODUCTS.map(p=>({...p})),
- purchaseForTest:(productId)=>{selected=productId;intent='self';recipient='';purchase();},
  sync:syncSMS
 };
 restoreGiftChats();
