@@ -30,19 +30,10 @@ function update(receipts){
 }
 function notify(event){
  if(!event||window.__IOS26_NOTIFICATIONS__?.enabled===false||document.hidden)return;
- const old=document.getElementById('kshop-sms-banner');if(old)old.remove();
- const el=document.createElement('button');
- el.type='button';el.id='kshop-sms-banner';
- el.setAttribute('aria-label','카카오페이 결제 알림');
- el.innerHTML='<span class="ks-sms-app">메시지 · 지금</span><strong>'+ (event.type==='gift'?'카카오 선물하기':'카카오페이')+
- '</strong><span>'+ (event.type==='gift'?'선물이 전송되었습니다':'결제가 완료되었습니다')+'</span>';
- document.body.appendChild(el);
- el.addEventListener('click',()=>{
-  el.remove();
-  if(typeof isLocked!=='undefined'&&isLocked)return;
-  if(typeof openApp==='function')openApp('messages');
- });
- setTimeout(()=>el.remove(),4200);
+ if(window.__IOS26_NOTIFICATIONS__?.showSMS){
+  window.__IOS26_NOTIFICATIONS__.showSMS(event);
+  return;
+ }
 }
 window.__IPHONE_SMS__={sync:update,notify};
 })();
