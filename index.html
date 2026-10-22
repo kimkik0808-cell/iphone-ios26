@@ -795,7 +795,7 @@ const contacts=[
  {id:'pd',name:'콘텐츠팀 PD님',initial:'P',status:'편집본 전달 완료',kind:'work'}
 ];
 const seed=[
- {id:'xxx',name:'xxx',type:'friend',tag:'친구',preview:'끝났어?',time:'방금',unread:1,members:1,scriptReply:'거의 다 끝났어',scriptNext:'아니 이 사람 진짜 뭐야ㅋㅋㅋ',messages:[['date','2026년 10월 21일 수요일'],['other','끝났어?','오후 9:12']]},
+ {id:'xxx',name:'xxx',type:'friend',tag:'친구',preview:'',time:'',unread:0,members:1,scriptReply:'',scriptNext:'',scriptDone:true,messages:[]},
  {id:'manager',name:'매니저님',initial:'매',type:'work',tag:'업무',preview:'내일 첫 스케줄 8시 20분 출발이야',time:'오후 9:14',unread:1,members:1,messages:[['date','2026년 10월 20일 화요일'],['other','재현아 내일 첫 스케줄 8시 20분 출발이야','오후 8:48'],['mine','넵 형, 8시 10분까지 내려갈게요','오후 8:51'],['other','의상은 현장에서 갈아입고 대본은 차에서 줄게','오후 9:02'],['other','내일 첫 스케줄 8시 20분 출발이야','오후 9:14']]},
  {id:'tbz',name:'더보이즈 🐬',initial:'TBZ',type:'group',tag:'그룹',preview:'선우: 형 오늘 운동 끝나고 뭐 먹어요?',time:'오후 8:37',unread:7,members:11,messages:[['date','2026년 10월 20일 화요일'],['other','오늘 연습 10시 시작 맞지?','오후 5:12','주연'],['other','웅 3층 큰 방!','오후 5:13','큐'],['mine','나 조금 일찍 갈게','오후 5:14'],['other','형 오늘 운동 끝나고 뭐 먹어요?','오후 8:37','선우'],['other','일단 연습부터 끝내자 ㅋㅋ','오후 8:38','영훈'],['mine','끝나고 다 같이 정하자','오후 8:39']]},
  {id:'stage',name:'음방 무대팀',initial:'무',type:'group',tag:'업무 단체',preview:'안무팀: 엔딩 포즈만 한 번 더 맞출게요',time:'오후 7:05',unread:3,members:8,messages:[['date','2026년 10월 20일 화요일'],['other','내일 리허설 콜타임 오전 11시입니다.','오후 4:21','무대감독'],['other','인이어 체크는 리허설 전 진행할게요.','오후 4:24','음향팀'],['mine','확인했습니다!','오후 4:30'],['other','엔딩 포즈만 한 번 더 맞출게요','오후 7:05','안무팀']]},
@@ -805,7 +805,7 @@ const seed=[
  {id:'stylist',name:'스타일팀 수빈실장님',initial:'수',type:'work',tag:'업무',preview:'공항 룩 피팅은 목요일 2시로 잡을게요',time:'월요일',unread:0,members:1,messages:[['date','2026년 10월 18일 일요일'],['other','재현님 공항 룩 두 벌 중에 블랙 쪽이 더 좋았어요','오후 1:10'],['mine','저도 블랙이 더 편한 것 같아요!','오후 1:17'],['other','그럼 피팅은 목요일 2시로 잡을게요','오후 1:20']]},
  {id:'unknown',name:'알 수 없는 계정',initial:'?',type:'risk',tag:'주의',preview:'지금 숙소 근처인데 잠깐만 나와주면 안 돼요?',time:'월요일',unread:2,members:1,messages:[['date','2026년 10월 19일 월요일'],['other','오빠 저 기억하죠? 지난번 공항에도 갔었는데','오후 11:41'],['other','지금 숙소 근처인데 잠깐만 나와주면 안 돼요?','오후 11:43']]}
 ];
-let data15;try{data15=JSON.parse(localStorage.getItem('jh_kkt15')||'null')||seed}catch(e){data15=seed}data15=seed.map(s=>Object.assign({},s,data15.find(x=>x.id===s.id)||{}));try{if(localStorage.getItem('jh_kkt15_flow_v3')!=='1'){let demo=data15.find(x=>x.id==='xxx'),fresh=seed.find(x=>x.id==='xxx');if(demo&&fresh){demo.messages=fresh.messages.map(m=>[...m]);demo.preview=fresh.preview;demo.time=fresh.time;demo.unread=1;demo.scriptDone=false}localStorage.setItem('jh_kkt15_flow_v3','1');localStorage.setItem('jh_kkt15',JSON.stringify(data15))}}catch(e){}let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0;
+let data15;try{data15=JSON.parse(localStorage.getItem('jh_kkt15')||'null')||seed}catch(e){data15=seed}data15=seed.map(s=>Object.assign({},s,data15.find(x=>x.id===s.id)||{}));try{if(false && localStorage.getItem('jh_kkt15_flow_v3')!=='1'){let demo=data15.find(x=>x.id==='xxx'),fresh=seed.find(x=>x.id==='xxx');if(demo&&fresh){demo.messages=fresh.messages.map(m=>[...m]);demo.preview=fresh.preview;demo.time=fresh.time;demo.unread=1;demo.scriptDone=false}localStorage.setItem('jh_kkt15_flow_v3','1');localStorage.setItem('jh_kkt15',JSON.stringify(data15))}}catch(e){}let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0;
 let episodeTimer15=0,episodeToken15=0;
 const EPKEY15='jh_kkt_episode_KKT_EP001',ep15=window.__KKT_EPISODES__?.KKT_EP001;
 // Inline fallback prevents a stale or unavailable external episode file from restoring the legacy chat.
@@ -817,9 +817,11 @@ const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}
 // Recover already committed messages if the browser closed between two storage writes.
 if(episode15&&epState15.status!=='not_started'){const x=data15.find(c=>c.id==='xxx');if(x){const sent=episode15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);if(JSON.stringify(x.messages)!==JSON.stringify(sent)){x.messages=sent;x.preview=sent.at(-1)?.[1]||'';x.time=sent.at(-1)?.[2]||'';try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}}}}
 const epChat15=()=>data15.find(c=>c.id==='xxx');
+// Disable the obsolete fixed-message demo for xxx even on returning browsers.
+{const x=epChat15();if(x){x.scriptReply='';x.scriptNext='';x.scriptDone=true;}}
 // Targeted legacy-data migration: never reset other chats, settings or bank event.
 // A previously completed episode is reconstructed, not replayed.
-const epMigrationKey15='jh_kkt_ep001_legacy_migrated_v2';
+const epMigrationKey15='jh_kkt_ep001_legacy_migrated_v3';
 try{
  if(localStorage.getItem(epMigrationKey15)!=='1'){
   const x=epChat15();
