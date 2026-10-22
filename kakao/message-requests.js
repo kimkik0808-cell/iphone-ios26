@@ -513,6 +513,13 @@ function ensureAiChats(){
   }
   const visibleOrder=['xxx','sw','nuna','jy'];
   const visibleChats=visibleOrder.map(id=>data.find(item=>item.id===id)).filter(Boolean);
+  // Keep only the original interactive rooms plus chats containing sent gifts.
+  // Gift delivery must survive opening a Gemini chat or switching KKT tabs.
+  for(const item of data){
+    if(visibleChats.includes(item))continue;
+    if(item.giftChat||item.messages?.some(m=>typeof m[5]==='string'&&m[5].startsWith('gift:')))
+      visibleChats.push(item);
+  }
   data.splice(0,data.length,...visibleChats);
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
