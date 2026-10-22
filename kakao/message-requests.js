@@ -116,8 +116,11 @@ function refreshEntryCount(){
   const count=unreadCount();
   const bubble=entry.querySelector('.krq-entry-count');
   if(count){
-    if(bubble)bubble.textContent=String(count);
-    else entry.insertAdjacentHTML('beforeend','<i class="krq-entry-count">'+count+'</i>');
+    if(bubble){
+      // Do not rewrite unchanged badge text: this observer watches subtree
+      // childList changes, and a repeated textContent assignment loops forever.
+      if(bubble.textContent!==String(count))bubble.textContent=String(count);
+    }else entry.insertAdjacentHTML('beforeend','<i class="krq-entry-count">'+count+'</i>');
   }else bubble?.remove();
 }
 const current=()=>conversations.find(item=>item.id===currentId);
