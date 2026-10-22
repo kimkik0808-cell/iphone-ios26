@@ -1,0 +1,72 @@
+/* Korean KakaoTalk-style fictional shopping / gift / wallet interface */
+#kshop-root,#kshop-root *{box-sizing:border-box}
+#kshop-root{position:absolute;inset:0;overflow:hidden;background:#fff;color:#202124;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-size:14px}
+#kshop-root button{border:0;cursor:pointer;font-family:inherit}
+#kshop-root .ks-header{position:absolute;inset:0 0 auto;height:54px;padding:0 17px;background:#fff;display:flex;gap:12px;align-items:center;border-bottom:1px solid #efeff0;z-index:3}
+#kshop-root .ks-header>b{font-weight:750;font-size:20px;white-space:nowrap}
+#kshop-root .ks-headright{margin-left:auto;display:flex;align-items:center;gap:4px}
+#kshop-root .ks-headright .ks-btn{padding:6px 10px;background:transparent;color:#1f2021;font-size:20px}
+#kshop-root .ks-back{font-size:31px;background:transparent;color:#202124;width:32px;text-align:left}
+#kshop-root .ks-scroll{position:absolute;top:54px;bottom:65px;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 0 24px;background:#fff}
+#kshop-root .ks-scroll::-webkit-scrollbar{display:none}
+#kshop-root .ks-hero{margin:13px 15px 16px;padding:19px 20px;border-radius:19px;background:#fce552;display:flex;flex-direction:column;gap:9px;color:#191919}
+#kshop-root .ks-hero small{font-size:12px;color:#4f481e;font-weight:650}
+#kshop-root .ks-hero small span,#kshop-root .ks-infocard b span{font-weight:800}
+#kshop-root .ks-hero strong{font-size:29px;letter-spacing:-.8px;font-weight:800}
+#kshop-root .ks-hero p{font-size:11.5px;line-height:1.6;margin:0;color:#504b28}
+#kshop-root .ks-section{padding:12px 18px 10px}
+#kshop-root .ks-section h2{font-size:20px;line-height:1.35;letter-spacing:-.55px;margin:0 0 5px;font-weight:760}
+#kshop-root .ks-section p{font-size:12.5px;line-height:1.6;color:#777;margin:4px 0}
+#kshop-root .ks-section small{font-size:12px;color:#969696}
+#kshop-root .ks-huge{display:block;font-size:24px;font-weight:800;margin-top:11px}
+#kshop-root .ks-categories{padding:6px 13px 12px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+#kshop-root .ks-categories::-webkit-scrollbar{display:none}
+#kshop-root .ks-categories button{white-space:nowrap;border-radius:999px;background:#f4f4f5;color:#6c6c6d;padding:9px 13px;font-size:12.5px;font-weight:600}
+#kshop-root .ks-categories button.chosen{background:#222;color:#fff}
+#kshop-root .ks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 12px;padding:2px 15px 16px}
+#kshop-root .ks-product{text-align:left;background:transparent;display:flex;flex-direction:column;gap:6px;min-width:0;padding:0}
+#kshop-root .ks-art{display:grid;place-items:center;width:100%;aspect-ratio:1.08;border-radius:15px;font-size:62px;line-height:1}
+#kshop-root .ks-product-name{font-size:13px;line-height:1.45;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+#kshop-root .ks-price{font-size:15px;font-weight:800}
+#kshop-root .ks-detail-art{margin:14px 15px 8px;border-radius:17px;height:min(53vw,215px);display:grid;place-items:center;font-size:94px}
+#kshop-root .ks-infocard{background:#f7f7f8;margin:15px;padding:18px;border-radius:15px;font-size:13.5px;color:#666;line-height:1.65}
+#kshop-root .ks-infocard p{margin:4px 0;color:#696969}
+#kshop-root .ks-infocard b{color:#191919}
+#kshop-root .ks-btn{display:block;border-radius:13px;min-height:46px;margin:11px 15px;padding:12px 17px;font-size:14px;font-weight:720;text-align:center;background:#f3f3f4;color:#242424}
+#kshop-root .ks-btn.ks-primary{background:#fee500;color:#181818}
+#kshop-root .ks-btn.ks-outline{background:#f5f5f6;color:#363636}
+#kshop-root .ks-btn.ks-light{background:#fff9c3;color:#242424;margin:0;align-self:start;min-height:33px;padding:8px 12px;font-size:12px;border-radius:10px}
+#kshop-root .ks-btn.ks-plain{margin:0;background:none;padding:4px 6px;min-height:0}
+#kshop-root .ks-payment-line{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f0f0;margin:0 17px;padding:20px 2px;gap:10px;font-size:14px}
+#kshop-root .ks-payment-line span{flex:1}
+#kshop-root .ks-payment-line b{font-size:17px}
+#kshop-root .ks-payment-line strong{max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#kshop-root .ks-warning{margin:14px 17px;color:#e54f4f;font-size:13px}
+#kshop-root .ks-success{text-align:center;padding:26px 20px 22px}
+#kshop-root .ks-success h2{font-size:21px;margin:13px 0 7px}
+#kshop-root .ks-success p{font-size:14px;font-weight:700;margin:6px 0 13px}
+#kshop-root .ks-success small{font-size:12px;line-height:1.6;color:#777}
+#kshop-root .ks-check{background:#fee500;color:#222;width:70px;height:70px;border-radius:50%;display:grid;place-items:center;font-size:35px;margin:auto}
+#kshop-root .ks-recipients{padding:4px 15px}
+#kshop-root .ks-recipients button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 4px;min-height:64px;border-bottom:1px solid #eee;background:white;color:#252525;font-size:14px}
+#kshop-root .ks-recipients button strong{flex:1;font-size:14px}
+#kshop-root .ks-recipients button.picked{color:#bd8700}
+#kshop-root .ks-avatar{background:#e9e9ed;border-radius:18px;display:grid;place-items:center;width:43px;height:43px;font-weight:700}
+#kshop-root .ks-stats{display:flex;gap:10px;margin:12px 15px}
+#kshop-root .ks-stats>div{flex:1;min-width:0;background:#f7f7f8;padding:14px;border-radius:13px}
+#kshop-root .ks-stats small{display:block;color:#8b8b8b;font-size:11px;margin-bottom:8px}
+#kshop-root .ks-stats b{display:block;font-size:17px;white-space:nowrap}
+#kshop-root .ks-order{width:calc(100% - 30px);margin:0 15px;background:#fff;display:flex;align-items:center;gap:10px;padding:10px 0;text-align:left;border-bottom:1px solid #eee;color:#222}
+#kshop-root .ks-order-art{width:50px;height:50px;border-radius:12px;display:grid;place-items:center;flex:none;font-size:27px}
+#kshop-root .ks-order>span:nth-child(2){flex:1;min-width:0}
+#kshop-root .ks-order strong,#kshop-root .ks-order small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#kshop-root .ks-order strong{font-size:13px}
+#kshop-root .ks-order small{font-size:10.5px;color:#999;margin-top:5px}
+#kshop-root .ks-order b{font-size:13px}
+#kshop-root .ks-order i{font-style:normal;color:#bbb}
+#kshop-root .ks-empty{padding:25px 20px;text-align:center;color:#999}
+#kshop-root .ks-disclaimer{margin:20px 13px 10px;text-align:center;font-size:10px;line-height:1.5;color:#aaa}
+#kshop-sms-banner{position:fixed;z-index:10020;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(calc(100% - 26px),420px);border:0;border-radius:19px;background:rgba(250,250,250,.97);box-shadow:0 9px 35px #0004;color:#252525;padding:13px 15px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;font-size:13px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#kshop-sms-banner strong{font-size:14px}
+#kshop-sms-banner .ks-sms-app{font-size:10px;font-weight:720;color:#888}
+@media(max-width:360px){#kshop-root .ks-grid{gap:13px 9px}#kshop-root .ks-art{font-size:50px}#kshop-root .ks-hero strong{font-size:25px}}
