@@ -807,24 +807,27 @@ const seed=[
 let data15;try{data15=JSON.parse(localStorage.getItem('jh_kkt15')||'null')||seed}catch(e){data15=seed}data15=seed.map(s=>Object.assign({},s,data15.find(x=>x.id===s.id)||{}));try{if(localStorage.getItem('jh_kkt15_flow_v3')!=='1'){let demo=data15.find(x=>x.id==='xxx'),fresh=seed.find(x=>x.id==='xxx');if(demo&&fresh){demo.messages=fresh.messages.map(m=>[...m]);demo.preview=fresh.preview;demo.time=fresh.time;demo.unread=1;demo.scriptDone=false}localStorage.setItem('jh_kkt15_flow_v3','1');localStorage.setItem('jh_kkt15',JSON.stringify(data15))}}catch(e){}let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0;
 let episodeTimer15=0,episodeToken15=0;
 const EPKEY15='jh_kkt_episode_KKT_EP001',ep15=window.__KKT_EPISODES__?.KKT_EP001;
+// Inline fallback prevents a stale or unavailable external episode file from restoring the legacy chat.
+const epFallback15={"id":"KKT_EP001","contact":"xxx","steps":[["mine","계좌번호 보내줘","오전 10:05"],["other","?","오후 12:06"],["other","무슨 뜻이야?","오후 12:06"],["mine","왜","오후 12:06"],["other","나한테 돈 보내주려고?","오후 12:07"],["mine","ㅇ","오후 12:07"],["other","ㅎ","오후 12:07"],["other","나 뭐로 보는 거야","오후 12:07"],["other","카카오뱅크 3333-00-0000000 김여주","오후 12:08"],{"type":"transfer","id":"KKT_EP001_TRANSFER","amount":100000,"bank":"카카오뱅크","recipient":"김여주","account":"3333-00-0000000"},["mine","보냈어","오후 12:08"],["mine","확인해봐","오후 12:09"],["other","아니","오후 12:09"],["other","왜 이렇게 많아?","오후 12:09"],["mine","🙂","오후 12:10"],["other","원래 뭐라 하려고 했는데","오후 12:10"],["other","날 뭘로 보든 다 인정할게ㅎㅎ","오후 12:10"],["mine","별뜻없어","오후 12:10"],["other","무슨 뜻이든 다 인정할게","오후 12:10"],["other","오빠 이름이 뭐야","오후 12:11"],["mine","오빠","오후 12:11"],["other","ㅋㅋㅋ","오후 12:11"],["other","아 웃기다 너","오후 12:11"],["mine","지금 일하러 가야돼","오후 12:11"],["other","다음에또봐 오빠~","오후 12:11"],{"type":"unsentDraft","text":"다음은 없어","time":"오후 12:12","holdMs":4000}]};
+const episode15=ep15?.steps?.length?ep15:epFallback15;
 let epState15;try{epState15=JSON.parse(localStorage.getItem(EPKEY15)||'null')}catch(e){}
 if(!epState15||!['playing','completed'].includes(epState15.status))epState15={status:'not_started',cursor:0,transferred:false,draft:''};
 const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}catch(e){}};
 // Recover already committed messages if the browser closed between two storage writes.
-if(ep15&&epState15.status!=='not_started'){const x=data15.find(c=>c.id==='xxx');if(x){const sent=ep15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);if(JSON.stringify(x.messages)!==JSON.stringify(sent)){x.messages=sent;x.preview=sent.at(-1)?.[1]||'';x.time=sent.at(-1)?.[2]||'';try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}}}}
+if(episode15&&epState15.status!=='not_started'){const x=data15.find(c=>c.id==='xxx');if(x){const sent=episode15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);if(JSON.stringify(x.messages)!==JSON.stringify(sent)){x.messages=sent;x.preview=sent.at(-1)?.[1]||'';x.time=sent.at(-1)?.[2]||'';try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}}}}
 const epChat15=()=>data15.find(c=>c.id==='xxx');
 // Replace only xxx's legacy conversation, including persisted v3 data.
-if(ep15){let x=epChat15();if(x&&epState15.status==='not_started'){x.messages=[];x.preview='';x.time='';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;localStorage.setItem('jh_kkt15',JSON.stringify(data15));}}
+if(episode15){let x=epChat15();if(x&&epState15.status==='not_started'){x.messages=[];x.preview='';x.time='';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;localStorage.setItem('jh_kkt15',JSON.stringify(data15));}}
 function pauseEp15(){episodeToken15++;clearTimeout(episodeTimer15);episodeTimer15=0;typing15=false;keyboard15=false;}
 function epVisible15(){return mode==='kakao'&&view15==='room'&&chat15==='xxx'}
 function epRender15(){if(!epVisible15())return;render15()}
 function runEp15(){
- if(!ep15||!epVisible15()||epState15.status==='completed')return;
+ if(!episode15||!epVisible15()||epState15.status==='completed')return;
  if(epState15.status==='not_started'){const x=epChat15();x.messages=[];x.preview='';x.time='';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;save15();epState15.status='playing';epState15.cursor=0;saveEp15()}
  const token=++episodeToken15;
  function wait(fn,ms){episodeTimer15=setTimeout(()=>{if(token===episodeToken15&&epVisible15())fn()},ms)}
  function next(){
-  const step=ep15.steps[epState15.cursor];
+  const step=episode15.steps[epState15.cursor];
   if(!step){epState15.status='completed';epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
   if(Array.isArray(step)){
    const x=epChat15(),mine=step[0]==='mine';
