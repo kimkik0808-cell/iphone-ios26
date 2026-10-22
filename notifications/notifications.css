@@ -1,17 +1,17 @@
 
 /* In-web iOS 26 notification banners. Not operating-system push notifications. */
 #ios26-notice-stack{
-  position:absolute;z-index:115;top:calc(var(--safe-top) + 58px);
-  left:10px;right:10px;display:flex;flex-direction:column;align-items:stretch;
+  position:absolute;z-index:115;top:calc(var(--safe-top) + 50px);
+  left:8px;right:8px;display:flex;flex-direction:column;align-items:stretch;
   gap:7px;pointer-events:none;max-height:calc(100% - 95px);
   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
 .ios26-notice{
   -webkit-appearance:none;appearance:none;border:1px solid rgba(255,255,255,.58);
-  display:block;position:relative;width:100%;min-height:99px;
-  padding:12px 13px 12px;
-  border-radius:22px;background:rgba(245,245,249,.90);
+  display:block;position:relative;width:100%;min-height:78px;
+  padding:8px 11px 8px;
+  border-radius:18px;background:rgba(245,245,249,.90);
   -webkit-backdrop-filter:blur(32px) saturate(1.8);backdrop-filter:blur(32px) saturate(1.8);
   color:#24232a;box-shadow:0 6px 32px rgba(22,19,29,.20),0 1px 2px rgba(22,19,29,.07);
   text-align:left;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;
@@ -21,19 +21,19 @@
 }
 .ios26-notice.ios26-notice-visible{transform:translateY(0) scale(1);opacity:1}
 .ios26-notice.ios26-notice-leaving{transform:translateY(-130%) scale(.97);opacity:0;pointer-events:none}
-.ios26-notice-top{display:flex;align-items:center;gap:8px;min-height:31px}
-.ios26-notice-icon{flex:none;display:block;width:30px;height:30px;overflow:hidden;border-radius:8px;
+.ios26-notice-top{display:flex;align-items:center;gap:7px;min-height:26px}
+.ios26-notice-icon{flex:none;display:block;width:26px;height:26px;overflow:hidden;border-radius:7px;
   background:#fff;box-shadow:0 .5px 2px #12121a20}
 .ios26-notice-icon svg{display:block;width:100%;height:100%}
-.ios26-notice-app{font-size:12.3px;line-height:17px;font-weight:685;letter-spacing:-.12px;color:#33313a}
-.ios26-notice-time{font-size:11.2px;font-weight:475;color:#8b8a92;line-height:17px;margin-left:auto;flex:none}
-.ios26-notice-content{padding-left:0;margin-top:6px;padding-right:2px;line-height:1.3}
-.ios26-notice-content strong{font-size:13.8px;font-weight:690;display:block;color:#25222b;
+.ios26-notice-app{font-size:11.8px;line-height:15px;font-weight:685;letter-spacing:-.12px;color:#33313a}
+.ios26-notice-time{font-size:10.5px;font-weight:475;color:#8b8a92;line-height:15px;margin-left:auto;flex:none}
+.ios26-notice-content{padding-left:0;margin-top:4px;padding-right:2px;line-height:1.25}
+.ios26-notice-content strong{font-size:13px;font-weight:690;display:block;color:#25222b;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ios26-notice-content p{font-size:13.5px;line-height:1.35;font-weight:460;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;margin:3px 0 0;color:#37333c}
-.ios26-notice-handle{height:3px;width:34px;background:#a8a5b0;opacity:.65;
-  border-radius:6px;margin:9px auto -5px}
+.ios26-notice-content p{font-size:12.7px;line-height:1.3;font-weight:460;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;margin:2px 0 0;color:#37333c}
+.ios26-notice-handle{height:3px;width:30px;background:#a8a5b0;opacity:.65;
+  border-radius:6px;margin:6px auto -3px}
 @media (prefers-reduced-motion:reduce){
   .ios26-notice{transition:none;transform:none;opacity:1}
   .ios26-notice.ios26-notice-leaving{opacity:0}
