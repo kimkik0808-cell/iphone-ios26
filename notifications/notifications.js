@@ -120,7 +120,7 @@
     stack.appendChild(node);
     displayed=node;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{if(node.isConnected)node.classList.add('ios26-notice-visible')}));
-    eraseTimer=setTimeout(removeNotice,4200);
+    eraseTimer=setTimeout(removeNotice,3200);
     node.addEventListener('click',()=>{if(onClick)onClick();else navigate(info.kind,info.requestId)});
     let touchY=null;
     node.addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null},{passive:true});
