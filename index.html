@@ -816,6 +816,24 @@ const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}
 // Recover already committed messages if the browser closed between two storage writes.
 if(episode15&&epState15.status!=='not_started'){const x=data15.find(c=>c.id==='xxx');if(x){const sent=episode15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);if(JSON.stringify(x.messages)!==JSON.stringify(sent)){x.messages=sent;x.preview=sent.at(-1)?.[1]||'';x.time=sent.at(-1)?.[2]||'';try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}}}}
 const epChat15=()=>data15.find(c=>c.id==='xxx');
+// Targeted legacy-data migration: never reset other chats, settings or bank event.
+// A previously completed episode is reconstructed, not replayed.
+const epMigrationKey15='jh_kkt_ep001_legacy_migrated_v2';
+try{
+ if(localStorage.getItem(epMigrationKey15)!=='1'){
+  const x=epChat15();
+  if(x){
+   const sent=episode15.steps.slice(0,epState15.cursor).filter(Array.isArray).map(m=>[...m]);
+   x.messages=epState15.status==='not_started'?[]:sent;
+   x.preview=x.messages.at(-1)?.[1]||'';
+   x.time=x.messages.at(-1)?.[2]||'';
+   x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;
+   localStorage.setItem('jh_kkt15',JSON.stringify(data15));
+  }
+  localStorage.setItem(epMigrationKey15,'1');
+ }
+}catch(e){console.warn('EP001 legacy migration',e)}
+
 // Replace only xxx's legacy conversation, including persisted v3 data.
 if(episode15){let x=epChat15();if(x&&epState15.status==='not_started'){x.messages=[];x.preview='';x.time='';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;localStorage.setItem('jh_kkt15',JSON.stringify(data15));}}
 function pauseEp15(){episodeToken15++;clearTimeout(episodeTimer15);episodeTimer15=0;typing15=false;keyboard15=false;}
