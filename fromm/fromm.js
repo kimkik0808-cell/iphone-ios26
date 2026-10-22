@@ -25,7 +25,8 @@
   let scenes = [];
   let collections = new Map();
   let scripted = new Map();
-  const fixedTurns = [{ text: '요', group: 't01' }, { text: '모하니', group: 't02' }, { text: '밥먹었어?', group: 't03' }];
+  let messageThreads = new Map();
+  const fixedTurns = [];
   const fixedSent = () => local.filter(x => x.fixed === true).length;
   let ready = false;
   let busy = false;
@@ -55,7 +56,7 @@
   const labelFor=(item,key)=>chinese()?(item?.[key+'Zh']||item?.[key]||''):(item?.[key]||'');
   const getScene = () => scenes.find(x => x.id === selectedId);
   const activeLocal = () => local.find(x => x.id === selectedId);
-  const activeThread = () => getScene() || activeLocal();
+  const activeThread = () => messageThreads.get(selectedId) || getScene() || activeLocal();
   const selectedCollection = () => {
     const custom = activeLocal();
     return custom ? custom.replyScene : selectedId;
@@ -71,7 +72,7 @@
     try { localStorage.setItem('fromm26_artist_extra', JSON.stringify(local)); } catch {}
   }
   function replyCard(id, count, previews, waiting = false) {
-    return `<button class="fm-replycard ${waiting ? 'fm-waiting' : ''}" data-fm="${waiting ? 'waiting' : 'open'}" data-scene="${escape(id)}" ${waiting ? 'disabled aria-label="답장 기다리는 중"' : `aria-label="${count}개의 답장 보기"`}><div class="fm-cardtop"><b>▤ &nbsp;답장 모아보기</b><span>${waiting ? '답장 도착 중…' : count + '개 ›'}</span></div><div class="fm-preview">${waiting ? '팬들이 메시지를 확인하고 있어요…' : escape(previews.join(' · '))}</div></button>`;
+    return `<div class="fm-replyline"><span class="fm-from-avatar"><i></i><b>F</b></span><div class="fm-replywrap"><span class="fm-from-label">FROM FAN</span><button class="fm-replycard ${waiting ? 'fm-waiting' : ''}" data-fm="${waiting ? 'waiting' : 'open'}" data-scene="${escape(id)}" ${waiting ? 'disabled aria-label="답장 기다리는 중"' : `aria-label="${count}개의 답장 보기"`}><div class="fm-cardtop"><b>답장 모아보기</b><span>${waiting ? '답장 도착 중…' : count + '개 ›'}</span></div><div class="fm-preview">${waiting ? '팬들이 메시지를 확인하고 있어요…' : escape(previews.join(' · '))}</div></button></div></div>`;
   }
 
   function header(title, right) {
@@ -86,7 +87,9 @@
   function chatHtml() {
     const days = scenes.map(scene => {
       const messages = scene.messages.map(m => {
-        const card = m.replies ? replyCard(scene.id, scene.replyCount, chinese()?(scene.previewZh||scene.preview):scene.preview) : '';
+        const replies=collections.get(m.id)||[];
+        const previews=replies.slice(0,2).map(item=>chinese()?(item.textZh||item.text):item.text);
+        const card = m.replies ? replyCard(m.id, replies.length, previews) : '';
         return message(m) + card;
       }).join('');
       return `<section class="fm-scene"><div class="fm-date">${escape(labelFor(scene,'dateLabel'))}</div>${messages}</section>`;
@@ -100,9 +103,9 @@
         : (m.fixed && !m.replyScene ? replyCard(m.id, 0, [], true) : '');
       return message(m) + replyBlock;
     }).join('');
-    const more = extras ? `<section class="fm-scene"><div class="fm-date">내가 보낸 메시지</div>${extras}</section>` : '';
-    const finished = fixedSent() >= fixedTurns.length;
-    return `<div class="fm-shell">${header('재현', '<span class="fm-emptybtn"></span>')}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="${finished ? '오늘의 메시지를 모두 보냈어요' : '메시지 입력'}" rows="1" maxlength="300" ${finished ? 'disabled' : ''}>${finished ? '' : escape(currentDraft)}</textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기" ${finished ? 'disabled' : ''}>${svg('send')}</button></div></div>`;
+    const more = '';
+    const finished = true;
+    return `<div class="fm-shell">${header('재현', '<span class="fm-emptybtn"></span>')}<div class="fm-scroll" id="fm-chat-list">${days}${more}</div><div class="fm-composer"><button class="fm-plus" data-fm="attachment" aria-label="첨부">${svg('plus')}</button><textarea id="fm-draft" placeholder="오늘의 메시지를 모두 보냈어요" rows="1" maxlength="300" disabled></textarea><button class="fm-send" data-fm="send" aria-label="메시지 보내기" disabled>${svg('send')}</button></div></div>`;
   }
 
   function fanRow(item, i) {
@@ -117,7 +120,7 @@
     if (!scene) return '<div class="fm-shell"><div class="fm-status">답장 정보를 찾을 수 없습니다.</div></div>';
     const rows = getReplies();
     const custom = activeLocal();
-    const anchor = custom || scene.messages.find(m => m.id === scene.anchor);
+    const anchor = custom || scene.messages?.find(m => m.id === scene.anchor) || scene.message || scene;
     return `<div class="fm-shell">${header('답장 모아보기', '<span class="fm-emptybtn"></span>')}<div class="fm-origin"><small>재현 · ${escape(anchor?.time || '')}</small><strong>${escape(contentFor(anchor)||labelFor(scene,'topic'))}</strong></div><div class="fm-sortbar"><b>답장 ${rows.length}개</b><button data-fm="sort">${sort === 'new' ? '최신순' : '오래된순'} ⌄</button></div><div class="fm-replies" id="fm-replies-list">${rows.slice(0, visibleCount).map(fanRow).join('')}${visibleCount < rows.length ? '<button class="fm-more" data-fm="more">답장 더 보기 ↓</button>' : ''}</div></div>`;
   }
 
@@ -143,42 +146,74 @@
     }
   }
 
+  const fanNamesKo=['현재만보는더비','말랑현재','구름다리','소금빵좋아','재현이웃음','별빛정원','오늘도더비','다정한밤','곰돌이티','하루끝에재현'];
+  const fanNamesZh=['草莓牛奶','小熊软糖','橘子汽水','月亮收集者','今天也想你','奶油泡芙','晚风很好','一颗小星星','软糖日记','海边散步'];
+  const replyPools={
+    hello:{
+      ko:['요 여기있어','재현아 왔구나','기다리고 있었어 ㅋㅋ','나도 요','오늘도 반가워','알림 보자마자 왔어','왜 이렇게 귀엽게 와','딱 기다리던 타이밍이야','오늘 하루 어땠어','재현이 왔다'],
+      zh:['我在这里','你终于来啦','看到提醒马上就来了','我也哟','一直在等你出现','今天过得怎么样','一来就这么可爱','刚好正在想你','欢迎回来','今天也很高兴见到你']
+    },
+    doing:{
+      ko:['퇴근하고 집 가는 중이야','저녁 먹고 있었어','과제하다가 잠깐 쉬는 중','침대에 누워서 프롬 보고 있어','운동 끝나고 집 왔어','친구랑 카페에 있어','드라마 보다가 알림 보고 왔어','아직 회사야 살려줘','강아지 산책시키고 있어','너 기다리고 있었지'],
+      zh:['刚下班正在回家','正在吃晚饭','写作业写到一半来看看','躺在床上看FROMM','刚健身结束','和朋友在咖啡店','看剧的时候收到提醒了','还在公司加班','正在遛狗','当然是在等你']
+    },
+    pictorial:{
+      ko:['화보 봤어 진짜 너무 잘 나왔어','분위기 미쳤더라','사진 뜨자마자 저장했어','카인드오브랑 너무 잘 어울려','표정이랑 착장 다 좋았어','잘 나온 정도가 아닌데 ㅋㅋ','이번 화보 완전 레전드야','한 장씩 계속 보고 있어','악세서리까지 완벽했어','진짜 자랑할 만해'],
+      zh:['看了！真的拍得特别好','氛围感太绝了','照片一出来我就保存了','和KIND OF特别合适','表情和造型都很好看','哪里只是拍得好，是神图','这次画报完全是传奇','每一张都反复看了好多遍','连配饰都特别适合你','确实值得你骄傲']
+    },
+    story:{
+      ko:['무슨 썰인데 빨리 말해줘','화보 찍을 때 재밌었겠다','악세서리 착용한 거 너무 잘 어울렸어','그래서 무슨 일이 있었는데 ㅋㅋ','벌써 재밌다 계속 얘기해줘','관계자분도 놀라셨겠다','옷이랑 반지 조합 진짜 좋았어','비하인드 더 들려줘','이런 얘기 해주는 거 너무 좋아','사진 다시 보면서 들어야겠다'],
+      zh:['什么故事快讲给我们听','拍画报的时候一定很有趣','配饰真的特别适合你','所以后来发生什么了哈哈','已经开始觉得好笑了，继续讲','工作人员应该也很惊讶','衣服和戒指的搭配特别好看','再多说一点幕后故事吧','最喜欢听你讲这种小故事','我要一边重看画报一边听']
+    },
+    piercing:{
+      ko:['귀가 안 막혀 있었던 거네 ㅋㅋ','10년 만에 알았다니 너무 웃겨','안 아팠다니 다행이다','쏘옥 들어간 게 진짜 신기해','연습생 때 귀걸이 했던 거 보고 싶다','본인이 제일 놀란 게 너무 귀여워','살짝만 막혀 있었나 보다','이제 귀걸이 자주 해줘','그 장면 상상하니까 웃겨','화보 귀걸이 진짜 잘 어울렸어'],
+      zh:['原来耳洞根本没有完全堵住哈哈','十年后才发现也太好笑了','不疼就好','居然一下就戴进去了，好神奇','好想看看练习生时期戴耳环的样子','你自己最惊讶这件事太可爱了','看来只是稍微堵住了一点','以后可以多戴耳环了','想象那个场面就觉得好笑','画报里的耳环真的很适合你']
+    },
+    dinner:{
+      ko:['저녁은 고기 먹자','김치찌개 어때','오늘은 닭갈비 추천','따뜻한 국밥 먹어','파스타 먹고 싶다','제발 밥부터 챙겨 먹어','치킨 먹자 ㅋㅋ','샤브샤브 어때','나는 떡볶이 먹을 거야','너는 뭐 먹고 싶은데'],
+      zh:['晚饭吃烤肉吧','要不要吃泡菜汤','今天推荐炒鸡排','吃一碗热乎乎的汤饭吧','我想吃意面','先好好吃饭最重要','吃炸鸡吧哈哈','火锅怎么样','我准备吃辣炒年糕','你自己想吃什么']
+    }
+  };
+  function poolFor(message){
+    const text=message.text||'';
+    if(message.id==='m01')return replyPools.hello;
+    if(message.id==='m02')return replyPools.doing;
+    if(message.id==='m19')return replyPools.dinner;
+    if(/화보|잘나왔지|카인드오브랑/.test(text))return replyPools.pictorial;
+    if(/귀|반지|귀걸이|구멍|막혀|들어가|아팠|10년/.test(text))return replyPools.piercing;
+    return replyPools.story;
+  }
+  function buildFanReplies(message){
+    const pool=poolFor(message),rows=[];
+    for(let i=0;i<10;i++){
+      rows.push({id:message.id+'-ko-'+(i+1),name:fanNamesKo[i],text:pool.ko[i],textZh:pool.ko[i],time:message.time,lang:'ko'});
+      rows.push({id:message.id+'-zh-'+(i+1),name:fanNamesZh[i],text:pool.zh[i],textZh:pool.zh[i],time:message.time,lang:'zh-CN'});
+    }
+    const seed=Number(message.id.replace(/\D/g,''))||1;
+    return rows.map((row,index)=>({row,key:(index*7+seed*11)%20})).sort((a,b)=>a.key-b.key).map(item=>item.row);
+  }
   async function load() {
     if (busy || ready) return;
     busy = true;
     try {
-      const responses = await Promise.all([
-        fetch(new URL('scenes.json?locale=2', base),{cache:'no-store'}),
-        fetch(new URL('replies.json?locale=2', base),{cache:'no-store'}),
-        fetch(new URL('interactive.json?locale=2', base),{cache:'no-store'})
-      ]);
-      if (!responses.every(r => r.ok)) throw new Error('Data missing');
-      const [a, b, c] = await Promise.all(responses.map(x => x.json()));
-      if (!Array.isArray(a.scenes) || !Array.isArray(b.collections) || !Array.isArray(c.collections))
-        throw new Error('Invalid fromm data');
-      const next = new Map([...b.collections, ...c.collections].map(x => [x.sceneId, x.replies]));
-      for (const scene of a.scenes) {
-        if (!next.has(scene.id) || next.get(scene.id).length !== scene.replyCount)
-          throw new Error('Reply count mismatch');
-      }
-      for (const item of fixedTurns) {
-        if (!next.has(item.group) || next.get(item.group).length < 60)
-          throw new Error('Fixed three-step reply collection unavailable');
-      }
-      scenes = a.scenes;
-      scripted = new Map(c.collections.map(x => [x.sceneId, {
-        topic: x.phrase, topicZh:x.phraseZh, preview: x.preview,previewZh:x.previewZh, replyCount: x.replies.length
-      }]));
-      collections = next;
-      // Recover an interrupted reply arrival after a page reload.
-      let changed = false;
-      for (const item of local) {
-        if (item.fixed && !item.replyScene) {
-          item.replyScene = fixedTurns[(item.stage || 1) - 1]?.group || 't01';
-          changed = true;
+      const response=await fetch(new URL('scenes.json?locale=3', base),{cache:'no-store'});
+      if(!response.ok)throw new Error('Data missing');
+      const data=await response.json();
+      if(!Array.isArray(data.scenes))throw new Error('Invalid fromm data');
+      scenes=data.scenes;
+      collections=new Map();
+      messageThreads=new Map();
+      for(const scene of scenes){
+        for(const message of scene.messages||[]){
+          const replies=buildFanReplies(message);
+          collections.set(message.id,replies);
+          messageThreads.set(message.id,{
+            id:message.id,topic:message.text,topicZh:message.textZh,anchor:message.id,
+            message,messages:[message],replyCount:replies.length
+          });
         }
       }
-      if (changed) persistLocal();
+      scripted=new Map();
       ready = true;
       failed = false;
       draw();
