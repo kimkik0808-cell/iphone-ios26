@@ -21,6 +21,7 @@
 
   const instagramIcon=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="nig26" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ffcb54"/><stop offset=".28" stop-color="#fa5c39"/><stop offset=".56" stop-color="#d5268c"/><stop offset=".83" stop-color="#8c46cc"/><stop offset="1" stop-color="#4159c7"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#nig26)"/><rect x="14" y="14" width="36" height="36" rx="10" stroke="white" stroke-width="4.3" fill="none"/><circle cx="32" cy="32" r="8.7" fill="none" stroke="white" stroke-width="4.3"/><circle cx="43" cy="21" r="3" fill="white"/></svg>`;
   const kakaoIcon=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#FEE500"/><ellipse cx="32" cy="29.5" rx="24" ry="18" fill="#3b2923"/><path d="M18 44l-3.7 12 14-9.4" fill="#3b2923"/><text x="32" y="34" fill="#fee500" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="900" text-anchor="middle">TALK</text></svg>`;
+  const messagesIcon=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#34c759"/><path d="M32 13c-13 0-23 8.2-23 18.3 0 5.8 3.5 11 9 14.3L15 53l9.1-4.1c2.5.7 5.2 1 7.9 1 13 0 23-8.2 23-18.6S45 13 32 13Z" fill="#fff"/></svg>`;
   const igFans=[
     'hyunjae_daily','deobi._love','h_j_lover','yourmoon_23',
     'onlyhyunjae','deobi.zip','lovely_jjae','theboyz_fanclub',
@@ -88,6 +89,8 @@
         window.__IG14_TEST__.render();
       }
       document.querySelector('#ig14 [data-a="detail"][data-id="own1"]')?.click();
+    }else if(name==='messages'){
+      openApp('messages');
     }else{
       openApp('kakao');
       const requests=window.__KKT_REQUESTS__;
@@ -105,6 +108,38 @@
       zh()?name+'及另外'+(12+(i*7)%68)+'人赞了你的帖子。':name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
       translate(igMessages[i%igMessages.length]);
     return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
+  }
+  function displayInfo(info,onClick){
+    clearNotice();
+    const node=document.createElement('button');
+    node.type='button';
+    node.className='ios26-notice';
+    node.dataset.notification=info.kind;
+    node.setAttribute('aria-label',info.name+(zh()?' 通知：':' 알림: ')+info.sender+' '+info.message);
+    node.innerHTML=`<div class="ios26-notice-top"><span class="ios26-notice-icon">${info.icon}</span><span class="ios26-notice-app">${esc(info.name)}</span><span class="ios26-notice-time">${zh()?'现在':'지금'}</span></div><div class="ios26-notice-content"><strong>${esc(info.sender)}</strong><p>${esc(info.message)}</p></div><div class="ios26-notice-handle"></div>`;
+    stack.appendChild(node);
+    displayed=node;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(node.isConnected)node.classList.add('ios26-notice-visible')}));
+    eraseTimer=setTimeout(removeNotice,4200);
+    node.addEventListener('click',()=>{if(onClick)onClick();else navigate(info.kind,info.requestId)});
+    let touchY=null;
+    node.addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null},{passive:true});
+    node.addEventListener('touchend',e=>{
+      if(touchY!==null && touchY-(e.changedTouches[0]?.clientY??touchY)>35){
+        e.preventDefault();e.stopPropagation();removeNotice();
+      }
+      touchY=null;
+    },{passive:false});
+    return true;
+  }
+  function showSMS(payload={}){
+    if(!canDisplay())return false;
+    const gift=payload.type==='gift';
+    return displayInfo({
+      kind:'messages',name:zh()?'信息':'메시지',sender:gift?'카카오 선물하기':'카카오페이',
+      message:gift?(zh()?'礼物已发送。':'선물이 전송되었습니다'):(zh()?'付款完成。':'결제가 완료되었습니다'),
+      icon:messagesIcon
+    },()=>navigate('messages'));
   }
   function show(kind){
     if(!canDisplay())return false;
@@ -126,27 +161,7 @@
       }
       // With all scripted messages delivered, normal ticks remain IG-only.
     }
-    clearNotice();
-    const node=document.createElement('button');
-    node.type='button';
-    node.className='ios26-notice';
-    node.dataset.notification=info.kind;
-    node.setAttribute('aria-label',info.name+(zh()?' 通知：':' 알림: ')+info.sender+' '+info.message);
-    node.innerHTML=`<div class="ios26-notice-top"><span class="ios26-notice-icon">${info.icon}</span><span class="ios26-notice-app">${esc(info.name)}</span><span class="ios26-notice-time">${zh()?'现在':'지금'}</span></div><div class="ios26-notice-content"><strong>${esc(info.sender)}</strong><p>${esc(info.message)}</p></div><div class="ios26-notice-handle"></div>`;
-    stack.appendChild(node);
-    displayed=node;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{if(node.isConnected)node.classList.add('ios26-notice-visible')}));
-    eraseTimer=setTimeout(removeNotice,4600);
-    node.addEventListener('click',()=>navigate(info.kind,info.requestId));
-    let touchY=null;
-    node.addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null},{passive:true});
-    node.addEventListener('touchend',e=>{
-      if(touchY!==null && touchY-(e.changedTouches[0]?.clientY??touchY)>35){
-        e.preventDefault();e.stopPropagation();removeNotice();
-      }
-      touchY=null;
-    },{passive:false});
-    return true;
+    return displayInfo(info);
   }
   function stop(){
     generation++;
@@ -185,7 +200,7 @@
   if(canDisplay())schedule(1200);
   window.addEventListener('iphone26:languagechange',()=>clearNotice());
   window.__IOS26_NOTIFICATIONS__={
-    show,stop,replay:()=>{if(canDisplay())schedule(100);},
+    show,showSMS,stop,replay:()=>{if(canDisplay())schedule(100);},
     get enabled(){return !isDnd()},
     get shown(){return displayed?[displayed.dataset.notification]:[]},
     get count(){return counter}
