@@ -193,6 +193,7 @@ function assignGift(o,id){
   }
  }
  syncSMS();
+ if(intent==='after')window.__IPHONE_SMS__?.notify?.({type:'gift',recipient:id});
  return true;
 }
 function restoreGiftChats(){
@@ -211,7 +212,8 @@ function restoreGiftChats(){
   if(!Array.isArray(c.messages))c.messages=[];
   if(c.messages.some(m=>m[5]==='gift:'+o.id))continue;
   const msg='🎁 [선물하기] '+p.ko+' · '+money(o.price)+'\n선물을 보냈어요!';
-  c.messages.push(['mine',msg,'오후 9:00','','read','gift:'+o.id]);c.preview=msg;c.time='방금';
+  const restoredTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.giftedAt||o.at));
+  c.messages.push(['mine',msg,restoredTime,'','read','gift:'+o.id]);c.preview=msg;c.time='방금';
  }
  try{localStorage.setItem('jh_kkt15',JSON.stringify(list))}catch{}
 }
@@ -222,6 +224,7 @@ function purchase(){
  const o={id,itemId:p.id,price:p.price,at:Date.now(),balanceAfter:balance()-p.price,recipient:null};
  state.orders.push(o);save();
  orderId=id;syncSMS();
+ window.__IPHONE_SMS__?.notify?.({type:'purchase',id});
  if(intent==='gift'&&recipient)assignGift(o,recipient);
  page='success';draw();
 }
