@@ -251,7 +251,7 @@ function callVoiceFile(index){
  if(!activeCall||!activeCall.lines?.[index])return '';
  // Sunwoo conversation has recordings for BOTH speakers, in transcript order.
  if(activeCall.id==='sunwoo')
-  return 'sunwoo-'+String(index+1).padStart(2,'0')+'.mp3';
+  return 'sunwoo-'+String(index+1).padStart(2,'0')+'.m4a';
  // xxx and Youngjae calls only have Hyunjae's lines.
  if(activeCall.lines[index][0]!=='mine')return '';
  if(activeCall.id==='xxx'){
