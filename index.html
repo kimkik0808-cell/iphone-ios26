@@ -772,7 +772,7 @@ const igrTouch={active:false,startX:0,startY:0,vertical:false};
 function igrSwipeStart(event){
  igrTouch.active=false;
  if(typeof mode==='undefined'||mode!=='instagram'||state.activeTab!=='reels'||view||igrSheet)return;
- if(!event.target.closest('.igr-view')||event.target.closest('button,input,textarea,.igr-sheet-overlay'))return;
+ if(!event.target.closest('.igr-view')||event.target.closest('input,textarea,.igr-sheet-overlay'))return;
  if(event.touches.length!==1)return;
  igrTouch.active=true;
  igrTouch.startX=event.touches[0].clientX;
