@@ -19,7 +19,8 @@ function update(receipts){
   if(!e||typeof e.id!=='string'||existing.has(e.id)||!['purchase','gift','bank'].includes(e.type))continue;
   existing.add(e.id);
   const gift=e.type==='gift',bank=e.type==='bank',name=bank?(e.bank||'카카오뱅크'):gift?'카카오 선물하기':'카카오페이';
-  const message=bank?
+  const zh=window.IphoneLocale?.language==='zh';
+  const message=zh?(bank?'[银行转账支出]\n支出金额 '+balance(e.amount)+'\n收款人 '+esc(e.recipient||'')+'\n账户 '+esc(e.account||'')+'\n转账后余额 '+balance(e.balance):gift?'[Kakao礼物]\n已向'+esc(e.recipient||'朋友')+'发送 '+esc(e.item||'礼物')+'\n订单号 '+e.id.replace(/-gift$/,''):'[KakaoPay支付完成]\n商品 '+esc(e.item||'礼物')+'\n支付金额 '+balance(e.price)+'\n支付后余额 '+balance(e.balance)+'\n订单号 '+e.id):bank?
    '[은행 이체출금]\n출금 금액 '+balance(e.amount)+'\n받는 분 '+esc(e.recipient||'')+'\n계좌 '+esc(e.account||'')+'\n출금 후 잔액 '+balance(e.balance):gift?
    '[카카오 선물하기]\n'+esc(e.recipient||'친구')+'님에게 '+esc(e.item||'선물')+' 선물 발송 완료\n주문번호 '+e.id.replace(/-gift$/,''):
    '[카카오페이 결제 완료]\n상품 '+esc(e.item||'선물')+'\n결제 금액 '+balance(e.price)+'\n결제 후 잔액 '+balance(e.balance)+'\n주문번호 '+e.id;
