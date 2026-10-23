@@ -142,6 +142,18 @@
       icon:messagesIcon
     },()=>navigate('messages'));
   }
+  function showKakao(payload={}){
+    if(!canDisplay())return false;
+    return displayInfo({
+      kind:'kakao',name:kakaoName(),sender:payload.sender||'카카오톡 선물하기',
+      message:payload.message||'선물 주문이 완료되었습니다.',icon:kakaoIcon
+    },()=>{
+      removeNotice();
+      if(typeof openApp!=='function')return;
+      openApp('kakao');
+      window.__KKT15_TEST__?.openChat?.(payload.chatId||'kakao-gift');
+    });
+  }
   function show(kind){
     if(!canDisplay())return false;
     const info=nextData();
@@ -201,7 +213,7 @@
   if(canDisplay())schedule(1200);
   window.addEventListener('iphone26:languagechange',()=>clearNotice());
   window.__IOS26_NOTIFICATIONS__={
-    show,showSMS,stop,replay:()=>{if(canDisplay())schedule(100);},
+    show,showSMS,showKakao,stop,replay:()=>{if(canDisplay())schedule(100);},
     get enabled(){return !isDnd()},
     get shown(){return displayed?[displayed.dataset.notification]:[]},
     get count(){return counter}

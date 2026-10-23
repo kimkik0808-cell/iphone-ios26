@@ -80,6 +80,15 @@
 #kshop-root .ks-order i{font-style:normal;color:#bbb}
 #kshop-root .ks-empty{padding:25px 20px;text-align:center;color:#999}
 #kshop-root .ks-search-empty{grid-column:1/-1;margin:0}
+#kshop-root .ks-gift-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #ececee;background:#fff}
+#kshop-root .ks-gift-tabs button{height:47px;background:#fff;color:#8a8a8e;font-size:14px;font-weight:650;border-bottom:2px solid transparent}
+#kshop-root .ks-gift-tabs button.active{color:#202124;border-bottom-color:#202124}
+#kshop-root .ks-coupon{margin:4px 15px 16px;padding:18px;border-radius:16px;background:#fff;border:1px solid #e9e9eb;text-align:center;box-shadow:0 5px 18px #0000000a}
+#kshop-root .ks-coupon>span{display:inline-block;padding:5px 9px;border-radius:999px;background:#e9f8eb;color:#24833a;font-size:11px;font-weight:750}
+#kshop-root .ks-coupon strong,#kshop-root .ks-coupon small{display:block}
+#kshop-root .ks-coupon strong{font-size:13px;letter-spacing:1.8px;margin:10px 0 7px}
+#kshop-root .ks-coupon small{font-size:11px;color:#888}
+#kshop-root .ks-barcode{height:62px;margin:17px auto 8px;max-width:250px;background:repeating-linear-gradient(90deg,#171717 0 2px,transparent 2px 4px,#171717 4px 5px,transparent 5px 9px,#171717 9px 12px,transparent 12px 14px)}
 #kshop-root .ks-disclaimer{margin:20px 13px 10px;text-align:center;font-size:10px;line-height:1.5;color:#aaa}
 #kshop-sms-banner{position:fixed;z-index:10020;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(calc(100% - 26px),420px);border:0;border-radius:19px;background:rgba(250,250,250,.97);box-shadow:0 9px 35px #0004;color:#252525;padding:13px 15px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;font-size:13px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 #kshop-sms-banner strong{font-size:14px}

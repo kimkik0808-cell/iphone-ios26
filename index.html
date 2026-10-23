@@ -223,7 +223,7 @@ const phoneContacts=[
  {group:'멤버',name:'상연',number:'010-28••-1104',color:'#6286c5'},{group:'멤버',name:'제이콥',number:'010-73••-3010',color:'#7b87b8'},{group:'멤버',name:'영훈',number:'010-19••-0808',color:'#587ba9'},{group:'멤버',name:'주연',number:'010-65••-0115',color:'#556f9d'},{group:'멤버',name:'케빈',number:'010-40••-0223',color:'#7367a1'},{group:'멤버',name:'뉴',number:'010-98••-0426',color:'#4d8c9b'},{group:'멤버',name:'큐',number:'010-31••-1105',color:'#6b78aa'},{group:'멤버',name:'선우',number:'01022222222',color:'#527eaf'},
  {group:'회사',name:'매니저 형',number:'010-44••-7281',color:'#6c757d'},{group:'회사',name:'실장님',number:'010-26••-9035',color:'#737b84'},
  {group:'가족',name:'아빠',number:'010-80••-1968',color:'#8297b1'},{group:'가족',name:'엄마',number:'010-35••-1971',color:'#b78496'},{group:'가족',name:'누나',number:'010-71••-1994',color:'#997b9d'},
- {group:'친구',name:'민트',number:'010-63••-0528',color:'#7975d6'},{group:'친구',name:'시은',number:'010-93••-0617',color:'#4bb7b1'},{group:'친구',name:'오란',number:'010-21••-0924',color:'#5b9bd5'},{group:'친구',name:'영재',number:'01033333333',color:'#7488c7'}
+ {group:'친구',name:'민트',number:'010-63••-0528',color:'#7975d6'},{group:'친구',name:'시은',number:'010-93••-0617',color:'#4bb7b1'},{group:'친구',name:'오란',number:'010-21••-0924',color:'#5b9bd5'},{group:'친구',name:'영재',number:'01033333333',color:'#7488c7'},{group:'친구',name:'xxx',number:'01011111111',color:'#c27a92'}
 ];
 const phoneCalls=[
  {id:'mom',name:'엄마',number:'010-35••-1971',time:'오늘',dir:'in',detail:'수신 통화 · 2분',lines:[['other','밥은 먹었어?'],['mine','응, 방금 먹었어. 오늘은 조금 늦게 끝날 것 같아.'],['other','그래. 끝나면 연락하고 조심히 들어가.'],['mine','응 엄마. 먼저 자.']]},
@@ -352,7 +352,7 @@ function advancePhoneCall(){
 
 const smsTimes=['방금','1분 전','3분 전','7분 전','12분 전','18분 전','25분 전','39분 전','오전 9:18','오전 8:47','오전 8:12','어제','어제','어제','월요일','월요일','일요일','토요일','10월 18일','10월 17일','10월 16일','10월 15일','10월 13일','10월 11일'];
 const smsRand=n=>Math.floor(Math.random()*n),smsCode=()=>String(smsRand(900000)+100000),smsPhone=()=>`010-${String(smsRand(9000)+1000)}-${String(smsRand(9000)+1000)}`;
-const smsEntry=(name,initial,color,messages,extra={})=>({name,initial,color,messages:extra.risk?messages.map(x=>x.replace(/[，。、,.]/g,'')):messages,...extra});
+const smsEntry=(name,initial,color,messages,extra={})=>({name,initial,color,messages,...extra});
 function smsShuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const smsAuth=[
  ()=>smsEntry('Apple','','#111',[`Apple ID 확인 코드: ${smsCode()}`, '이 코드는 다른 사람과 공유하지 마십시오']),
@@ -371,7 +371,7 @@ const smsCommerce=[
  ()=>smsEntry('우체국택배','우','#e44b35',['등기우편물이 배달 예정입니다','부재 시 우편함에 안내문을 남겨드립니다']),
  ()=>smsEntry('쿠팡','C','#e94235',['주문하신 상품이 문 앞에 도착했습니다','배송 사진을 앱에서 확인할 수 있습니다']),
  ()=>smsEntry('배달의민족','배','#20c997',['주문이 접수되었습니다','가게에서 조리를 시작했습니다','예상 도착 시간은 35분 뒤입니다']),
- ()=>smsEntry('LOUIS VUITTON','LV','#31241e',['주문하신 상품이 출고되었습니다','배송 조회는 앱 주문 내역에서 확인하세요']),
+ ()=>smsEntry('무신사','M','#111',['주문하신 상품이 출고되었습니다','배송 조회는 앱 주문 내역에서 확인하세요']),
  ()=>smsEntry('컬리','K','#6f2c91',['샛별배송 주문이 완료되었습니다','내일 오전 7시 전까지 배송됩니다']),
  ()=>smsEntry('올리브영','O','#86b817',['오늘드림 상품 준비가 완료되었습니다','매장에서 주문번호를 보여 주세요']),
  ()=>smsEntry('스타벅스','S','#1f7a4d',['사이렌 오더가 접수되었습니다','주문하신 음료가 준비되었습니다']),
@@ -391,6 +391,18 @@ const smsFinance=[
  ()=>smsEntry('네이버페이','N','#03c75a',['네이버페이 포인트가 적립되었습니다','적립 포인트 1,240원을 확인해 보세요']),
  ()=>smsEntry('카카오페이','K','#f3c800',['카카오페이 결제가 완료되었습니다','결제 내역은 카카오페이에서 확인하세요']),
  ()=>smsEntry('PAYCO','P','#fa3348',['PAYCO 쿠폰이 도착했습니다','쿠폰함에서 사용 기간을 확인해 주세요'])
+];
+const smsWork=[
+ ()=>smsEntry('IST 일정팀','I','#56677f',['내일 첫 일정 출발 시간이 변경되었습니다','오전 8시 10분까지 로비로 내려와 주세요']),
+ ()=>smsEntry('매니저 형','매','#6c757d',['차량 로비 앞에 도착했어','준비되면 바로 내려와']),
+ ()=>smsEntry('스타일팀','스','#9b718f',['내일 공항 의상 피팅 시간이 확정됐어요','오후 2시 스타일룸에서 진행합니다']),
+ ()=>smsEntry('안무팀','안','#755aa8',['오늘 연습실이 3층 큰 방으로 변경됐습니다','엔딩 동선부터 먼저 맞출게요']),
+ ()=>smsEntry('콘텐츠팀','C','#4c82a6',['촬영용 질문지를 전달드립니다','수정할 내용이 있으면 오늘 안으로 알려 주세요']),
+ ()=>smsEntry('공연팀','공','#d06b55',['리허설 콜타임이 20분 앞당겨졌습니다','인이어 체크 후 바로 무대 리허설 진행합니다']),
+ ()=>smsEntry('헤어메이크업','H','#bd7892',['내일 헤어 메이크업 순서 공유드려요','도착 후 바로 샴푸실로 와 주세요']),
+ ()=>smsEntry('차량팀','차','#596879',['배차 차량 번호가 변경되었습니다','새 차량 번호는 12가 4821입니다']),
+ ()=>smsEntry('녹음실','R','#4f6699',['오늘 녹음 파일 1차본 전달드렸습니다','2절 애드리브 부분만 다시 확인 부탁드립니다']),
+ ()=>smsEntry('방송국 안내','B','#43536d',['사전 녹화 입장 시간이 확정되었습니다','대기실 위치는 현장 스태프에게 확인해 주세요'])
 ];
 const smsService=[
  ()=>smsEntry('병원 예약','병','#4e9d8a',['내일 오후 4시 진료가 예약되어 있습니다','방문이 어려우면 사전에 예약을 변경해 주세요']),
@@ -420,10 +432,8 @@ const smsRisk=[
 ];
 let smsLastKeys=new Set();
 function smsTakeFresh(pool,n,prefix){const all=pool.map((make,i)=>({make,key:`${prefix}-${i}`}));const fresh=smsShuffle(all.filter(x=>!smsLastKeys.has(x.key)));const fallback=smsShuffle(all.filter(x=>smsLastKeys.has(x.key)));return [...fresh,...fallback].slice(0,n).map(x=>({key:x.key,...x.make()}))}
-function makeTexts(){const selected=smsShuffle([...smsTakeFresh(smsAuth,3,'auth'),...smsTakeFresh(smsCommerce,5,'commerce'),...smsTakeFresh(smsFinance,4,'finance'),...smsTakeFresh(smsService,4,'service'),...smsTakeFresh(smsRisk,4,'risk')]);smsLastKeys=new Set(selected.map(x=>x.key));return selected.map((x,i)=>{const messages=x.messages||[];const preview=messages[messages.length-1]||'',baseTime=smsTimes[i%smsTimes.length];return{name:x.name,initial:x.initial,color:x.color,risk:!!x.risk,unread:i<9,preview,time:baseTime,chat:messages.map((text,j)=>['other',text,j===messages.length-1?baseTime:''])}})}
+function makeTexts(){const selected=smsShuffle([...smsTakeFresh(smsAuth,3,'auth'),...smsTakeFresh(smsCommerce,5,'commerce'),...smsTakeFresh(smsFinance,4,'finance'),...smsTakeFresh(smsWork,4,'work'),...smsTakeFresh(smsService,4,'service'),...smsTakeFresh(smsRisk,4,'risk')]);smsLastKeys=new Set(selected.map(x=>x.key));return selected.map((x,i)=>{const messages=x.messages||[];const preview=messages[messages.length-1]||'',baseTime=smsTimes[i%smsTimes.length];return{name:x.name,initial:x.initial,color:x.color,risk:!!x.risk,unread:i<9,preview,time:baseTime,chat:messages.map((text,j)=>['other',text,j===messages.length-1?baseTime:''])}})}
 let texts=makeTexts();
-let smsListScrollY=0;
-const smsScroller=()=>{const list=frame.querySelector('#threadlist');return list&&list.scrollHeight>list.clientHeight+4?list:frame};
 const kakaoChats=[{name:'민지',initial:'민',preview:'주말에 뭐 해?',time:'오후 1:42',chat:[['other','주말에 뭐 해?'],['mine','아직 계획 없어!']]},{name:'친구들',initial:'친',preview:'다 같이 만나는 날!',time:'월요일',chat:[['other','다 같이 만나는 날!'],['mine','좋아~']]}];
 const photoColors=['linear-gradient(160deg,#e4bbb1,#bd8ca8 55%,#5c7293)','linear-gradient(155deg,#d7dec7,#8bb6af 50%,#527785)','linear-gradient(140deg,#f6dec3,#e7afad 43%,#95aecf)','linear-gradient(150deg,#bcd6db,#6e8eb5,#314879)','linear-gradient(140deg,#e1dfc8,#c4c7aa,#78938a)','linear-gradient(140deg,#d2bbdb,#ad8bbb,#516c9e)','linear-gradient(130deg,#daacbd,#c8d7ef,#637cb5)','linear-gradient(160deg,#b5d6dd,#83aa98,#456e86)','linear-gradient(150deg,#f0d0a6,#e49f88,#8d8eb9)'];
 function fallbackPhotoDate(index){
@@ -436,8 +446,8 @@ let photoManifest=photoSeed,photosLoading=false,photosLoaded=false,photosError='
 let photoSelected=new Set(),photoFavorites=new Set();try{photoFavorites=new Set(JSON.parse(localStorage.getItem('iphone_photo_favorites')||'[]'))}catch{}
 function savePhotoFavorites(){try{localStorage.setItem('iphone_photo_favorites',JSON.stringify([...photoFavorites]))}catch{}}
 function normalizePhotos(items){const seen=new Set();return (Array.isArray(items)?items:[]).filter(p=>p&&p.src&&p.name).map((p,index)=>({id:String(p.id||p.name),name:String(p.name),src:String(p.src),date:p.date||fallbackPhotoDate(index),deleted:!!p.deleted,deletedAt:p.deletedAt||null})).filter(p=>{if(seen.has(p.id))return false;seen.add(p.id);return true})}
-async function loadPhotoManifest(force=false){if(photosLoading||photosLoaded&&!force)return;photosLoading=true;photosError='';if(mode==='photos')render();try{const r=await fetch(`photos/manifest.json${force?'?refresh='+Date.now():''}`,{cache:force?'no-store':'default'});if(!r.ok)throw Error(String(r.status));const data=await r.json(),items=normalizePhotos(data.photos);if(items.length)photoManifest=items;photosLoaded=true}catch(e){photosError='사진 목록을 새로 불러오지 못했습니다.';photosLoaded=true}finally{photosLoading=false;if(mode==='photos')render()}}
-function visiblePhotos(){if(photoAlbum==='deleted')return photoManifest.filter(p=>p.deleted);const live=photoManifest.filter(p=>!p.deleted).sort((a,b)=>Date.parse(b.date)-Date.parse(a.date));return photoAlbum==='favorites'?live.filter(p=>photoFavorites.has(p.id)):live}
+async function loadPhotoManifest(force=false){if(photosLoading||photosLoaded&&!force)return;photosLoading=true;photosError='';if(mode==='photos')render();try{const r=await fetch(`photos/manifest.json?v=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw Error(String(r.status));const data=await r.json(),items=normalizePhotos(data.photos);if(items.length)photoManifest=items;photosLoaded=true}catch(e){photosError='사진 목록을 새로 불러오지 못했습니다.';photosLoaded=true}finally{photosLoading=false;if(mode==='photos')render()}}
+function visiblePhotos(){if(photoAlbum==='deleted')return photoManifest.filter(p=>p.deleted);const live=photoManifest.filter(p=>!p.deleted);return photoAlbum==='favorites'?live.filter(p=>photoFavorites.has(p.id)):live}
 function photoLabel(p){return p?.date||''}
 function toast(s){const el=$('#toast');el.textContent=s;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2300)}
 function showPin(){pin='';$('#passcode').classList.add('active');updatePin()}function updatePin(){$('#pin-dots').innerHTML=Array.from({length:6},(_,i)=>`<i class="pin-dot ${i<pin.length?'filled':''}"></i>`).join('')}function lockOff(){isLocked=false;$('#lock').classList.add('hide');$('#passcode').classList.remove('active');$('#home').classList.remove('hide');$('#status').classList.remove('dark');$('#gesture').classList.remove('ink')}
@@ -479,9 +489,8 @@ function messagesPage(kakao){if(sub==='chat')return chatPage(kakao);return nav(k
 function safariPage(){return `<div class="safari-page"><div class="large-title">시작 페이지</div><div class="safari-section-head"><b>즐겨찾기</b></div><div class="safari-favorites">${[['NAVER','N'],['Google','G'],['YouTube','▶'],['Apple','●']].map(([n,icon])=>`<button class="safari-fav" data-fav="${n}"><i>${icon}</i>${n}</button>`).join('')}</div><div class="safari-section-head"><b>최근 검색</b><span>${safariHistory.length}개</span></div><div class="safari-history">${safariHistory.map(x=>`<button class="safari-history-row" data-safari-query="${escapeHTML(x.q)}" ${x.url?`data-safari-url="${escapeHTML(x.url)}"`:''}><i>${x.url?'▤':'⌕'}</i><span>${escapeHTML(x.q)}</span><small>${escapeHTML(x.time)}</small></button>`).join('')}</div><div class="safari-section-head"><b>개인정보 보호 보고서</b></div><div class="safari-privacy"><i>🛡</i><div><b>개인정보 보호가 켜져 있습니다.</b><p>Safari가 사용자의 브라우징 활동을 보호하고 있습니다.</p></div></div></div><div class="urlbar"><span style="font-size:22px;color:#007aff">‹</span><form id="safariform"><span style="color:#777">ᴀᴀ&nbsp;</span><input id="safariaddress" placeholder="검색어 또는 웹 사이트 이름 입력" autocomplete="off"><button>↗</button></form><span style="font-size:22px;color:#007aff">▢</span></div>`}
 function musicPage(){return nav('지금 재생 중','음악','•••')+`<div class="music-cover">♫</div><div class="music-info"><div><strong>Midnight Walk</strong><p>Demo Playlist</p></div><span style="font-size:27px">♡</span></div><div class="music-line"><span></span></div><div style="display:flex;justify-content:space-between;margin:0 35px;color:#9d9ea9;font-size:11px"><span>0:35</span><span>-2:10</span></div><div class="music-controls"><button data-prev>⏮</button><button data-play>${playing?'Ⅱ':'▶'}</button><button data-next>⏭</button></div><p style="text-align:center;color:#9d9fa9;font-size:12px">음악 재생 화면 데모</p>`}
 function photoTabs(){return `<div class="ph-tabs">${[['library','▦','사진'],['albums','▤','앨범']].map(([k,i,l])=>`<button data-ph-tab="${k}" class="${photoTab===k?'active':''}"><i>${i}</i><span>${l}</span></button>`).join('')}</div>`}
-function photoGrid(items){if(!items.length)return `<div class="ph-status"><div><div class="ph-empty-fav">♡</div><b>${photoAlbum==='favorites'?'즐겨찾기 없음':'사진 없음'}</b><span>${photoAlbum==='favorites'?'하트를 누른 사진이 여기에 표시됩니다.':'photos 폴더에 사진을 추가해 주세요.'}</span></div></div>`;return `<div class="ph-grid">${items.map(p=>`<button class="ph-tile ${photoSelected.has(p.id)?'selected':''}" data-photo-id="${escapeHTML(p.id)}" aria-label="${escapeHTML(p.name)}"><img src="${escapeHTML(p.src)}" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('is-error')">${photoSelectMode?`<i class="ph-check">${photoSelected.has(p.id)?'✓':''}</i>`:''}</button>`).join('')}</div>`}
-function photoGridByMonth(items){if(!items.length)return photoGrid(items);const groups=new Map();for(const p of items){const date=new Date(p.date.replace(/\s+/g,' ').replace(' ','T'));const key=Number.isNaN(date.getTime())?'기타':new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long'}).format(date);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)}return [...groups].map(([label,photos])=>`<div class="ph-subhead"><strong>${escapeHTML(label)}</strong><small>${photos.length}장</small></div>${photoGrid(photos)}`).join('')}
-function photoLibrary(){const items=visiblePhotos(),title=photoAlbum==='favorites'?'즐겨찾기':photoAlbum==='deleted'?'최근 삭제된 항목':'사진';return `<div class="ph-page"><div class="ph-top"><h1>${title}</h1><div class="ph-top-actions"><button class="ph-circle" data-photo-reload aria-label="새로 고침">↻</button><button class="ph-pill" data-photo-select>${photoSelectMode?'완료':'선택'}</button></div></div>${photoSelectMode?`<div class="ph-selection">${photoSelected.size?`${photoSelected.size}장 선택됨`:'사진 선택'}</div>`:''}<div class="ph-scroll"><div class="ph-subhead"><strong>${photoAlbum==='all'?'최근 항목':title}</strong><small>${items.length}장</small></div>${photosLoading?'<div class="ph-status"><div><div class="ph-loader"></div><span>사진을 불러오는 중…</span></div></div>':(photoAlbum==='all'?photoGridByMonth(items):photoGrid(items))}${photosError?`<div class="ph-refresh-note">${photosError} 기존 사진을 표시합니다.</div>`:''}</div>${photoTabs()}</div>`}
+function photoGrid(items){if(!items.length)return `<div class="ph-status"><div><div class="ph-empty-fav">♡</div><b>${photoAlbum==='favorites'?'즐겨찾기 없음':'사진 없음'}</b><span>${photoAlbum==='favorites'?'하트를 누른 사진이 여기에 표시됩니다.':'photos 폴더에 사진을 추가해 주세요.'}</span></div></div>`;return `<div class="ph-grid">${items.map(p=>`<button class="ph-tile ${photoSelected.has(p.id)?'selected':''}" data-photo-id="${escapeHTML(p.id)}" aria-label="${escapeHTML(p.name)}"><img src="${escapeHTML(p.src)}" alt="" loading="lazy" onerror="this.parentElement.classList.add('is-error')">${photoSelectMode?`<i class="ph-check">${photoSelected.has(p.id)?'✓':''}</i>`:''}</button>`).join('')}</div>`}
+function photoLibrary(){const items=visiblePhotos(),title=photoAlbum==='favorites'?'즐겨찾기':photoAlbum==='deleted'?'최근 삭제된 항목':'사진';return `<div class="ph-page"><div class="ph-top"><h1>${title}</h1><div class="ph-top-actions"><button class="ph-circle" data-photo-reload aria-label="새로 고침">↻</button><button class="ph-pill" data-photo-select>${photoSelectMode?'완료':'선택'}</button></div></div>${photoSelectMode?`<div class="ph-selection">${photoSelected.size?`${photoSelected.size}장 선택됨`:'사진 선택'}</div>`:''}<div class="ph-scroll"><div class="ph-subhead"><strong>${photoAlbum==='all'?'최근 항목':title}</strong><small>${items.length}장</small></div>${photosLoading?'<div class="ph-status"><div><div class="ph-loader"></div><span>사진을 불러오는 중…</span></div></div>':photoGrid(items)}${photosError?`<div class="ph-refresh-note">${photosError} 기존 사진을 표시합니다.</div>`:''}</div>${photoTabs()}</div>`}
 function photoAlbums(){const live=photoManifest.filter(p=>!p.deleted),deleted=photoManifest.filter(p=>p.deleted),cover=live[0],fav=live.find(p=>photoFavorites.has(p.id)),deletedCover=deleted[0];return `<div class="ph-page"><div class="ph-top"><h1>앨범</h1><div class="ph-top-actions"><button class="ph-circle" data-photo-reload aria-label="새로 고침">↻</button></div></div><div class="ph-scroll"><div class="ph-subhead"><strong>내 앨범</strong><small>전체 보기</small></div><div class="ph-albums"><div class="ph-album-grid"><button class="ph-album" data-photo-album="all"><div class="ph-album-cover">${cover?`<img src="${escapeHTML(cover.src)}" alt="">`:'▦'}</div><b>최근 항목</b><small>${live.length}장</small></button><button class="ph-album" data-photo-album="favorites"><div class="ph-album-cover">${fav?`<img src="${escapeHTML(fav.src)}" alt="">`:'♡'}</div><b>즐겨찾기</b><small>${photoFavorites.size}장</small></button><button class="ph-album" data-photo-album="deleted"><div class="ph-album-cover deleted">${deletedCover?`<img src="${escapeHTML(deletedCover.src)}" alt="">`:'⌫'}</div><b>최근 삭제된 항목</b><small>${deleted.length}장</small></button></div></div></div>${photoTabs()}</div>`}
 function photoPlaceholder(title,body,icon){return `<div class="ph-page"><div class="ph-top"><h1>${title}</h1></div><div class="ph-scroll"><div class="ph-status"><div><div class="ph-empty-fav">${icon}</div><b>${title}</b><span>${body}</span></div></div></div>${photoTabs()}</div>`}
 function photoDetail(){const p=photoManifest[photoIndex];if(!p){sub='root';return photoLibrary()}const fav=photoFavorites.has(p.id);return `<div class="ph-detail"><div class="ph-detail-top"><button data-photo-back aria-label="뒤로">‹</button><div class="ph-detail-title"><b>사진</b>${photoLabel(p)?`<small>${escapeHTML(photoLabel(p))}</small>`:''}</div><button data-photo-close aria-label="닫기">×</button></div><div class="ph-stage"><img src="${escapeHTML(p.src)}" alt="${escapeHTML(p.name)}" draggable="false" style="transform:scale(${photoScale})" onerror="this.parentElement.classList.add('is-error')"></div><div class="ph-detail-bottom"><button data-photo-fav class="${fav?'on':''}" aria-label="즐겨찾기">${fav?'♥':'♡'}</button><span class="ph-counter">${photoIndex+1} / ${photoManifest.length}</span><button data-photo-info aria-label="정보">ⓘ</button></div></div>`}
@@ -521,11 +530,10 @@ function youtubePage(){
 function instagramPage(){return `<div class="ig-top"><span style="font-family:Georgia;font-style:italic;font-size:27px">Instagram</span><span style="font-size:25px">♡　✉</span></div><div class="ig-stories">${['내 스토리','minji','seoyeon','today','travel'].map((n,i)=>`<div class="ig-story"><i><span>${n[0].toUpperCase()}</span></i>${n}</div>`).join('')}</div><div style="display:flex;align-items:center;padding:11px 15px;gap:9px"><span class="avatar" style="width:33px;height:33px;font-size:14px">S</span><b style="font-size:14px">seoul.days</b><span style="margin-left:auto">•••</span></div><div class="ig-pic">✦</div><div style="font-size:27px;padding:12px 16px"><button data-like style="background:none;color:${liked?'#ef345b':'#161616'};font-size:26px">${liked?'♥':'♡'}</button>　♡　↗</div><div style="font-size:13px;padding:0 20px"><b>좋아요 ${liked?'2':'1'}개</b><p><b>seoul.days</b> 오늘의 기록 ☁️</p></div>${tabs([['home','⌂','홈'],['search','⌕','검색'],['reels','▶','릴스'],['profile','◎','프로필']],'home')}`}
 function render(){let d=(mode==='kakao'||mode==='youtube'||mode==='instagram'||mode==='music'||(mode==='phone'&&sub==='call'))?'black':mode==='safari'||mode==='messages'||mode==='photos'?'white':mode==='notes'?'white':'';if(mode==='kakao')d='kakao-bg';if(mode==='music')d='music-bg';appEl.className='layer appscreen active '+d+(mode==='photos'?' photos-mode':'');$('#status').classList.toggle('dark',d!=='black'&&d!=='music-bg');$('#gesture').classList.toggle('ink',d!=='black'&&d!=='music-bg');frame.style.bottom=(sub==='chat')?'calc(var(--safe-bottom) + 75px)':'calc(var(--safe-bottom) + 28px)';frame.style.overflow=(mode==='calendar'||mode==='safari'||mode==='notes'||mode==='music'||mode==='phone'||mode==='kakao'||mode==='photos'||mode==='youtube'||(mode==='messages'&&sub==='chat'))?'hidden':'auto';let page=mode==='calendar'?(sub==='calendar-edit'?calendarEditor():calendarPage()):mode==='phone'?(sub==='call'?callPage():phonePage()):mode==='messages'?messagesPage(false):mode==='kakao'?messagesPage(true):mode==='safari'?safariPage():mode==='music'?musicPage():mode==='photos'?photosPage():mode==='notes'?notesPage():mode==='youtube'?youtubePage():instagramPage();frame.innerHTML=page;const ytLocalVideo=frame.querySelector('.yt-local-video');if(ytLocalVideo){const missing=frame.querySelector('.yt-local-missing');ytLocalVideo.addEventListener('error',()=>{if(missing)missing.hidden=false},{once:true});ytLocalVideo.addEventListener('loadeddata',()=>{if(missing)missing.hidden=true},{once:true})}if(sub==='chat'){let sc=frame.querySelector('.chat-scroller');if(sc)sc.scrollTop=sc.scrollHeight}}
 function persist(){try{localStorage.setItem('iphone_demo_notes',JSON.stringify(notes))}catch{}}
-function back(){if(mode==='messages'&&sub==='chat'){sub='root';render();requestAnimationFrame(()=>{smsScroller().scrollTop=smsListScrollY});return}if(mode==='youtube'&&ytActiveVideo){ytActiveVideo='';render();return}if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render();return}if(sub==='edit'){notes[noteIndex]=$('#noteedit')?.value||'';persist();sub='root';render();return}if(sub!=='root'){sub='root';render();return}closeApp()}
+function back(){if(mode==='youtube'&&ytActiveVideo){ytActiveVideo='';render();return}if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render();return}if(sub==='edit'){notes[noteIndex]=$('#noteedit')?.value||'';persist();sub='root';render();return}if(sub!=='root'){sub='root';render();return}closeApp()}
 frame.addEventListener('click',e=>{
  if(mode!=='messages'||sub!=='root')return;
  const row=e.target.closest('[data-chat]');if(!row)return;
- smsListScrollY=smsScroller().scrollTop;
  const thread=texts[Number(row.dataset.chat)];if(!thread)return;
  thread.unread=false;window.__IPHONE_SMS__?.markRead?.(thread);
 },true);
@@ -656,597 +664,18 @@ const privateFeed=[
  {id:'pv4',user:'noona.archive',avatar:null,photos:['flowers'],caption:'예쁜 건 오래 보기 🌸',where:'',likes:204,comments:11,time:'4일 전'}
 ];
 const fanRequests=[
- {
-  "id": "fan1",
-  "name": "hyunjae__today",
-  "text": "오빠 오늘 왜 이렇게 신남ㅋㅋ",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "오빠 오늘 왜 이렇게 신남ㅋㅋ",
-    "textZh": "今天怎么这么兴奋哈哈"
-   }
-  ],
-  "textZh": "今天怎么这么兴奋哈哈"
- },
- {
-  "id": "fan2",
-  "name": "xoxo_041",
-  "text": "WHO LET HIM POST THIS 😭",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "WHO LET HIM POST THIS 😭"
-   }
-  ]
- },
- {
-  "id": "fan3",
-  "name": "m__sun7",
-  "text": "不是这张谁顶得住啊",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "不是这张谁顶得住啊",
-    "textZh": "이 사진 누가 버팀"
-   }
-  ],
-  "textZh": "이 사진 누가 버팀"
- },
- {
-  "id": "fan4",
-  "name": "a.0924",
-  "text": "아니 이 사진 언제 찍음",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "아니 이 사진 언제 찍음",
-    "textZh": "这照片什么时候拍的"
-   }
-  ],
-  "textZh": "这照片什么时候拍的"
- },
- {
-  "id": "fan5",
-  "name": "noon_12x",
-  "text": "can u drop the playlist already",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "can u drop the playlist already"
-   }
-  ]
- },
- {
-  "id": "fan6",
-  "name": "bbang__08",
-  "text": "아ㅋㅋㅋㅋ 표정 개웃김",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "아ㅋㅋㅋㅋ 표정 개웃김",
-    "textZh": "哈哈哈这表情笑死"
-   }
-  ],
-  "textZh": "哈哈哈这表情笑死"
- },
- {
-  "id": "fan7",
-  "name": "yuyu_28",
-  "text": "今天这件衣服真的好好看",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "今天这件衣服真的好好看",
-    "textZh": "오늘 옷 진짜 예쁨"
-   }
-  ],
-  "textZh": "오늘 옷 진짜 예쁨"
- },
- {
-  "id": "fan8",
-  "name": "coldbrew_0",
-  "text": "i kinda hate this outfit sorry",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "i kinda hate this outfit sorry"
-   }
-  ]
- },
- {
-  "id": "fan9",
-  "name": "h4ppy_7",
-  "text": "뭐야 나만 또 저장함?",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "뭐야 나만 또 저장함?",
-    "textZh": "只有我又保存了吗"
-   }
-  ],
-  "textZh": "只有我又保存了吗"
- },
- {
-  "id": "fan10",
-  "name": "vv_040",
-  "text": "哈哈哈哈怎么还有这种照片",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "哈哈哈哈怎么还有这种照片",
-    "textZh": "ㅋㅋㅋ 이런 사진도 있네"
-   }
-  ],
-  "textZh": "ㅋㅋㅋ 이런 사진도 있네"
- },
- {
-  "id": "fan11",
-  "name": "starr.33",
-  "text": "not me replaying this 20 times",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "not me replaying this 20 times"
-   }
-  ]
- },
- {
-  "id": "fan12",
-  "name": "j__blue",
-  "text": "오늘도 늦게 자지 마라",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "오늘도 늦게 자지 마라",
-    "textZh": "今天也别熬夜"
-   }
-  ],
-  "textZh": "今天也别熬夜"
- },
- {
-  "id": "fan13",
-  "name": "r0gue.9",
-  "text": "요즘 사진 너무 똑같지 않냐",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "요즘 사진 너무 똑같지 않냐",
-    "textZh": "最近照片是不是太像了"
-   }
-  ],
-  "textZh": "最近照片是不是太像了"
- },
- {
-  "id": "fan14",
-  "name": "bby_88",
-  "text": "求你别删这张自拍",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "求你别删这张自拍",
-    "textZh": "이 셀카 지우지 마"
-   }
-  ],
-  "textZh": "이 셀카 지우지 마"
- },
- {
-  "id": "fan15",
-  "name": "daisy__1",
-  "text": "THIS HAIR IS EVERYTHING",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "THIS HAIR IS EVERYTHING"
-   }
-  ]
- },
- {
-  "id": "fan16",
-  "name": "mang0_0",
-  "text": "아니 웃는 거 왜 이렇게 귀엽냐",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "아니 웃는 거 왜 이렇게 귀엽냐",
-    "textZh": "怎么笑起来这么可爱"
-   }
-  ],
-  "textZh": "怎么笑起来这么可爱"
- },
- {
-  "id": "fan17",
-  "name": "yooni.4",
-  "text": "我真的要被这个视频笑死了",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "我真的要被这个视频笑死了",
-    "textZh": "이 영상 진짜 웃겨"
-   }
-  ],
-  "textZh": "이 영상 진짜 웃겨"
- },
- {
-  "id": "fan18",
-  "name": "ghost_0x",
-  "text": "the lighting is doing you no favors",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "the lighting is doing you no favors"
-   }
-  ]
- },
- {
-  "id": "fan19",
-  "name": "choco__",
-  "text": "이거 보고 출근할 힘 생김",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "이거 보고 출근할 힘 생김",
-    "textZh": "看完这个有力气上班了"
-   }
-  ],
-  "textZh": "看完这个有力气上班了"
- },
- {
-  "id": "fan20",
-  "name": "b00m_8",
-  "text": "오늘 무대 좀 아쉬웠음",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "오늘 무대 좀 아쉬웠음",
-    "textZh": "今天舞台有点遗憾"
-   }
-  ],
-  "textZh": "今天舞台有点遗憾"
- },
- {
-  "id": "fan21",
-  "name": "xiao_77",
-  "text": "这个角度也太绝了吧",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "这个角度也太绝了吧",
-    "textZh": "이 각도 미쳤다"
-   }
-  ],
-  "textZh": "이 각도 미쳤다"
- },
- {
-  "id": "fan22",
-  "name": "zzip_08",
-  "text": "no because WHAT is that face 😭",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "no because WHAT is that face 😭"
-   }
-  ]
- },
- {
-  "id": "fan23",
-  "name": "nightowl7",
-  "text": "팬들 댓글 보는 거 재밌지ㅋㅋ",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "팬들 댓글 보는 거 재밌지ㅋㅋ",
-    "textZh": "看粉丝评论很有意思吧哈哈"
-   }
-  ],
-  "textZh": "看粉丝评论很有意思吧哈哈"
- },
- {
-  "id": "fan24",
-  "name": "peach_05",
-  "text": "终于更新了啊啊啊",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "终于更新了啊啊啊",
-    "textZh": "드디어 업데이트했네"
-   }
-  ],
-  "textZh": "드디어 업데이트했네"
- },
- {
-  "id": "fan25",
-  "name": "min.404",
-  "text": "사진 더 줘요 현기증남",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "사진 더 줘요 현기증남",
-    "textZh": "多发点照片要晕了"
-   }
-  ],
-  "textZh": "多发点照片要晕了"
- },
- {
-  "id": "fan26",
-  "name": "b___99",
-  "text": "this one is lowkey iconic",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "this one is lowkey iconic"
-   }
-  ]
- },
- {
-  "id": "fan27",
-  "name": "tangerine_",
-  "text": "오늘 왜 이렇게 피곤해 보임",
-  "textZh": "今天看起来怎么这么累",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "오늘 왜 이렇게 피곤해 보임",
-    "textZh": "今天看起来怎么这么累"
-   }
-  ]
- },
- {
-  "id": "fan28",
-  "name": "luna_31",
-  "text": "笑死你自己看过这张吗",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "笑死你自己看过这张吗",
-    "textZh": "ㅋㅋ 본인도 이 사진 봤어"
-   }
-  ],
-  "textZh": "ㅋㅋ 본인도 이 사진 봤어"
- },
- {
-  "id": "fan29",
-  "name": "8pm_09",
-  "text": "이제 좀 쉬어라 진짜",
-  "textZh": "现在真的休息一下吧",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "이제 좀 쉬어라 진짜",
-    "textZh": "现在真的休息一下吧"
-   }
-  ]
- },
- {
-  "id": "fan30",
-  "name": "n0filter",
-  "text": "not everything needs to be a selfie",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "not everything needs to be a selfie"
-   }
-  ]
- },
- {
-  "id": "fan31",
-  "name": "miso.02",
-  "text": "아니 저 반지 어디 거임",
-  "textZh": "那个戒指是哪家的",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "아니 저 반지 어디 거임",
-    "textZh": "那个戒指是哪家的"
-   }
-  ]
- },
- {
-  "id": "fan32",
-  "name": "xiaoyu_8",
-  "text": "好久没看到这个发色了",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "好久没看到这个发色了",
-    "textZh": "이 머리색 오랜만이다"
-   }
-  ],
-  "textZh": "이 머리색 오랜만이다"
- },
- {
-  "id": "fan33",
-  "name": "w00dy.7",
-  "text": "i'm actually crying at the last slide",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "i'm actually crying at the last slide"
-   }
-  ]
- },
- {
-  "id": "fan34",
-  "name": "d0nt_08",
-  "text": "솔직히 이번 건 별로임",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "솔직히 이번 건 별로임",
-    "textZh": "说实话这次一般"
-   }
-  ],
-  "textZh": "说实话这次一般"
- },
- {
-  "id": "fan35",
-  "name": "momo.17",
-  "text": "这套真的很适合你",
-  "textZh": "이 착장 진짜 잘 어울려",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "这套真的很适合你",
-    "textZh": "이 착장 진짜 잘 어울려"
-   }
-  ]
- },
- {
-  "id": "fan36",
-  "name": "cloud_99",
-  "text": "why is nobody talking about the shoes",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "why is nobody talking about the shoes"
-   }
-  ]
- },
- {
-  "id": "fan37",
-  "name": "theb__05",
-  "text": "아무튼 밥 잘 먹고 다녀",
-  "textZh": "总之好好吃饭",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "아무튼 밥 잘 먹고 다녀",
-    "textZh": "总之好好吃饭"
-   }
-  ]
- },
- {
-  "id": "fan_h38",
-  "name": "candy.4",
-  "text": "这视频我要看一百遍",
-  "textZh": "이 영상 백 번 볼 거야",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "这视频我要看一百遍",
-    "textZh": "이 영상 백 번 볼 거야"
-   }
-  ]
- },
- {
-  "id": "fan_h39",
-  "name": "404_jj",
-  "text": "팬들 기다리게 하지 좀 마",
-  "textZh": "别总让粉丝等",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "팬들 기다리게 하지 좀 마",
-    "textZh": "别总让粉丝等"
-   }
-  ]
- },
- {
-  "id": "fan_h40",
-  "name": "aftergl0w",
-  "text": "HELP I CANT STOP LAUGHING",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "HELP I CANT STOP LAUGHING"
-   }
-  ]
- },
- {
-  "id": "fan_h41",
-  "name": "y2k_070",
-  "text": "아 이거 너무 킹받음ㅋㅋ",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "아 이거 너무 킹받음ㅋㅋ",
-    "textZh": "这个真的有点欠揍哈哈"
-   }
-  ],
-  "textZh": "这个真的有点欠揍哈哈"
- },
- {
-  "id": "fan_h42",
-  "name": "b__light",
-  "text": "谁懂啊这一秒真的绝了",
-  "textZh": "이 순간 진짜 미쳤다",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "谁懂啊这一秒真的绝了",
-    "textZh": "이 순간 진짜 미쳤다"
-   }
-  ]
- },
- {
-  "id": "fan_h43",
-  "name": "orbit.8",
-  "text": "honestly miss the old styling",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "honestly miss the old styling"
-   }
-  ]
- },
- {
-  "id": "fan_h44",
-  "name": "jelly_24",
-  "text": "오늘 라이브 음향 뭐였냐",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "오늘 라이브 음향 뭐였냐",
-    "textZh": "今天直播音响什么情况"
-   }
-  ],
-  "textZh": "今天直播音响什么情况"
- },
- {
-  "id": "fan_h45",
-  "name": "kiki.33",
-  "text": "这个表情包我先收下了",
-  "textZh": "이 짤 저장함",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "这个表情包我先收下了",
-    "textZh": "이 짤 저장함"
-   }
-  ]
- },
- {
-  "id": "fan_h46",
-  "name": "sunny__",
-  "text": "ok but the vocals????",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "ok but the vocals????"
-   }
-  ]
- },
- {
-  "id": "fan_h47",
-  "name": "jjae_5am",
-  "text": "ㅋㅋㅋㅋㅋㅋㅋ 진짜 뭐야",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "ㅋㅋㅋㅋㅋㅋㅋ 진짜 뭐야",
-    "textZh": "哈哈哈哈什么啊"
-   }
-  ],
-  "textZh": "哈哈哈哈什么啊"
- }
+ {id:'fan1',name:'hyunjae_love',text:'오빠 오늘 사진 너무 좋아요 🖤',at:'1시간 전',messages:['오빠 오늘 사진 너무 좋아요 🖤','항상 응원하고 있어요!']},
+ {id:'fan2',name:'daily_jjae',text:'이번 무대도 정말 멋졌어요',at:'어제',messages:['이번 무대도 정말 멋졌어요','건강 잘 챙겨 주세요!']},
+ {id:'fan3',name:'forever_theb',text:'파리 사진 더 보고 싶어요 ✨',at:'3일 전',messages:['파리 사진 더 보고 싶어요 ✨']}
 ];
 const privateChats=[
  {id:'yeon',name:'yeon',followers:184,following:97},
  {id:'youngjjjj',name:'youngjjjj',followers:263,following:118},
- {id:'sw0412',name:'sw0412',followers:156,following:84}
+ {id:'sw0412',name:'sw0412',followers:156,following:84},
+ {id:'xxx',name:'xxx',followers:219,following:131}
 ];
-function fresh(){return {account:'public',activeTab:'home',likes:{public:[],private:[]},saved:{public:[],private:[]},comments:{public:{},private:{}},messages:{yeon:[],youngjjjj:[],sw0412:[]},stories:{public:[],private:[]},userPosts:{public:[],private:[]}}}
-let state;try{state=Object.assign(fresh(),JSON.parse(localStorage.getItem('jh_ig14')||'{}'))}catch(e){state=fresh()} state.likes=Object.assign({public:[],private:[]},state.likes);state.saved=Object.assign({public:[],private:[]},state.saved);state.comments=Object.assign({public:{},private:{}},state.comments);state.messages=Object.assign({yeon:[],youngjjjj:[],sw0412:[]},state.messages);delete state.messages.xxx;state.stories=Object.assign({public:[],private:[]},state.stories);state.userPosts=Object.assign({public:[],private:[]},state.userPosts);
+function fresh(){return {account:'public',activeTab:'home',likes:{public:[],private:[]},saved:{public:[],private:[]},comments:{public:{},private:{}},messages:{yeon:[],youngjjjj:[],sw0412:[],xxx:[]},stories:{public:[],private:[]},userPosts:{public:[],private:[]}}}
+let state;try{state=Object.assign(fresh(),JSON.parse(localStorage.getItem('jh_ig14')||'{}'))}catch(e){state=fresh()} state.likes=Object.assign({public:[],private:[]},state.likes);state.saved=Object.assign({public:[],private:[]},state.saved);state.comments=Object.assign({public:{},private:{}},state.comments);state.messages=Object.assign({yeon:[],youngjjjj:[],sw0412:[],xxx:[]},state.messages);state.stories=Object.assign({public:[],private:[]},state.stories);state.userPosts=Object.assign({public:[],private:[]},state.userPosts);
 
 // Private account's confirmed fictional DM archive. Seed once by stable message IDs, preserving saved chats.
 const IG_APPROVED_20261022={
@@ -1399,18 +828,17 @@ function getPost(pid){return [...ownPosts,...Object.values(teammate).flatMap(x=>
 function post(p){let i=Math.min(slide[p.id]||0,p.photos.length-1), liked=list('likes').includes(p.id),saved=list('saved').includes(p.id);let comments=(state.comments[acct()][p.id]||[]).length+(Number(p.comments)||0);return `<article class="ig14-post"><div class="ig14-posthead">${b('user',av(p.avatar),'',`data-id="${esc(p.user)}"`)}<div class="ig14-postwho">${b('user',esc(p.user)+(p.verified?verified():''),'',`data-id="${esc(p.user)}"`)}<small>${esc(p.where||'')}</small></div>${b('noop',ico('more'),'ig14-icon')}</div><div class="ig14-photo" data-post="${p.id}">${img(p.photos[i])}${p.photos.length>1?`<span class="ig14-count">${i+1}/${p.photos.length}</span>${i?b('prev','‹','ig14-arr ig14-prev',`data-id="${p.id}"`):''}${i<p.photos.length-1?b('next','›','ig14-arr ig14-next',`data-id="${p.id}"`):''}`:''}</div><div class="ig14-actions">${b('like',ico('heart',27,liked),liked?'ig14-liked':'',`data-id="${p.id}"`)}${b('comments',ico('comment',27),'',`data-id="${p.id}"`)}${b('noop',ico('send',27))}<span class="ig14-grow"></span>${b('save',ico('bookmark',27,saved),'',`data-id="${p.id}"`)}</div>${p.photos.length>1?`<div class="ig14-dots">${p.photos.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>`:''}<div class="ig14-meta"><b>좋아요 ${cnt((p.likes||0)+(liked?1:0))}개</b>${p.caption?`<p><b>${esc(p.user)}</b> ${esc(p.caption)}</p>`:''}${comments?b('comments',`댓글 ${comments.toLocaleString('ko-KR')}개 모두 보기`,'ig14-subtle',`data-id="${p.id}"`):''}<small>${esc(p.time||'방금')}</small></div></article>`}
 function home(){let stories=state.stories[acct()];return `${head('<span class="ig14-brand">Instagram</span>',b('opencreate',ico('plus',28),'ig14-icon')+b('noop',ico('heart',28),'ig14-icon'))}<main class="scroll"><div class="ig14-stories">${b('storycreate',(acct()==='public'?av('jh_avatar'):def())+'<span class="ig14-add">+</span><small>내 스토리</small>','ig14-story')}${stories.map((s,i)=>b('storyview',img(s.data)+'<small>내 스토리</small>','ig14-story',`data-id="${i}"`)).join('')}</div>${allFeed().map(post).join('')}</main>${tabs()}`}
 function profile(pid=id()){
- if(pid==='x_x'&&acct()==='private')return `${head('x_x','',true)}<main class="scroll"><div class="ig14-profiletop">${def('ig14-bigav')}<div class="ig14-stats"><span><b>2</b><small>게시물</small></span><span><b>146</b><small>팔로워</small></span><span><b>218</b><small>팔로잉</small></span></div></div><div class="ig14-bio"><b>x_x</b><p>비공개 계정</p></div><div class="ig14-buttons"><button disabled>팔로우</button></div><div class="ig14-empty"><b>비공개 계정입니다</b><span class="ig14-private-note">서로 팔로우하지 않습니다</span></div></main>`;
  if(teammate[pid]){let a=teammate[pid];return `${head(esc(pid)+verified(),'',true)}<main class="scroll"><div class="ig14-profiletop">${av(a.avatar,'ig14-bigav')}<div class="ig14-stats"><span><b>1</b><small>게시물</small></span><span><b>—</b><small>팔로워</small></span><span><b>—</b><small>팔로잉</small></span></div></div><div class="ig14-bio"><b>${esc(a.name)}</b><p>${esc(a.bio)}</p></div><div class="ig14-buttons"><button>팔로잉</button><button>메시지</button></div><div class="ig14-profilenav">${ico('grid')} ${ico('reel')} ${ico('camera')}</div><div class="ig14-grid">${a.posts.map(p=>b('detail',img(p.photos[0])+'<span class="ig14-multi">▣</span>','',`data-id="${p.id}"`)).join('')}</div></main>`}
  let priv=acct()==='private', up=state.userPosts[acct()], ps=priv?up:[...up,...ownPosts];return `${head(b('accounts',esc(id())+' ⌄'+(priv?'':' '+verified()),'title'),b('noop',ico('more'),'ig14-icon'))}<main class="scroll"><div class="ig14-profiletop">${priv?def('ig14-bigav'):av('jh_avatar','ig14-bigav')}<div class="ig14-stats"><span><b>${ps.length}</b><small>게시물</small></span><span><b>${priv?'376':'214만'}</b><small>팔로워</small></span><span><b>${priv?'23':'3'}</b><small>팔로잉</small></span></div></div><div class="ig14-bio"><b>${priv?'nuyheaj':'이재현'}</b><p>${priv?'비공개 계정':'THE BOYZ'}</p></div><div class="ig14-buttons"><button>프로필 편집</button>${b('accounts','계정 전환')}</div><div class="ig14-profilenav ${priv?'two':''}">${ico('grid')} ${ico('reel')} ${priv?'':ico('camera')}</div>${ps.length?`<div class="ig14-grid">${ps.map(p=>b('detail',img(p.photos[0])+(p.photos.length>1?'<span class="ig14-multi">▣</span>':''),'',`data-id="${p.id}"`)).join('')}</div>`:`<div class="ig14-empty"><b>아직 게시물이 없습니다</b><span class="ig14-private-note">비공개 계정</span></div>`}</main>${tabs()}`}
  function accounts(){let item=(which,name,sub,pic)=>b('switch',pic+`<span><b>${name}</b><small>${sub}</small></span><b>${acct()===which?'✓':''}</b>`,'ig14-accountrow',`data-v="${which}"`);return `${head('계정 전환','',true)}<main class="scroll ig14-accountsheet">${item('public',ME,'공개 계정 · 인증',av('jh_avatar'))}${item('private',PRIVATE,'비공개 계정',def())}</main>`}
 function inbox(){let rows=acct()==='public'?[]:privateChats;return `${head(b('accounts',id()+' ⌄','title'),b('noop',ico('plus'),'ig14-icon'))}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input placeholder="검색"></label><div class="ig14-listtitle"><b>메시지</b><span class="ig14-grow"></span>${acct()==='public'?b('requests','요청','ig14-blue'):''}</div>${rows.length?rows.map(c=>{let m=state.messages[c.id]||[],last=m.at(-1),preview=last?.type==='reel'?(igLanguage()==='zh'?'分享了 Reels':'릴스를 보냈습니다'):last?.type==='post'?(igLanguage()==='zh'?'分享了帖子':'게시물을 보냈습니다'):last?.type==='system'?(igLanguage()==='zh'?(last.textZh||last.text):last.text):(igLanguage()==='zh'?(last?.textZh||last?.text):last?.text)||'메시지 없음';return `<div class="ig14-row">${b('contactprofile',def(),'','data-id="'+c.id+'" aria-label="'+esc(c.name)+' 프로필"')}${b('chat',`<span class="ig14-rowtext"><b>${esc(c.name)}</b><small>${esc(preview)}</small></span>`,'ig14-rowopen',`data-id="${c.id}"`)}</div>`}).join(''):'<div class="ig14-empty"><b>메시지가 없습니다</b></div>'}</main>${tabs()}`}
-function requests(){return `${head('메시지 요청','',true)}<main class="scroll"><p class="ig14-requestnote">요청을 수락하기 전에는 상대방에게 읽음 표시가 전송되지 않습니다.</p>${fanRequests.map(x=>b('request',def()+`<span class="ig14-rowtext"><b>${x.name}</b><small>${esc(igLanguage()==='zh'?(x.textZh||x.text):x.text)} · ${x.at}</small></span>`,'ig14-row',`data-id="${x.id}"`)).join('')}</main>`}
+function requests(){return `${head('메시지 요청','',true)}<main class="scroll"><p class="ig14-requestnote">요청을 수락하기 전에는 상대방에게 읽음 표시가 전송되지 않습니다.</p>${fanRequests.map(x=>b('request',def()+`<span class="ig14-rowtext"><b>${x.name}</b><small>${x.text} · ${x.at}</small></span>`,'ig14-row',`data-id="${x.id}"`)).join('')}</main>`}
 const igScenes={meme:['😳','ㅋㅋㅋㅋ','reaction'],dance:['🕺','DANCE CHALLENGE','studio'],pet:['🐶','DOG MOMENT','cozy'],fashion:['🧥','STYLE CHECK','mirror'],duo:['🕺 🕺','TOGETHER TREND','duo']};
 function reelMessage(m){const r=m.reel||{},scene=igScenes[r.theme];let art=scene?`<div class="ig26-scene ig26-${scene[2]}"><div class="ig26-top">REELS <span>•••</span></div><div class="ig26-subject"><span>${scene[0]}</span><small>${scene[1]}</small></div><div class="ig26-title">${esc(r.overlay||'')}</div><div class="ig26-side">♡<br>♧<br>➤</div><div class="ig26-play">▶</div><div class="ig26-by">@${esc(r.user||'reels')}</div></div>`:r.cover?img(r.cover):'<span>릴스</span>';return `<div class="ig14-reelshare ig26-card"><div class="ig14-reelcover">${art}<span class="ig14-reelbadge">${ico('reel',18,true)}</span></div><div class="ig14-reelfooter"><b>${esc(r.user||'Instagram')}</b><small>${esc(r.caption||'릴스')}</small></div></div>`}
 function sharedPost(m){const p=getPost(m.post);if(!p)return '<div class="ig14-bubble">게시물을 공유했습니다</div>';return b('sharedpost',`<div class="ig14-reelcover ig14-postcover">${img(p.photos[0])}<span class="ig14-reelbadge">${ico('grid',17)}</span></div><div class="ig14-reelfooter"><b>${esc(p.user)}${p.verified?verified():''}</b><small>${esc(p.caption||'게시물')}</small></div>`,'ig14-reelshare ig14-sharedpost',`data-id="${esc(p.id)}"`)}
 function messageHTML(m){const item=typeof m==='string'?{who:'other',text:m}:m;if(item.type==='system')return `<div class="ig14-systemline">${esc(igLanguage()==='zh'?(item.textZh||item.text):item.text)}</div>`;const mine=item.who==='mine',body=item.type==='reel'?reelMessage(item):item.type==='post'?sharedPost(item):`<div class="ig14-bubble">${esc(igLanguage()==='zh'?(item.textZh||item.text||''):(item.text||''))}</div>`;return `<div class="ig14-message ${mine?'mine':''}">${body}${item.time?`<small class="ig14-msgtime">${esc(item.time)}</small>`:''}</div>`}
 function conversationHead(c){return `<div class="ig14-head">${b('back',ico('back'),'ig14-icon')}${b('contactprofile',def()+`<span><b>${esc(c.name)}</b><small>Instagram</small></span>`,'ig14-chathead-profile',`data-id="${c.id}"`)}<span class="ig14-grow"></span>${b('noop',ico('phone',23),'ig14-icon')}${b('noop',ico('video',24),'ig14-icon')}</div>`}
-function conversation(cid,request=false){let c=request?fanRequests.find(x=>x.id===cid):privateChats.find(x=>x.id===cid),msgs=request?c.messages.map(m=>typeof m==='string'?{who:'other',text:m}:({who:'other',...m})):state.messages[cid]||[],headHTML=request?head(esc(c.name),'',true):conversationHead(c);return `${headHTML}<div class="ig14-chat" id="ig14-chat">${msgs.length?msgs.map(messageHTML).join(''):'<div class="ig14-empty">아직 메시지가 없습니다</div>'}${!request&&aiTyping?'<div class="ig14-typing"><i></i><i></i><i></i></div>':''}${!request&&aiError?`<div class="ig14-aierror">${esc(aiError)}</div>`:''}</div>${request?'<div class="ig14-readonly">요청을 수락하지 않은 상태입니다</div>':`<form class="ig14-chatinput" data-chat="${cid}"><input placeholder="메시지 보내기..." autocomplete="off" maxlength="300"><button ${aiSending?'disabled':''}>전송</button></form>`}`}
+function conversation(cid,request=false){let c=request?fanRequests.find(x=>x.id===cid):privateChats.find(x=>x.id===cid),msgs=request?c.messages.map(text=>({who:'other',text})):state.messages[cid]||[],headHTML=request?head(esc(c.name),'',true):conversationHead(c);return `${headHTML}<div class="ig14-chat" id="ig14-chat">${msgs.length?msgs.map(messageHTML).join(''):'<div class="ig14-empty">아직 메시지가 없습니다</div>'}${!request&&aiTyping?'<div class="ig14-typing"><i></i><i></i><i></i></div>':''}${!request&&aiError?`<div class="ig14-aierror">${esc(aiError)}</div>`:''}</div>${request?'<div class="ig14-readonly">요청을 수락하지 않은 상태입니다</div>':`<form class="ig14-chatinput" data-chat="${cid}"><input placeholder="메시지 보내기..." autocomplete="off" maxlength="300"><button ${aiSending?'disabled':''}>전송</button></form>`}`}
 function contactProfile(cid){let c=privateChats.find(x=>x.id===cid);if(!c)return inbox();return `${head(esc(c.name),'',true)}<main class="scroll"><div class="ig14-profiletop">${def('ig14-bigav')}<div class="ig14-stats"><span><b>0</b><small>게시물</small></span><span><b>${c.followers}</b><small>팔로워</small></span><span><b>${c.following}</b><small>팔로잉</small></span></div></div><div class="ig14-bio"><b>${esc(c.name)}</b><p>비공개 계정</p></div><div class="ig14-buttons"><button>팔로잉</button>${b('messagecontact','메시지','','data-id="'+c.id+'"')}</div><div class="ig14-profilenav two">${ico('grid')} ${ico('reel')}</div><div class="ig14-empty"><b>아직 게시물이 없습니다</b><span class="ig14-private-note">비공개 계정</span></div></main>`}
 const igrIcons={
  back:'<path d="m15 18-6-6 6-6"/>',
@@ -1663,7 +1091,7 @@ function igrAttachVideo(){
  // Mobile Safari autoplay is muted; manual tap can resume if autoplay is blocked.
  video.play()?.catch(()=>{});
 }
-function search(){const pub=acct()==='public';const users=pub?Object.keys(teammate):['x_x'];return `${head('검색')}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input id="ig14-search" placeholder="검색" autocomplete="off"></label><div id="ig14-results">${users.map(u=>b('user',(pub?av(teammate[u].avatar):def())+`<span class="ig14-rowtext"><b>${u}</b><small>${pub?teammate[u].name:'알 수도 있는 사람 · 비공개 계정'}</small></span>`,'ig14-row',`data-id="${u}"`)).join('')}</div></main>${tabs()}`}
+function search(){let users=acct()==='public'?Object.keys(teammate):privateFeed.map(x=>x.user);return `${head('검색')}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input id="ig14-search" placeholder="검색"></label><div id="ig14-results">${users.map(u=>b('user',(acct()==='public'?av(teammate[u].avatar):def())+`<span class="ig14-rowtext"><b>${u}</b><small>${acct()==='public'?teammate[u].name:'추천 계정'}</small></span>`,'ig14-row',`data-id="${u}"`)).join('')}</div></main>${tabs()}`}
 function detail(pid){let p=getPost(pid);return `${head('게시물','',true)}<main class="scroll">${post(p)}</main>`}
 function comments(pid){let p=getPost(pid),arr=state.comments[acct()][pid]||[];return `${head('댓글','',true)}<div class="ig14-chat">${arr.map(x=>`<div class="ig14-bubble"><b>${id()}</b> ${esc(x)}</div>`).join('')||'<div class="ig14-empty">아직 댓글이 없습니다</div>'}</div><form class="ig14-chatinput" data-comment="${pid}"><input placeholder="댓글 달기..."><button>게시</button></form>`}
 function create(kind='post'){draftKind=kind;return `${head(kind==='story'?'스토리 만들기':'새 게시물','',true)}<main class="scroll ig14-compose"><div class="ig14-preview" id="ig14-preview">${ico('camera',44)}</div><label class="ig14-file">사진 선택<input id="ig14-image" type="file" accept="image/*"></label>${kind==='post'?'<textarea id="ig14-caption" placeholder="문구를 입력하세요..."></textarea>':''}${b('publish','공유','ig14-primary')}</main>`}
@@ -1685,10 +1113,9 @@ function action(e){if(mode!=='instagram')return;let x=e.target.closest('[data-a]
  if(['reelback','reelclose','reelplay','reelsound','reellike','reelsave','reelrepost','reelfollow','reelcomments','reelshare','reelmore','reeldetails','reelcopy','reelshareopen','reeladd'].includes(a)){
   igrHandleAction(a,x);return;
  }
- if(a==='tab'){state.activeTab=v;view='';persist();render14();if(v==='reels')void loadGithubReels()}else if(a==='reelnext'){changeReel(1)}else if(a==='reelprev'){changeReel(-1)}else if(a==='reeladd'){document.querySelector('#ig14-video')?.click()}else if(a==='back'){if(view==='request'){view='requests'}else if(view==='conversation'){view='';state.activeTab='inbox'}else if(view==='other'&&selected==='x_x'){view='';state.activeTab='search'}else if(view==='detail'&&sharedPostReturn){selected=sharedPostReturn;sharedPostReturn='';view='conversation'}else if(view==='contact'&&contactReturn==='conversation'){view='conversation';contactReturn=''}else view='';render14()}else if(a==='accounts'){view='accounts';render14()}else if(a==='switch'){state.account=v;state.activeTab='profile';view='';persist();render14()}else if(a==='like')toggle('likes',pid,x);else if(a==='save')toggle('saved',pid,x);else if(a==='prev'||a==='next'){let p=getPost(pid);slide[pid]=Math.max(0,Math.min(p.photos.length-1,(slide[pid]||0)+(a==='next'?1:-1)));rerenderKeepScroll()}else if(a==='user'){if(teammate[pid]||(acct()==='private'&&pid==='x_x')){selected=pid;view='other';render14()}}else if(a==='contactprofile'){contactReturn=view==='conversation'?'conversation':'';selected=pid;view='contact';render14()}else if(a==='messagecontact'){selected=pid;view='conversation';contactReturn='';render14()}else if(a==='sharedpost'){sharedPostReturn=selected;selected=pid;view='detail';render14()}else if(a==='detail'){sharedPostReturn='';selected=pid;view='detail';render14()}else if(a==='comments'){selected=pid;view='comments';render14()}else if(a==='requests'){view='requests';render14()}else if(a==='request'){selected=pid;view='request';render14()}else if(a==='chat'){selected=pid;view='conversation';aiError='';render14()}else if(a==='opencreate'){view='create';render14()}else if(a==='storycreate'){view='storycreate';render14()}else if(a==='storyview'){selected=pid;view='storyview';render14()}else if(a==='publish'){if(!draftMedia)return toast14('사진을 먼저 선택하세요');if(draftKind==='story')state.stories[acct()].push({data:draftMedia,time:Date.now()});else{let cap=document.querySelector('#ig14-caption')?.value.trim()||'';state.userPosts[acct()].unshift({id:'u'+Date.now(),user:id(),avatar:acct()==='public'?'jh_avatar':null,photos:[draftMedia],caption:cap,likes:0,comments:0,time:'방금'});}draftMedia='';persist();view='';state.activeTab=draftKind==='story'?'home':'profile';render14()}}
+ if(a==='tab'){state.activeTab=v;view='';persist();render14();if(v==='reels')void loadGithubReels()}else if(a==='reelnext'){changeReel(1)}else if(a==='reelprev'){changeReel(-1)}else if(a==='reeladd'){document.querySelector('#ig14-video')?.click()}else if(a==='back'){if(view==='detail'&&sharedPostReturn){selected=sharedPostReturn;sharedPostReturn='';view='conversation'}else if(view==='contact'&&contactReturn==='conversation'){view='conversation';contactReturn=''}else view='';render14()}else if(a==='accounts'){view='accounts';render14()}else if(a==='switch'){state.account=v;state.activeTab='profile';view='';persist();render14()}else if(a==='like')toggle('likes',pid,x);else if(a==='save')toggle('saved',pid,x);else if(a==='prev'||a==='next'){let p=getPost(pid);slide[pid]=Math.max(0,Math.min(p.photos.length-1,(slide[pid]||0)+(a==='next'?1:-1)));rerenderKeepScroll()}else if(a==='user'){if(teammate[pid]){selected=pid;view='other';render14()}}else if(a==='contactprofile'){contactReturn=view==='conversation'?'conversation':'';selected=pid;view='contact';render14()}else if(a==='messagecontact'){selected=pid;view='conversation';contactReturn='';render14()}else if(a==='sharedpost'){sharedPostReturn=selected;selected=pid;view='detail';render14()}else if(a==='detail'){sharedPostReturn='';selected=pid;view='detail';render14()}else if(a==='comments'){selected=pid;view='comments';render14()}else if(a==='requests'){view='requests';render14()}else if(a==='request'){selected=pid;view='request';render14()}else if(a==='chat'){selected=pid;view='conversation';aiError='';render14()}else if(a==='opencreate'){view='create';render14()}else if(a==='storycreate'){view='storycreate';render14()}else if(a==='storyview'){selected=pid;view='storyview';render14()}else if(a==='publish'){if(!draftMedia)return toast14('사진을 먼저 선택하세요');if(draftKind==='story')state.stories[acct()].push({data:draftMedia,time:Date.now()});else{let cap=document.querySelector('#ig14-caption')?.value.trim()||'';state.userPosts[acct()].unshift({id:'u'+Date.now(),user:id(),avatar:acct()==='public'?'jh_avatar':null,photos:[draftMedia],caption:cap,likes:0,comments:0,time:'방금'});}draftMedia='';persist();view='';state.activeTab=draftKind==='story'?'home':'profile';render14()}}
 function compress(file,cb){let rd=new FileReader;rd.onload=()=>{let im=new Image;im.onload=()=>{let scale=Math.min(1,1080/im.width,1350/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.78))};im.src=rd.result};rd.readAsDataURL(file)}
-const content=document.querySelector('#appcontent');content.addEventListener('click',action,true);
-content.addEventListener('input',e=>{if(mode!=='instagram'||e.target.id!=='ig14-search')return;const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#ig14-results [data-a="user"]').forEach(row=>{row.style.display=(!q||String(row.dataset.id||'').toLowerCase().includes(q))?'':'none'})});content.addEventListener('change',e=>{if(mode!=='instagram')return;if(e.target.id==='ig14-image'){let f=e.target.files?.[0];if(f)compress(f,d=>{draftMedia=d;let p=document.querySelector('#ig14-preview');if(p)p.innerHTML=img(d)})}if(e.target.id==='ig14-video'){let f=e.target.files?.[0];if(f){const list=videoUrls[acct()];list.unshift({url:URL.createObjectURL(f),caption:f.name});if(list.length>8){const old=list.pop();if(old?.url?.startsWith('blob:'))URL.revokeObjectURL(old.url)}reelIndex[acct()]=0;render14()}}},true);content.addEventListener('submit',e=>{
+const content=document.querySelector('#appcontent');content.addEventListener('click',action,true);content.addEventListener('change',e=>{if(mode!=='instagram')return;if(e.target.id==='ig14-image'){let f=e.target.files?.[0];if(f)compress(f,d=>{draftMedia=d;let p=document.querySelector('#ig14-preview');if(p)p.innerHTML=img(d)})}if(e.target.id==='ig14-video'){let f=e.target.files?.[0];if(f){const list=videoUrls[acct()];list.unshift({url:URL.createObjectURL(f),caption:f.name});if(list.length>8){const old=list.pop();if(old?.url?.startsWith('blob:'))URL.revokeObjectURL(old.url)}reelIndex[acct()]=0;render14()}}},true);content.addEventListener('submit',e=>{
  if(mode!=='instagram')return;
  let form=e.target;
  if(form.matches('[data-igr-comment]')){
@@ -1933,10 +1360,10 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./settings/settings.js?v=5"></script>
 <script src="./kakao/message-requests-data.js?v=3"></script>
 <script src="./kakao/message-requests.js?v=16&amp;build=ep001-v12"></script>
-<script src="./notifications/notifications.js?v=8&amp;build=ep001-v18"></script>
+<script src="./notifications/notifications.js?v=9&amp;build=gift-v22"></script>
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v18"></script>
-<link rel="stylesheet" href="./kakao/shop.css?v=2&amp;build=gift-ai-v21">
-<script src="./kakao/shop.js?v=3&amp;build=gift-ai-v21"></script>
+<link rel="stylesheet" href="./kakao/shop.css?v=3&amp;build=gift-v22">
+<script src="./kakao/shop.js?v=4&amp;build=gift-v22"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V021';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V022';proof.removeAttribute('hidden')}}</script>
 </body></html>

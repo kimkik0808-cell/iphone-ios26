@@ -75,12 +75,12 @@ const contacts=()=>{
  const chats=window.__KKT15_TEST__?.data||[];
  const result=[],ids=new Set();
  for(const c of [{id:'nuna',name:'누나'},...from,...chats]){
-  if(!c?.id||!c.name||ids.has(c.id)||c.id==='unknown'||c.id==='tbz'||c.id==='stage')continue;
+  if(!c?.id||!c.name||ids.has(c.id)||c.type==='service'||c.id==='kakao-gift'||c.id==='unknown'||c.id==='tbz'||c.id==='stage')continue;
   ids.add(c.id);result.push({id:c.id,name:c.name});
  }
  return result;
 };
-let page='home', selected='coffee', orderId='', intent='self', recipient='', active=false, category='전체';
+let page='home', selected='coffee', orderId='', intent='self', recipient='', active=false, category='전체',ordersView='received';
 let searchQuery='',searchResults=[],searching=false,searchError='';
 const currentOrder=()=>state.orders.find(o=>o.id===orderId)||null;
 const iconTab=(emoji,label,key)=>'<button type="button" data-k15="tab" data-v="'+key+'"><span style="font-size:21px">'+emoji+'</span><span>'+label+'</span></button>';
@@ -104,7 +104,7 @@ function orderRow(o){
  return '<button class="ks-order" data-kshop="order" data-id="'+safe(o.id)+'">'+
  '<span class="ks-order-art" style="background:'+p.bg+'">'+p.emoji+'</span>'+
  '<span><strong>'+safe(t(p.ko,p.zh))+'</strong><small>'+new Date(o.at).toLocaleDateString('ko-KR')+
- (o.recipient?' · '+safe(t('선물 완료','已赠送')):' · '+safe(t('구매 완료','已购买')))+'</small></span>'+
+ (o.recipient?' · '+safe(t('선물 완료','已赠送')):' · '+safe(t('사용 가능','可以使用')))+'</small></span>'+
  '<b>'+money(o.price)+'</b><i>›</i></button>';
 }
 function transferRow(x){
@@ -117,28 +117,28 @@ function catalog(){
  return '<section class="ks-hero"><small>kakao<span>pay</span> · '+t('모의 잔액','模拟余额')+'</small>'+
  '<strong>'+money(balance())+'</strong>'+button('wallet',t('잔액 · 결제 내역 보기 ›','查看余额与交易 ›'),'ks-light')+'</section>'+
  '<div class="ks-section"><h2>'+t('마음을 전하는 선물','把心意送给朋友')+'</h2><p>'+t('친구에게 보내거나 직접 구매해 보세요.','可自行购买，也可以赠送好友。')+'</p></div>'+
- '<form class="ks-search" data-kshop-form="search"><input name="query" maxlength="40" autocomplete="off" value="'+safe(searchQuery)+'" placeholder="'+safe(t('향수, 케이크, 생일 선물 검색','搜索香水、蛋糕、生日礼物'))+'" aria-label="'+safe(t('AI 선물 검색','AI 礼物搜索'))+'"><button type="submit" '+(searching?'disabled':'')+'>'+(searching?'<span class="ks-spinner"></span>':t('AI 검색','AI 搜索'))+'</button>'+(searchQuery?'<button type="button" class="ks-search-clear" data-kshop="clear-search" aria-label="'+safe(t('검색 지우기','清除搜索'))+'">×</button>':'')+'</form>'+
- (searching?'<p class="ks-search-note">'+t('어울리는 선물을 찾고 있어요…','正在生成合适的礼物…')+'</p>':'')+
+ '<form class="ks-search" data-kshop-form="search"><input name="query" maxlength="40" autocomplete="off" value="'+safe(searchQuery)+'" placeholder="'+safe(t('향수, 케이크, 생일 선물 검색','搜索香水、蛋糕、生日礼物'))+'" aria-label="'+safe(t('선물 검색','搜索礼物'))+'"><button type="submit" '+(searching?'disabled':'')+'>'+(searching?'<span class="ks-spinner"></span>':t('검색','搜索'))+'</button>'+(searchQuery?'<button type="button" class="ks-search-clear" data-kshop="clear-search" aria-label="'+safe(t('검색 지우기','清除搜索'))+'">×</button>':'')+'</form>'+
+ (searching?'<p class="ks-search-note">'+t('상품을 불러오는 중…','正在加载商品…')+'</p>':'')+
  (searchError?'<p class="ks-search-error">'+safe(searchError)+'</p>':'')+
- (searchQuery&&!searching?'<div class="ks-result-title"><strong>'+safe(t('“'+searchQuery+'” AI 추천','“'+searchQuery+'” AI 推荐'))+'</strong><small>'+visible.length+t('개',' 件')+'</small></div>':'')+
+ (searchQuery&&!searching?'<div class="ks-result-title"><strong>'+safe(t('“'+searchQuery+'” 검색 결과','“'+searchQuery+'” 搜索结果'))+'</strong><small>'+visible.length+t('개',' 件')+'</small></div>':'')+
  '<div class="ks-categories">'+chips.map(c=>'<button class="'+(c===category?'chosen':'')+'" data-kshop="category" data-id="'+c+'">'+
  safe(c==='전체'?t('전체','全部'):categoryName(c))+'</button>').join('')+'</div>'+
  '<div class="ks-grid">'+visible.map(productCard).join('')+'</div>'+
  (!searching&&!visible.length?'<p class="ks-empty ks-search-empty">'+t('검색 결과가 없어요. 다른 단어로 검색해 보세요.','没有找到结果，请换个关键词试试。')+'</p>':'')+
- button('orders',t('선물함 · 구매 내역','礼物盒 · 购买记录'),'ks-outline');
+ button('orders',t('선물함','礼物盒'),'ks-outline');
 }
 function detail(){
  const p=getItem(selected);if(!p)return catalog();
  return '<div class="ks-detail-art" style="background:'+p.bg+'">'+p.emoji+'</div>'+
  '<div class="ks-section"><small>'+safe(categoryName(p.kind))+'</small><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(p.price)+'</strong><p>'+safe(t(p.desc,p.descZh||'虚拟电子礼券。购买后可赠送 KakaoTalk 联系人。'))+'</p></div>'+
- '<div class="ks-infocard">'+t('모바일 교환권 · 구매 후 선물 가능','电子礼券 · 购买后可赠送')+'</div>'+
- button('checkout',t('구매하기','立即购买'),'ks-primary')+
- button('choose-before',t('친구에게 선물하기','购买并送给好友'),'ks-outline');
+ '<div class="ks-infocard">'+t('모바일 교환권 · 선물함에서 확인','电子兑换券 · 可在礼物盒中查看')+'</div>'+
+ button('checkout',t('나에게 선물','送给自己'),'ks-primary')+
+ button('choose-before',t('친구에게 선물하기','赠送给好友'),'ks-outline');
 }
 function checkout(){
  const p=getItem(selected);if(!p)return catalog();
  const who=contacts().find(c=>c.id===recipient);
- return '<div class="ks-section"><h2>'+t('결제 확인','确认支付')+'</h2><p>'+t('실제 결제가 발생하지 않는 체험용 화면입니다.','此页面仅模拟付款，不会产生真实扣款。')+'</p></div>'+
+ return '<div class="ks-section"><h2>'+t('주문 확인','确认订单')+'</h2><p>'+t('실제 결제가 발생하지 않는 체험용 화면입니다.','此页面仅模拟付款，不会产生真实扣款。')+'</p></div>'+
  '<div class="ks-payment-line"><span>'+p.emoji+' '+safe(t(p.ko,p.zh))+'</span><b>'+money(p.price)+'</b></div>'+
  (intent==='gift'?'<div class="ks-payment-line"><span>'+t('받는 친구','赠送对象')+'</span><strong>'+safe(who?.name||'—')+'</strong></div>':'')+
  '<div class="ks-infocard"><b>kakao<span>pay</span></b><p>'+t('현재 잔액','当前余额')+'　'+money(balance())+'</p>'+
@@ -151,11 +151,11 @@ function checkout(){
 function success(){
  const o=currentOrder(),p=o&&getItem(o.itemId);if(!p)return catalog();
  const who=contacts().find(c=>c.id===o.recipient);
- return '<div class="ks-success"><div class="ks-check">✓</div><h2>'+t('결제가 완료됐어요','模拟付款成功')+'</h2>'+
+ return '<div class="ks-success"><div class="ks-check">✓</div><h2>'+t(o.recipient?'선물을 보냈어요':'선물이 도착했어요',o.recipient?'礼物已送出':'礼物已存入礼物盒')+'</h2>'+
  '<p>'+money(o.price)+' · '+safe(t(p.ko,p.zh))+'</p>'+
- '<small>'+t('아이폰 메시지 앱에 결제 안내가 도착했어요.','付款通知已写入 iPhone“信息”App。')+'</small></div>'+
+ '<small>'+t(o.recipient?'채팅방과 주문내역에서 확인할 수 있어요.':'선물함의 받은 선물에서 교환권을 확인해 보세요.',o.recipient?'可在聊天和订单记录中查看。':'可在礼物盒的“收到的礼物”中查看兑换券。')+'</small></div>'+
  (o.recipient?'<div class="ks-infocard">'+t('선물 받는 친구','赠送对象')+'：'+safe(who?.name||o.recipient)+'</div>':
- button('choose-after',t('🎁 구매한 상품 선물하기','🎁 把买好的商品送给联系人'),'ks-primary'))+
+ '<button type="button" data-kshop="order" data-id="'+safe(o.id)+'" class="ks-btn ks-primary">'+t('교환권 확인하기','查看兑换券')+'</button>')+
  button('wallet',t('잔액 · 결제 내역 보기','查看余额及交易'),'ks-outline')+
  button('home',t('쇼핑 계속하기','继续购物'),'ks-outline');
 }
@@ -177,10 +177,13 @@ function wallet(){
  ([...state.orders.map(x=>({...x,kind:'order'})),...state.transfers.map(x=>({...x,kind:'transfer'}))].sort((a,b)=>b.at-a.at).map(x=>x.kind==='transfer'?transferRow(x):orderRow(x)).join('')||'<p class="ks-empty">'+t('결제 내역이 없습니다.','暂无购买记录')+'</p>');
 }
 function orders(){
- return '<div class="ks-section"><h2>'+t('구매한 선물','已购买礼物')+'</h2><p>'+
- t('구매한 상품은 친구에게 한 번 선물할 수 있어요.','每笔已购买礼物可以赠送给一位联系人。')+'</p></div>'+
- (state.orders.length?state.orders.slice().reverse().map(orderRow).join(''):'<p class="ks-empty">'+t('아직 구매 내역이 없어요.','还没有购买记录')+'</p>');
+ const received=state.orders.filter(o=>!o.recipient),list=ordersView==='received'?received:state.orders;
+ return '<div class="ks-gift-tabs"><button data-kshop="orders-view" data-id="received" class="'+(ordersView==='received'?'active':'')+'">'+t('받은 선물','收到的礼物')+'</button><button data-kshop="orders-view" data-id="history" class="'+(ordersView==='history'?'active':'')+'">'+t('주문내역','订单记录')+'</button></div>'+
+ '<div class="ks-section"><h2>'+t(ordersView==='received'?'사용 가능한 교환권':'선물 주문내역',ordersView==='received'?'可使用的兑换券':'礼物订单记录')+'</h2><p>'+t(ordersView==='received'?'나에게 선물한 모바일 교환권이에요.':'나에게 선물하거나 친구에게 보낸 주문을 확인해 보세요.',ordersView==='received'?'这里保存送给自己的电子兑换券。':'查看送给自己或朋友的订单。')+'</p></div>'+
+ (list.length?list.slice().reverse().map(orderRow).join(''):'<p class="ks-empty">'+t(ordersView==='received'?'사용 가능한 선물이 없어요.':'아직 주문내역이 없어요.',ordersView==='received'?'暂无可用礼物。':'暂无订单记录。')+'</p>');
 }
+const couponCode=o=>('2026'+String(parseInt(o.id.replace(/\D/g,'').slice(-8)||Date.now(),10)%100000000).padStart(8,'0')).replace(/(.{4})/g,'$1 ').trim();
+const expiry=o=>new Date(o.at+365*86400000).toLocaleDateString(window.IphoneLocale?.language==='zh'?'zh-CN':'ko-KR');
 function orderDetail(){
  const o=currentOrder(),p=o&&getItem(o.itemId);if(!p)return orders();
  const who=contacts().find(c=>c.id===o.recipient);
@@ -188,7 +191,7 @@ function orderDetail(){
  '<div class="ks-section"><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(o.price)+'</strong><p>'+
  t('주문번호','订单号')+'：'+safe(o.id)+'</p><p>'+t('구매 시각','购买时间')+'：'+new Date(o.at).toLocaleString('ko-KR')+'</p></div>'+
  (o.recipient?'<div class="ks-infocard">'+t('선물 완료','礼物已送出')+' · '+safe(who?.name||o.recipient)+'</div>':
- button('choose-after',t('이 상품 선물하기','把这份礼物送给联系人'),'ks-primary'))+
+ '<div class="ks-coupon"><span>'+t('사용 가능','可以使用')+'</span><div class="ks-barcode" aria-hidden="true"></div><strong>'+safe(couponCode(o))+'</strong><small>'+t('유효기간','有效期')+' · '+expiry(o)+'</small></div>'+button('choose-after',t('친구에게 보내기','发送给好友'),'ks-primary'))+
  button('orders',t('선물함으로','返回礼物盒'),'ks-outline');
 }
 function draw(){
@@ -228,6 +231,7 @@ function recordEpisodeTransfer(event){
  state.transfers.push(transfer);save();syncSMS();return true;
 }
 const giftReplyPending=new Set();
+const giftReplyEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-reply':'https://nuyheaj.pages.dev/api/kkt-gift-reply';
 const giftFallback=(id,p)=>{
  const item=p.kind==='카페'?'커피':p.kind==='푸드'||p.kind==='디저트'?'맛있는 거':p.ko;
  const fixed={
@@ -243,21 +247,45 @@ const giftFallback=(id,p)=>{
  };
  return fixed[id]||`${item} 고마워 잘 받을게`;
 };
+async function requestGiftReply(id,p,chat){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+ try{
+  const recent=(chat.messages||[]).filter(m=>m?.[0]==='mine'||m?.[0]==='other').slice(-8).map(m=>({role:m[0]==='mine'?'재현':'상대방',text:String(m[1]||'').slice(0,180)}));
+  const response=await fetch(giftReplyEndpoint(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({recipientId:id,recipientName:chat.name,item:p.ko,kind:p.kind,history:recent}),signal:controller.signal});
+  const data=await response.json().catch(()=>({}));
+  if(response.ok&&typeof data.reply==='string'&&data.reply.trim())return {text:data.reply.trim().slice(0,180),source:'gemini'};
+ }catch{}finally{clearTimeout(timer)}
+ return {text:giftFallback(id,p),source:'fallback'};
+}
 function scheduleGiftReply(o,id,p,chat){
  if(!o||o.replyDone||giftReplyPending.has(o.id)||!chat)return;
  giftReplyPending.add(o.id);
- setTimeout(()=>{
-  const reply=giftFallback(id,p);
+ setTimeout(async()=>{
+  const result=await requestGiftReply(id,p,chat),reply=result.text;
   const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
   if(!chat.messages.some(message=>message[5]==='gift-reply:'+o.id)){
    chat.messages.push(['other',reply,now,'','', 'gift-reply:'+o.id]);
    chat.preview=reply;chat.time='방금';chat.unread=(chat.unread||0)+1;
   }
-  o.replyDone=true;o.replyText=reply;o.repliedAt=Date.now();save();
+  o.replyDone=true;o.replyText=reply;o.replySource=result.source;o.repliedAt=Date.now();save();
   try{localStorage.setItem('jh_kkt15',JSON.stringify(window.__KKT15_TEST__?.data||[]))}catch{}
   giftReplyPending.delete(o.id);
   window.__KKT15_TEST__?.render?.();
  },900+Math.floor(Math.random()*900));
+}
+function pushOrderNotice(o,p){
+ const data=window.__KKT15_TEST__?.data;if(!Array.isArray(data))return;
+ let chat=data.find(c=>c.id==='kakao-gift');
+ if(!chat){chat={id:'kakao-gift',name:'카카오톡 선물하기',type:'service',tag:'공식',giftChat:true,preview:'',time:'방금',unread:0,members:1,messages:[]};data.unshift(chat)}
+ if(!Array.isArray(chat.messages))chat.messages=[];
+ if(chat.messages.some(m=>m[5]==='order:'+o.id))return;
+ const who=contacts().find(c=>c.id===o.recipient)?.name||o.recipient;
+ const text=o.recipient?'[선물 주문 완료]\n'+p.ko+'\n받는 분 '+who+'\n결제금액 '+money(o.price)+'\n주문번호 '+o.id:
+  '[나에게 선물 주문 완료]\n'+p.ko+'\n결제금액 '+money(o.price)+'\n교환권이 선물함 > 받은 선물에 도착했어요.\n주문번호 '+o.id;
+ const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.at));
+ chat.messages.push(['other',text,now,'','','order:'+o.id]);chat.preview=text.split('\n')[0];chat.time='방금';chat.unread=(chat.unread||0)+1;
+ try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
+ window.__IOS26_NOTIFICATIONS__?.showKakao?.({sender:'카카오톡 선물하기',message:o.recipient?'선물 주문이 완료되었습니다.':'나에게 선물한 교환권이 도착했습니다.',chatId:'kakao-gift'});
 }
 function assignGift(o,id){
  if(!o||o.recipient||!contacts().some(c=>c.id===id))return false;
@@ -316,10 +344,10 @@ function purchase(){
  if(!p||balance()<p.price)return;
  const id='KS'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*10000).toString(36).toUpperCase();
  const o={id,itemId:p.id,price:p.price,at:Date.now(),balanceAfter:balance()-p.price,recipient:null};
- state.orders.push(o);save();
- orderId=id;syncSMS();
- window.__IPHONE_SMS__?.notify?.({type:'purchase',id});
+ state.orders.push(o);save();orderId=id;
  if(intent==='gift'&&recipient)assignGift(o,recipient);
+ pushOrderNotice(o,p);syncSMS();
+ setTimeout(()=>window.__IPHONE_SMS__?.notify?.({type:'purchase',id}),3600);
  page='success';draw();
 }
 const giftEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-search':'https://nuyheaj.pages.dev/api/kkt-gift-search';
@@ -352,7 +380,7 @@ async function searchGifts(query){
   searchResults=fresh;
  }catch(error){
   searchResults=localSearch(q);
-  searchError=t('AI 연결이 잠시 불안정해 기본 추천을 보여드려요.','AI 暂时连接不稳定，已显示本地推荐。');
+  searchError=t('검색 결과를 불러오지 못해 인기 상품을 보여드려요.','暂时无法加载搜索结果，已显示热门商品。');
  }finally{clearTimeout(timer);searching=false;draw()}
 }
 function back(){
@@ -378,6 +406,7 @@ document.addEventListener('click',function(e){
  else if(action==='clear-search'){searchQuery='';searchResults=[];searchError='';category='전체';page='home';}
  else if(action==='wallet'||action==='balance'||action==='pay'){page='wallet';}
  else if(action==='orders'){page='orders';}
+ else if(action==='orders-view'){ordersView=id==='history'?'history':'received';page='orders';}
  else if(action==='order'){orderId=id;page='order';}
  else if(action==='checkout'){intent='self';recipient='';page='checkout';}
  else if(action==='choose-before'){intent='gift';recipient='';page='recipients';}
