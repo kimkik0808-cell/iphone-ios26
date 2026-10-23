@@ -122,3 +122,19 @@
   font-size:0;
   line-height:1;
 }
+
+/* Apple Music compact home/search layout v27 */
+.am-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.am-home-section{padding-top:10px}
+.am-cardstrip{display:grid;grid-template-columns:minmax(0,154px);gap:13px;padding:12px 0 4px}
+.am-card{display:flex;flex-direction:column;gap:8px;min-width:0;text-align:left;color:#17171b}
+.am-card>.am-art{width:154px;height:154px;border-radius:10px;font-size:54px}
+.am-card>span:last-child{display:block;min-width:0}
+.am-card strong,.am-card small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.am-card strong{font-size:14px;font-weight:650}
+.am-card small{font-size:12px;color:#87838b;margin-top:3px}
+.am-local-entry{margin:22px -2px 2px;padding:15px 16px;border-radius:15px;background:#f0eef2;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.am-local-entry div{display:flex;flex-direction:column;min-width:0}
+.am-local-entry strong{font-size:15px}
+.am-local-entry span{font-size:11px;color:#86828b;margin-top:4px}
+.am-local-entry button{flex:none;color:#fff;background:#fa335d;border-radius:15px;padding:8px 12px;font-size:12px;font-weight:700}

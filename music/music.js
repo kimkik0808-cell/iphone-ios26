@@ -12,7 +12,12 @@
   const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}};
   const fmt=s=>Number.isFinite(s)?`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`:'0:00';
   const stamp=()=>Math.random().toString(36).slice(2)+Date.now().toString(36);
-  let tab='library', view='list', sheet='', query='', sort='recent', loading=false, loaded=false, loadTime=0, error='';
+  const filenameInfo=name=>{
+    const stem=basename(name);
+    const match=stem.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+    return match?{artist:match[1].trim(),title:match[2].trim()}:{artist:'아티스트 정보 없음',title:stem};
+  };
+  let tab='home', view='list', sheet='', query='', sort='recent', loading=false, loaded=false, loadTime=0, error='';
   let built=[], links=safeStorage('am26_links',[]), locals=[], ephemeral=[], currentId='', currentSrc='', shuffle=false, repeat=false;
   let fav=new Set(safeStorage('am26_favorites',[]));
   const audio=new Audio();
@@ -111,11 +116,6 @@
     loading=true;error='';if(isMusic())refresh();
     const found=[],seen=new Set(), metadata={};
     // Upload format: Artist - Song.mp3 (also supports Artist - Song.m4a).
-    const filenameInfo=name=>{
-      const stem=basename(name);
-      const match=stem.match(/^(.+?)\s+-\s+(.+)$/);
-      return match?{artist:match[1].trim(),title:match[2].trim()}:{artist:'아티스트 정보 없음',title:stem};
-    };
     const addTrack=(name,extra={},src='',size=0)=>{
       if(typeof name!=='string'||!mediaType.test(name))return;
       const canonical=name.normalize('NFC');
@@ -175,6 +175,12 @@
         }
       }catch{}
       built=found;
+      if(!currentId&&built.length){
+        currentId=built[0].id;
+        currentSrc=built[0].src;
+        audio.src=currentSrc;
+        audio.load();
+      }
       loaded=true;loadTime=Date.now();
     }catch(err){error=String(err?.message||'음악 목록을 불러올 수 없습니다');loaded=true;loadTime=Date.now()}
     finally{loading=false;if(isMusic())refresh()}
@@ -247,6 +253,9 @@
   function row(t){
     return `<div class="am-row"><button class="am-row-main" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></span></button></div>`;
   }
+  function tile(t){
+    return `<button class="am-card" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></span></button>`;
+  }
   function list(filter='all'){
     let found=tracks();
     if(filter==='official')found=found.filter(x=>x.source==='official');
@@ -262,7 +271,7 @@
     return `<div class="am-mini"><button class="am-mini-song" data-am="player">${art(t)}<strong>${e(t.title)}</strong></button><button class="am-mini-btn" data-am="toggle" data-am-icon="play" aria-label="재생 또는 일시 정지">${icon(audio.paused?'play':'pause')}</button><button class="am-mini-btn" data-am="next" aria-label="다음 곡">${icon('next')}</button><div class="am-mini-line" data-am-progress style="width:${pct}%"></div></div>`;
   }
   function bottom(){
-    const tabs=[['home','⌂','홈'],['new','♫','새로운 음악'],['radio','◉','라디오'],['library','▤','보관함'],['search','⌕','검색']];
+    const tabs=[['home','⌂','홈'],['search','⌕','검색']];
     return `<div class="am-bottom">${mini()}<div class="am-tabs">${tabs.map(([k,i,label])=>`<button class="am-tab ${tab===k?'selected':''}" data-am="tab" data-tab="${k}"><i>${i}</i><span>${label}</span></button>`).join('')}</div></div>`;
   }
   function head(title){return `<div class="am-head"><h1>${title}</h1><button class="am-add" data-am="sheet" aria-label="음악 추가">＋</button></div>`}
@@ -270,36 +279,29 @@
     return `<div class="am-empty"><i>♫</i><strong>${error?'목록을 불러올 수 없음':loading?'음악 불러오는 중…':'아직 음악이 없습니다'}</strong>${error?e(error):'기기의 음악 파일 또는 오디오 URL을 추가할 수 있습니다.'}<div style="margin-top:15px"><button class="am-smallbutton" data-am="sheet">＋ 음악 추가</button> <button class="am-smallbutton" data-am="reload">새로고침</button></div></div>`
   }
   function content(){
-    const n=tracks(),count=n.length;
+    const all=tracks(),fixed=list('official'),uploaded=list('local');
     if(tab==='search'){
-      return head('검색')+`<div class="am-search">⌕ <input id="am26-search" placeholder="보관함 검색" autocomplete="off" value="${e(query)}"></div><div class="am-sectionname"><b>검색 결과</b><span>${list().length}곡</span></div><div class="am-list" id="am26-list">${list().map(row).join('')||noSongs()}</div>`;
+      return head('검색')+`<div class="am-search">⌕ <input id="am26-search" placeholder="노래 또는 아티스트 검색" autocomplete="off" value="${e(query)}"></div><div class="am-sectionname"><b>검색 결과</b><span>${list().length}곡</span></div><div class="am-list" id="am26-list">${list().map(row).join('')||'<div class="am-empty"><strong>검색 결과가 없습니다</strong>다른 곡명이나 아티스트를 검색해 보세요.</div>'}</div>`;
     }
-    if(tab==='radio'){
-      return head('라디오')+`<div class="am-hero"><div class="am-hero-art">♫</div><div><strong>나만의 스테이션</strong><p>보관함에 있는 음악을 셔플로 재생합니다.</p><div class="am-hero-actions"><button class="am-smallbutton" data-am="station">셔플 재생</button></div></div></div><div class="am-sectionname"><b>스테이션의 음악</b><span>${count}곡</span></div><div class="am-list">${n.map(row).join('')||noSongs()}</div>`;
-    }
-    if(tab==='new'){
-      const recent=[...n].reverse();
-      return head('새로운 음악')+`<div class="am-hero"><div class="am-hero-art">♪</div><div><strong>최근 추가된 음악</strong><p>새로운 노래를 추가해 나만의 보관함을 완성해 보세요.</p><div class="am-hero-actions"><button data-am="sheet" class="am-smallbutton">음악 추가</button></div></div></div><div class="am-sectionname"><b>최근 추가됨</b><span>${count}곡</span></div><div class="am-list">${recent.map(row).join('')||noSongs()}</div>`;
-    }
-    if(tab==='home'){
-      return head('홈')+`<div class="am-hero"><div class="am-hero-art">♫</div><div><strong>내 음악으로 채우는 하루</strong><p>좋아하는 노래를 언제든 재생하세요.</p><div class="am-hero-actions"><button class="am-smallbutton" data-am="station">셔플 재생</button><button class="am-smallbutton" data-am="sheet">추가</button></div></div></div><div class="am-sectionname"><b>내가 좋아하는 노래</b><span>${list('favorites').length}곡</span></div><div class="am-list">${list('favorites').map(row).join('')||'<div class="am-empty">아직 좋아요 표시한 노래가 없습니다.</div>'}</div><div class="am-sectionname"><b>보관함에서 듣기</b><span>${count}곡</span></div><div class="am-list">${n.map(row).join('')||noSongs()}</div>`;
-    }
-    const nFiltered=sort==='official'?list('official'):sort==='local'?list('local'):sort==='favorites'?list('favorites'):list();
-    const chips=[['recent','모든 노래'],['official','기본 음악'],['local','내가 추가함'],['favorites','즐겨찾기']];
-    return head('보관함')+`<div class="am-chips">${chips.map(([key,label])=>`<button class="am-chip ${sort===key?'on':''}" data-am="filter" data-filter="${key}">${label}</button>`).join('')}</div><div class="am-sectionname"><b>노래</b><span>${nFiltered.length}곡 <button data-am="reload" aria-label="새로고침" style="color:#ee325f;font-size:16px;margin-left:5px">↻</button></span></div><div class="am-list">${nFiltered.map(row).join('')||noSongs()}</div>`;
+    const recent=current()?[current()]:fixed.slice(0,1);
+    return head('홈')+
+      `<div class="am-sectionname am-home-section"><b>최근 재생</b></div><div class="am-cardstrip">${recent.map(tile).join('')||'<div class="am-empty">최근 재생한 음악이 없습니다.</div>'}</div>`+
+      `<div class="am-sectionname"><b>노래</b><span>${fixed.length}곡</span></div><div class="am-list">${fixed.map(row).join('')||noSongs()}</div>`+
+      `<div class="am-local-entry"><div><strong>이 기기의 음악</strong><span>MP3 · M4A 파일을 가져올 수 있어요</span></div><button data-am="sheet">파일 선택</button></div>`+
+      (uploaded.length?`<div class="am-sectionname"><b>가져온 음악</b><span>${uploaded.length}곡</span></div><div class="am-list">${uploaded.map(row).join('')}</div>`:'');
   }
   function uploadSheet(){
     if(!sheet)return '';
     const isMenu=sheet.startsWith('options:');
     const t=isMenu?trById(sheet.slice(8)):null;
-    if(isMenu&&t) return `<div class="am-modalshade" data-am="dismiss"><div class="am-sheet" data-am-surface><div class="am-handle"></div><h2>${e(t.title)}</h2><p>${e(info(t))}</p><button class="am-primary" data-am="favorite" data-id="${e(t.id)}">${fav.has(t.id)?'♥ 즐겨찾기 해제':'♡ 즐겨찾기에 추가'}</button>${t.source!=='official'?`<button class="am-secondary" data-am="remove" data-id="${e(t.id)}">보관함에서 제거</button>`:''}<button class="am-secondary" data-am="dismiss">취소</button></div></div>`;
-    return `<div class="am-modalshade" data-am="dismiss"><div class="am-sheet" data-am-surface><div class="am-handle"></div><h2>보관함에 음악 추가</h2><p>내 기기에서 파일을 선택하거나 직접 재생할 수 있는 오디오 URL을 등록하세요.</p><input type="file" id="am26-file" multiple accept="audio/*,.mp3,.m4a,.aac,.wav,.flac,.ogg" style="display:none"><button class="am-select" data-am="pick">↑ 파일 업로드</button><form id="am26-urlform"><label for="am26-url">오디오 링크 (HTTPS)</label><input type="url" id="am26-url" required placeholder="https://example.com/song.mp3"><label for="am26-title">곡 제목 (선택)</label><input type="text" id="am26-title" maxlength="90" placeholder="노래 제목"><label for="am26-artist">아티스트 (선택)</label><input type="text" id="am26-artist" maxlength="90" placeholder="아티스트 이름"><button class="am-primary" type="submit">링크로 추가</button></form><div class="am-note">파일은 이 기기의 브라우저에만 저장됩니다. 다른 사용자에게 공개되지 않습니다. YouTube·Spotify 페이지 주소는 직접 재생할 수 없습니다. 스트리밍 링크는 서버에서 오디오 재생을 허용해야 합니다.</div><button class="am-secondary" data-am="dismiss">닫기</button></div></div>`;
+    if(isMenu&&t) return `<div class="am-modalshade" data-am="dismiss"><div class="am-sheet" data-am-surface><div class="am-handle"></div><h2>${e(t.title)}</h2><p>${e(info(t))}</p><button class="am-primary" data-am="favorite" data-id="${e(t.id)}">${fav.has(t.id)?'♥ 즐겨찾기 해제':'♡ 즐겨찾기에 추가'}</button>${t.source!=='official'?`<button class="am-secondary" data-am="remove" data-id="${e(t.id)}">이 기기에서 제거</button>`:''}<button class="am-secondary" data-am="dismiss">취소</button></div></div>`;
+    return `<div class="am-modalshade" data-am="dismiss"><div class="am-sheet" data-am-surface><div class="am-handle"></div><h2>음악 가져오기</h2><p>이 iPhone에서 MP3 또는 M4A 파일을 선택하세요. 파일명은 ‘아티스트 - 노래 제목’ 형식으로 읽어요.</p><input type="file" id="am26-file" multiple accept="audio/*,.mp3,.m4a,.aac,.wav,.flac,.ogg" style="display:none"><button class="am-select" data-am="pick">파일 선택</button><div class="am-note">가져온 음악은 이 브라우저의 로컬 저장소에만 보관되며 다른 사용자에게 공개되지 않습니다.</div><button class="am-secondary" data-am="dismiss">닫기</button></div></div>`;
   }
   function playingPage(){
     const t=current();
     if(!t){view='list';return listPage()}
     const dur=Number.isFinite(audio.duration)?audio.duration:0,pct=dur>0?audio.currentTime/dur*100:0;
-    return `<div class="am-player"><div class="am-playerbar"><button data-am="back" aria-label="보관함으로">${icon('down')}</button><span>재생 중</span><button data-am="menu" data-id="${e(t.id)}" aria-label="더 보기">${icon('more')}</button></div><div class="am-playing-art">${imgCover(t)||'♫'}</div><div class="am-player-meta"><div class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></div><button class="am-heart" data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button></div><div><input type="range" class="am-range" min="0" max="100" step=".1" id="am26-seek" value="${pct}" style="--pct:${pct}%" aria-label="재생 위치"><div class="am-timeline"><span id="am26-current">${fmt(audio.currentTime)}</span><span id="am26-total">-${fmt(Math.max(0,dur-audio.currentTime))}</span></div></div><div class="am-bigcontrols"><button data-am="previous" aria-label="이전 곡">${icon('prev')}</button><button data-am="toggle" class="am-central" aria-label="재생 또는 일시 정지" data-am-icon="play">${icon(audio.paused?'play':'pause')}</button><button data-am="next" aria-label="다음 곡">${icon('next')}</button></div><div class="am-playerfeet"><button data-am="shuffle" aria-label="셔플" data-active="${shuffle}">${icon('shuffle')}</button><button data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button><button data-am="repeat" aria-label="반복 재생" data-active="${repeat}">${icon('repeat')}</button></div><div class="am-player-note">${e(origin(t))}</div>${uploadSheet()}</div>`;
+    return `<div class="am-player"><div class="am-playerbar"><button data-am="back" aria-label="홈으로">${icon('down')}</button><span>재생 중</span><button data-am="menu" data-id="${e(t.id)}" aria-label="더 보기">${icon('more')}</button></div><div class="am-playing-art">${imgCover(t)||'♫'}</div><div class="am-player-meta"><div class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></div><button class="am-heart" data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button></div><div><input type="range" class="am-range" min="0" max="100" step=".1" id="am26-seek" value="${pct}" style="--pct:${pct}%" aria-label="재생 위치"><div class="am-timeline"><span id="am26-current">${fmt(audio.currentTime)}</span><span id="am26-total">-${fmt(Math.max(0,dur-audio.currentTime))}</span></div></div><div class="am-bigcontrols"><button data-am="previous" aria-label="이전 곡">${icon('prev')}</button><button data-am="toggle" class="am-central" aria-label="재생 또는 일시 정지" data-am-icon="play">${icon(audio.paused?'play':'pause')}</button><button data-am="next" aria-label="다음 곡">${icon('next')}</button></div><div class="am-playerfeet"><button data-am="shuffle" aria-label="셔플" data-active="${shuffle}">${icon('shuffle')}</button><button data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button><button data-am="repeat" aria-label="반복 재생" data-active="${repeat}">${icon('repeat')}</button></div><div class="am-player-note">${e(origin(t))}</div>${uploadSheet()}</div>`;
   }
   function listPage(){
     const songs=tracks();
@@ -307,7 +309,10 @@
     return `<div class="am-root am-simple-root"><div class="am-scroll am-simple-scroll"><div class="am-list am-simple-list">${body}</div></div></div>`;
   }
   const oldMusicPage=musicPage;
-  musicPage=function(){return view==='player'?playingPage():listPage()};
+  musicPage=function(){
+    if(view==='player')return playingPage();
+    return `<div class="am-root"><div class="am-scroll">${content()}</div>${bottom()}${uploadSheet()}</div>`;
+  };
   const oldRender=render;
   render=function(...args){
     oldRender.apply(this,args);
@@ -337,7 +342,7 @@
     event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
     if(command==='surface')return;
     if(command==='dismiss'){if(event.target.closest('[data-am-surface]')&&btn.classList.contains('am-modalshade'))return;sheet='';refresh();return}
-    if(command==='tab'){tab=btn.dataset.tab||'library';view='list';query='';refresh();return}
+    if(command==='tab'){tab=btn.dataset.tab||'home';view='list';query='';refresh();return}
     if(command==='filter'){sort=btn.dataset.filter||'recent';refresh();return}
     if(command==='sheet'){sheet='add';refresh();return}
     if(command==='pick'){frame.querySelector('#am26-file')?.click();return}
@@ -363,7 +368,8 @@
     for(const file of files){
       if(file.size>100*1024*1024){showNotice('100MB 이하의 파일만 추가할 수 있습니다.');continue}
       if(!file.type.startsWith('audio/')&&!mediaType.test(file.name)){showNotice('지원되는 오디오 형식이 아닙니다.');continue}
-      const rec={id:'local:'+stamp(),name:file.name,title:basename(file.name),artist:'내 음악',blob:file,size:file.size,created:Date.now()};
+      const meta=filenameInfo(file.name);
+      const rec={id:'local:'+stamp(),name:file.name,title:meta.title,artist:meta.artist,blob:file,size:file.size,created:Date.now()};
       try{await putLocal(rec);locals.unshift(rec);success++}
       catch{ephemeral.unshift(rec);temporary++}
     }
