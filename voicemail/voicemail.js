@@ -40,17 +40,53 @@
     state.playing = false;
   }
 
-  function labelFromFile(filename) {
-    const name = filename.replace(AUDIO_EXT, '').replace(/[_-]+/g,' ').trim();
-    return name || '음성 메시지';
+  function hashNumber(value) {
+    return Array.from(String(value)).reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, 2166136261);
+  }
+
+  function parsedStamp(value) {
+    const text = String(value || '').trim();
+    const compact = text.match(/(20\d{2})(\d{2})(\d{2})(?:[^\d]?(\d{2})(\d{2})(\d{2}))?/);
+    if (compact) {
+      const [, y, mo, day, hour, minute, second] = compact;
+      const stamp = new Date(Number(y), Number(mo) - 1, Number(day), Number(hour || 0), Number(minute || 0), Number(second || 0));
+      if (!Number.isNaN(stamp.getTime())) return stamp;
+    }
+    const stamp = new Date(text);
+    return Number.isNaN(stamp.getTime()) ? null : stamp;
+  }
+
+  function stampFromFile(file, meta = {}) {
+    const explicit = parsedStamp(meta.date || meta.time);
+    if (explicit) return explicit;
+    const stem = file.replace(AUDIO_EXT, '');
+    const fromName = parsedStamp(stem);
+    const hash = hashNumber(file);
+    if (fromName) {
+      if (!/(20\d{12})/.test(stem)) {
+        fromName.setHours(8 + hash % 15, Math.floor(hash / 17) % 60, Math.floor(hash / 101) % 60, 0);
+      }
+      return fromName;
+    }
+    const start = new Date(2026, 0, 1, 0, 0, 0).getTime();
+    const span = new Date(2027, 0, 1, 0, 0, 0).getTime() - start;
+    return new Date(start + hash % span);
+  }
+
+  function koreanStamp(stamp) {
+    const period = stamp.getHours() < 12 ? '오전' : '오후';
+    const hour = stamp.getHours() % 12 || 12;
+    return `${stamp.getFullYear()}년 ${stamp.getMonth() + 1}월 ${stamp.getDate()}일 ${period} ${hour}시 ${String(stamp.getMinutes()).padStart(2, '0')}분 ${String(stamp.getSeconds()).padStart(2, '0')}초`;
   }
 
   function normalize(file, meta = {}) {
+    const stamp = stampFromFile(file, meta);
     return {
       file,
-      name: String(meta.name || meta.caller || labelFromFile(file)),
-      date: String(meta.date || meta.time || ''),
-      number: String(meta.number || ''),
+      timestamp: stamp.getTime(),
+      name: koreanStamp(stamp),
+      date: '',
+      number: String(meta.number || meta.caller || '음성 메시지'),
       note: String(meta.note || '')
     };
   }
@@ -85,23 +121,26 @@
       let filenames = [...new Set(meta
         .map(x => x && x.file)
         .filter(x => typeof x === 'string' && AUDIO_EXT.test(x)))];
-      if (!filenames.length) {
-        // Legacy fallback: directories without a messages.json can still load.
-        try {
-          const response = await fetch(API_URL + '&_=' + Date.now(), {
-            cache: 'no-store',
-            headers: {'Accept':'application/vnd.github+json'}
-          });
-          if (!response.ok) throw new Error('GitHub API ' + response.status);
-          const body = await response.json();
-          if (!Array.isArray(body)) throw new Error('응답 형식 오류');
-          filenames = body.filter(x => x && x.type === 'file' && AUDIO_EXT.test(x.name))
-            .map(x => x.name);
-        } catch (err) {
-          throw new Error('No bundled voicemail manifest and directory discovery failed: ' + err);
-        }
+      // Also discover newly uploaded files so a numeric filename such as
+      // 20261003.m4a appears without manually editing messages.json.
+      try {
+        const response = await fetch(API_URL + '&_=' + Date.now(), {
+          cache: 'no-store',
+          headers: {'Accept':'application/vnd.github+json'}
+        });
+        if (!response.ok) throw new Error('GitHub API ' + response.status);
+        const body = await response.json();
+        if (!Array.isArray(body)) throw new Error('응답 형식 오류');
+        filenames = [...new Set([...filenames, ...body
+          .filter(x => x && x.type === 'file' && AUDIO_EXT.test(x.name))
+          .map(x => x.name)])];
+      } catch (err) {
+        if (!filenames.length) throw new Error('No bundled voicemail manifest and directory discovery failed: ' + err);
+        console.warn('[Voicemail] Directory discovery skipped:', err);
       }
-      state.items = filenames.map(file => normalize(file, metaMap.get(file.normalize('NFC')) || {}));
+      state.items = filenames
+        .map(file => normalize(file, metaMap.get(file.normalize('NFC')) || {}))
+        .sort((a, b) => b.timestamp - a.timestamp);
       state.loaded = true;
       state.error = '';
     })().catch(err => {
