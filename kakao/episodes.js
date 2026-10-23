@@ -1,21 +1,14 @@
-/* KKT episodic story data. Fictional transaction; no payment API. */
-try{
- const resetKey='jh_kkt_episode_KKT_EP001_content_v2';
- if(localStorage.getItem(resetKey)!=='1'){
-  localStorage.removeItem('jh_kkt_episode_KKT_EP001');
-  localStorage.setItem(resetKey,'1');
- }
-}catch(e){}
+/* KKT episode data. Transactions are fictional and never call a payment API. */
 window.__KKT_EPISODES__={
  KKT_EP001:{
-  id:'KKT_EP001',name:'转账',contact:'xxx',mode:'AUTO',
+  id:'KKT_EP001',version:3,name:'转账',contact:'xxx',mode:'INTERACTIVE_AUTO',
   steps:[
    ['mine','계좌번호 보내줘','오전 10:05'],
    ['other','?','오후 12:06'],['other','무슨 뜻이야?','오후 12:06'],['mine','왜','오후 12:06'],
    ['other','나한테 돈 보내주려고?','오후 12:07'],['mine','ㅇ','오후 12:07'],
    ['other','ㅎ','오후 12:07'],['other','나 뭐로 보는 거야','오후 12:07'],
    ['other','카카오뱅크 3333-00-0000000 김여주','오후 12:08'],
-   {type:'transfer',id:'KKT_EP001_TRANSFER',amount:100000,bank:'카카오뱅크',recipient:'김여주',account:'3333-00-0000000'},
+   {type:'transfer',id:'KKT_EP001_TRANSFER',amount:1000000,bank:'카카오뱅크',recipient:'김여주',account:'3333-00-0000000'},
    ['mine','보냈어','오후 12:08'],['mine','확인해봐','오후 12:09'],
    ['other','아니','오후 12:09'],['other','왜 이렇게 많아?','오후 12:09'],
    ['mine','🙂','오후 12:10'],['other','원래 뭐라 하려고 했는데','오후 12:10'],

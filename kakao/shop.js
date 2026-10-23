@@ -3,7 +3,7 @@
 'use strict';
 if(window.__KKT_SHOP__)return;
 const STORAGE='jh_kkt_shop_v1';
-const START=680000;
+const START=1680000;
 const PRODUCTS=[
  {id:'coffee',ko:'아메리카노 T',zh:'美式咖啡（中杯）',kind:'카페',emoji:'☕',price:4500,bg:'#f6e0cc',desc:'따뜻한 커피 한 잔을 선물해요.'},
  {id:'cake',ko:'딸기 케이크 세트',zh:'草莓蛋糕套餐',kind:'디저트',emoji:'🍰',price:12800,bg:'#f9e0e9',desc:'달콤한 디저트 선물.'},
@@ -25,16 +25,17 @@ const getItem=id=>PRODUCTS.find(p=>p.id===id);
 function load(){
  try{
   const s=JSON.parse(localStorage.getItem(STORAGE)||'null');
-  if(s&&Array.isArray(s.orders))return {
+   if(s&&Array.isArray(s.orders))return {
     orders:s.orders.filter(o=>o&&typeof o.id==='string'&&getItem(o.itemId)&&Number(o.price)===getItem(o.itemId).price).slice(-200),
-    topups:Array.isArray(s.topups)?s.topups.filter(v=>Number.isFinite(v)&&v===100000).slice(-50):[]
+    topups:Array.isArray(s.topups)?s.topups.filter(v=>Number.isFinite(v)&&v===100000).slice(-50):[],
+    transfers:Array.isArray(s.transfers)?s.transfers.filter(x=>x&&typeof x.id==='string'&&Number.isFinite(x.amount)&&x.amount>0).slice(-50):[]
   };
  }catch{}
- return {orders:[],topups:[]};
+ return {orders:[],topups:[],transfers:[]};
 }
 let state=load();
 const save=()=>{try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch{}};
-const totalSpent=()=>state.orders.reduce((sum,o)=>sum+o.price,0);
+const totalSpent=()=>state.orders.reduce((sum,o)=>sum+o.price,0)+state.transfers.reduce((sum,x)=>sum+x.amount,0);
 const balance=()=>Math.max(0,START+state.topups.reduce((sum,v)=>sum+v,0)-totalSpent());
 const contacts=()=>{
  const from=window.__KKT15_TEST__?.contacts||[];
@@ -71,6 +72,9 @@ function orderRow(o){
  '<span><strong>'+safe(t(p.ko,p.zh))+'</strong><small>'+new Date(o.at).toLocaleDateString('ko-KR')+
  (o.recipient?' · '+safe(t('선물 완료','已赠送')):' · '+safe(t('구매 완료','已购买')))+'</small></span>'+
  '<b>'+money(o.price)+'</b><i>›</i></button>';
+}
+function transferRow(x){
+ return '<div class="ks-order"><span class="ks-order-art" style="background:#fee500">₩</span><span><strong>'+safe(x.recipient||'계좌이체')+'</strong><small>'+new Date(x.at).toLocaleString('ko-KR')+' · '+safe(x.bank||'은행 이체')+'</small></span><b>'+money(x.amount)+'</b></div>';
 }
 function catalog(){
  const visible=PRODUCTS.filter(p=>category==='전체'||p.kind===category);
@@ -127,10 +131,10 @@ function wallet(){
  return '<section class="ks-hero"><small>kakao<span>pay</span> · '+t('내 지갑','我的钱包')+'</small>'+
  '<strong>'+money(balance())+'</strong><p>'+t('이 잔액은 실제 자산이 아닌 가상 금액입니다.','余额为虚构演示金额，不是真实资产。')+'</p></section>'+
  '<div class="ks-stats"><div><small>'+t('총 결제액','累计消费')+'</small><b>'+money(totalSpent())+'</b></div><div><small>'+
- t('결제 건수','购买次数')+'</small><b>'+state.orders.length+'</b></div></div>'+
+ t('결제 건수','购买次数')+'</small><b>'+(state.orders.length+state.transfers.length)+'</b></div></div>'+
  button('topup',t('＋ 100,000원 체험 충전','＋ 模拟充值 100,000 韩元'),'ks-outline')+
  '<div class="ks-section"><h2>'+t('최근 결제 내역','最近消费')+'</h2></div>'+
- (state.orders.length?state.orders.slice().reverse().map(orderRow).join(''):'<p class="ks-empty">'+t('결제 내역이 없습니다.','暂无购买记录')+'</p>');
+ ([...state.orders.map(x=>({...x,kind:'order'})),...state.transfers.map(x=>({...x,kind:'transfer'}))].sort((a,b)=>b.at-a.at).map(x=>x.kind==='transfer'?transferRow(x):orderRow(x)).join('')||'<p class="ks-empty">'+t('결제 내역이 없습니다.','暂无购买记录')+'</p>');
 }
 function orders(){
  return '<div class="ks-section"><h2>'+t('구매한 선물','已购买礼物')+'</h2><p>'+
@@ -167,15 +171,22 @@ function open(next='home'){
  page=next;draw();
 }
 function smsEvents(){
- return state.orders.flatMap(o=>{
+ const purchases=state.orders.flatMap(o=>{
   const p=getItem(o.itemId);
   const purchase={id:o.id,sender:'카카오페이',type:'purchase',item:t(p.ko,p.zh),price:o.price,balance:o.balanceAfter,at:o.at};
   if(!o.recipient)return [purchase];
   return [purchase,{id:o.id+'-gift',sender:'카카오 선물하기',type:'gift',item:t(p.ko,p.zh),
    recipient:contacts().find(c=>c.id===o.recipient)?.name||o.recipient,at:o.giftedAt||o.at}];
  });
+ return purchases.concat(state.transfers.map(x=>({...x,type:'bank',balance:x.balanceAfter})));
 }
 function syncSMS(){window.__IPHONE_SMS__?.sync?.(smsEvents());}
+function recordEpisodeTransfer(event){
+ if(!event||typeof event.id!=='string'||!Number.isFinite(event.amount)||event.amount<=0)return false;
+ if(state.transfers.some(x=>x.id===event.id)){syncSMS();return false}
+ const transfer={id:event.id,amount:event.amount,bank:event.bank||'카카오뱅크',recipient:event.recipient||'',account:event.account||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
+ state.transfers.push(transfer);save();syncSMS();return true;
+}
 const giftReplyPending=new Set();
 const giftFallback=(id,p)=>{
  const item=p.kind==='카페'?'커피':p.kind==='푸드'||p.kind==='디저트'?'맛있는 거':p.ko;
@@ -317,8 +328,9 @@ window.__KKT_SHOP__={
  get balance(){return balance()},
  balanceText:()=>money(balance()),
  get orders(){return state.orders.map(o=>({...o}))},
+ get transfers(){return state.transfers.map(x=>({...x}))},
  open, getProducts:()=>PRODUCTS.map(p=>({...p})),
- sync:syncSMS
+ sync:syncSMS,recordEpisodeTransfer
 };
 restoreGiftChats();
 syncSMS();

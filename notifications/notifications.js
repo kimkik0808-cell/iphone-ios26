@@ -135,7 +135,7 @@
   function showSMS(payload={}){
     if(!canDisplay())return false;
     const gift=payload.type==='gift';
-    if(payload.type==='bank')return displayInfo({kind:'messages',name:zh()?'信息':'메시지',sender:payload.sender||'카카오뱅크',message:payload.message||'은행 이체출금 100,000원',icon:messagesIcon},()=>navigate('messages'));
+    if(payload.type==='bank')return displayInfo({kind:'messages',name:zh()?'信息':'메시지',sender:payload.sender||'카카오뱅크',message:payload.message||'은행 이체출금 1,000,000원',icon:messagesIcon},()=>navigate('messages'));
     return displayInfo({
       kind:'messages',name:zh()?'信息':'메시지',sender:gift?'카카오 선물하기':'카카오페이',
       message:gift?(zh()?'礼物已发送。':'선물이 전송되었습니다'):(zh()?'付款完成。':'결제가 완료되었습니다'),

@@ -10,10 +10,11 @@ function update(receipts){
  const openChat=(typeof mode!=='undefined'&&mode==='messages'&&sub==='chat')?texts[currentThread]:null;
  let added=0;
  for(const e of receipts.slice().sort((a,b)=>(a.at||0)-(b.at||0))){
-  if(!e||typeof e.id!=='string'||existing.has(e.id)||!['purchase','gift'].includes(e.type))continue;
+  if(!e||typeof e.id!=='string'||existing.has(e.id)||!['purchase','gift','bank'].includes(e.type))continue;
   existing.add(e.id);
-  const gift=e.type==='gift',name=gift?'카카오 선물하기':'카카오페이';
-  const message=gift?
+  const gift=e.type==='gift',bank=e.type==='bank',name=bank?(e.bank||'카카오뱅크'):gift?'카카오 선물하기':'카카오페이';
+  const message=bank?
+   '[은행 이체출금]\n출금 금액 '+balance(e.amount)+'\n받는 분 '+esc(e.recipient||'')+'\n계좌 '+esc(e.account||'')+'\n출금 후 잔액 '+balance(e.balance):gift?
    '[카카오 선물하기]\n'+esc(e.recipient||'친구')+'님에게 '+esc(e.item||'선물')+' 선물 발송 완료\n주문번호 '+e.id.replace(/-gift$/,''):
    '[카카오페이 결제 완료]\n상품 '+esc(e.item||'선물')+'\n결제 금액 '+balance(e.price)+'\n결제 후 잔액 '+balance(e.balance)+'\n주문번호 '+e.id;
   let thread=texts.find(t=>t.shopSender===name);
