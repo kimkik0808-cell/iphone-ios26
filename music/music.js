@@ -20,6 +20,7 @@
   let tab='home', view='list', sheet='', query='', sort='recent', loading=false, loaded=false, loadTime=0, error='';
   let built=[], links=safeStorage('am26_links',[]), locals=[], ephemeral=[], currentId='', currentSrc='', shuffle=false, repeat=false;
   let fav=new Set(safeStorage('am26_favorites',[]));
+  let wantPlay=false, fallbackTriedFor='', failedNoticeFor='';
   const audio=new Audio();
   audio.preload='metadata';
   audio.playsInline=true;
@@ -61,7 +62,7 @@
   const current=()=>tracks().find(t=>t.id===currentId);
   const makeTrack=(x,source)=>({
     id:x.id,title:x.title||basename(x.name||'알 수 없는 노래'),artist:x.artist||'알 수 없는 아티스트',
-    src:x.src||'',cover:x.cover||'',source,filename:x.name||'',size:x.size||0,
+    src:x.src||'',fallbackSrc:x.fallbackSrc||'',cover:x.cover||'',source,filename:x.name||'',size:x.size||0,
     blob:x.blob||null,created:x.created||0
   });
   function tracks(){
@@ -125,7 +126,8 @@
         id:'official:'+canonical,name,
         title:extra.title||filenameInfo(name).title,artist:extra.artist||filenameInfo(name).artist,
         cover:typeof extra.cover==='string'?extra.cover:'',
-        src:src||new URL('./music/'+encodeURIComponent(name),document.baseURI).href,size
+        src:src||new URL('./music/'+encodeURIComponent(name),document.baseURI).href,
+        fallbackSrc:raw+encodeURIComponent(name),size
       });
     };
     try{
@@ -198,23 +200,55 @@
     }
     return t.src;
   }
+  // On Safari, a hosted M4A may fail because the static URL is stale or not
+  // served as expected. Retry the same uploaded file once from GitHub raw.
+  // This cannot fix corrupt media or an unsupported audio codec.
+  function playbackFailed(){
+    if(failedNoticeFor===currentSrc)return;
+    failedNoticeFor=currentSrc;
+    const err=audio.error;
+    const msg=err?.code===3||err?.code===4
+      ? '오디오 형식을 재생할 수 없습니다. 원본 파일과 AAC/MP3 인코딩을 확인해 주세요.'
+      : '오디오를 불러오지 못했습니다. 음악 파일 또는 연결을 확인해 주세요.';
+    showNotice(msg);
+  }
+  function playCurrent(){
+    const id=currentId,src=currentSrc;
+    audio.play().catch(err=>{
+      if(id!==currentId||src!==currentSrc||!wantPlay||err?.name==='AbortError')return;
+      if(!tryFallback())playbackFailed();
+    });
+  }
+  function tryFallback(){
+    if(!wantPlay||!currentId||fallbackTriedFor===currentId)return false;
+    const t=current();
+    if(!t||t.source!=='official')return false;
+    const alternative=t.fallbackSrc||raw+encodeURIComponent(t.filename);
+    if(!alternative||alternative===currentSrc)return false;
+    fallbackTriedFor=currentId;
+    currentSrc=alternative;
+    audio.src=alternative;
+    audio.load();
+    playCurrent();
+    return true;
+  }
   function selectSong(id,shouldPlay=true){
     const t=trById(id);if(!t){showNotice('노래를 찾을 수 없습니다.');return}
     if(currentId!==id||!audio.src){
       if(currentSrc.startsWith('blob:'))URL.revokeObjectURL(currentSrc);
       currentId=id;currentSrc=playerSrc(t);
+      fallbackTriedFor='';
       if(!currentSrc){showNotice('오디오 파일을 읽을 수 없습니다.');return}
       audio.src=currentSrc;audio.load();
     }
-    if(shouldPlay) {
-      audio.play().catch(()=>showNotice('재생할 수 없습니다. 오디오 파일 또는 링크를 확인해 주세요.'));
-    }
+    wantPlay=!!shouldPlay;
+    if(shouldPlay){failedNoticeFor='';playCurrent()}
     refresh();
   }
   function togglePlay(){
     if(!currentId){if(tracks().length)selectSong(tracks()[0].id);else showNotice('음악을 먼저 추가해 주세요.');return}
-    if(audio.paused) audio.play().catch(()=>showNotice('오디오를 재생할 수 없습니다.'));
-    else audio.pause();
+    if(audio.paused){wantPlay=true;failedNoticeFor='';playCurrent()}
+    else{wantPlay=false;audio.pause()}
     updatePlayButtons();
   }
   function nextSong(delta=1){
@@ -249,7 +283,7 @@
   audio.addEventListener('play',syncProgress);
   audio.addEventListener('pause',syncProgress);
   audio.addEventListener('ended',()=>{if(repeat){audio.currentTime=0;audio.play().catch(()=>{})}else nextSong(1)});
-  audio.addEventListener('error',()=>{if(currentId)showNotice('오디오 파일을 열 수 없습니다. 링크를 확인해 주세요.')});
+  audio.addEventListener('error',()=>{if(wantPlay&&currentId&&!tryFallback())playbackFailed()});
   function row(t){
     return `<div class="am-row"><button class="am-row-main" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></span></button></div>`;
   }
@@ -347,7 +381,7 @@
     if(command==='sheet'){sheet='add';refresh();return}
     if(command==='pick'){frame.querySelector('#am26-file')?.click();return}
     if(command==='menu'){sheet='options:'+id;refresh();return}
-    if(command==='song'){if(currentId===id&&!audio.paused){audio.pause();refresh()}else selectSong(id);return}
+    if(command==='song'){if(currentId===id&&!audio.paused){wantPlay=false;audio.pause();refresh()}else selectSong(id);return}
     if(command==='player'){view='player';refresh();return}
     if(command==='back'){view='list';refresh();return}
     if(command==='toggle'){togglePlay();return}
@@ -406,7 +440,7 @@
       locals=locals.filter(x=>x.id!==id);ephemeral=ephemeral.filter(x=>x.id!==id);
       try{await deleteLocal(id)}catch{}
     }
-    if(currentId===id){audio.pause();audio.removeAttribute('src');audio.load();if(currentSrc.startsWith('blob:'))URL.revokeObjectURL(currentSrc);currentSrc='';currentId=''}
+    if(currentId===id){wantPlay=false;audio.pause();audio.removeAttribute('src');audio.load();if(currentSrc.startsWith('blob:'))URL.revokeObjectURL(currentSrc);currentSrc='';currentId=''}
     fav.delete(id);save('am26_favorites',[...fav]);sheet='';refresh();showNotice('보관함에서 제거했습니다.');
   }
   // Photo, phone and other app states are not modified.
