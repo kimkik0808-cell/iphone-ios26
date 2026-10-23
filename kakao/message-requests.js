@@ -224,10 +224,10 @@ function saveKktData(){
   if(!Array.isArray(data))return;
   try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch(e){}
 }
-const AI_CHAT_IDS=new Set(['sw','nuna','jy']);
+const AI_CHAT_IDS=new Set(['sw','sister','jy']);
 const AI_PERSONAS={
   sw:'너는 선우다. 재현을 형이라고 부르는 친한 같은 팀 멤버다. 장난스럽고 짧게 자연스러운 한국어 카톡 말투로 답한다. 과하게 다정하거나 문어체로 말하지 않는다. 보통 한두 문장만 보낸다.',
-  nuna:'너는 재현의 누나다. 현실적인 가족 말투로 편하게 말한다. 잔소리와 챙김이 자연스럽게 섞이지만 과장하지 않는다. 짧은 한국어 카톡으로 답한다.',
+  sister:'너는 재현의 누나다. 현실적인 가족 말투로 편하게 말한다. 잔소리와 챙김이 자연스럽게 섞이지만 과장하지 않는다. 짧은 한국어 카톡으로 답한다.',
   jy:'너는 주연이다. 재현과 오래 알고 지낸 같은 팀 멤버다. 무심하고 편한 반말과 가벼운 농담을 쓴다. 짧고 자연스러운 한국어 카톡으로 답한다.'
 };
 let aiView='';
@@ -239,15 +239,47 @@ let aiRequestSequence=0;
 function ensureAiChats(){
   const data=window.__KKT15_TEST__?.data;
   if(!Array.isArray(data))return;
-  let nuna=data.find(item=>item.id==='nuna');
-  if(!nuna){
-    nuna={id:'nuna',name:'누나',initial:'누',type:'family',tag:'가족',preview:'밥은 챙겨 먹었어?',time:'어제',unread:0,members:1,messages:[
-      ['date','2026년 10월 19일 월요일'],
-      ['other','오늘도 늦어?','오후 7:14'],
-      ['mine','응 연습 끝나고 들어갈 것 같아','오후 7:18'],
-      ['other','알겠어 밥은 꼭 챙겨 먹어','오후 7:20']
-    ]};
-    data.splice(Math.min(3,data.length),0,nuna);
+  // Earlier AI code generated id="nuna" even though the main KKT already
+  // has id="sister". Keep one contact and preserve any existing AI messages.
+  const sister=data.find(item=>item.id==='sister');
+  const legacy=data.filter(item=>item.id==='nuna');
+  if(sister&&legacy.length){
+    const existing=Array.isArray(sister.messages)?sister.messages:[];
+    const seen=new Set(existing.map(message=>JSON.stringify(message)));
+    const addUnique=(items)=>items.filter(message=>{
+      if(!Array.isArray(message))return false;
+      const key=JSON.stringify(message);
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    });
+    let earlier=[],later=[],latest=null;
+    for(const old of legacy){
+      // Keep a local backup before folding the duplicate room into the original.
+      try{
+        if(!localStorage.getItem('jh_kkt_nuna_legacy_backup')){
+          localStorage.setItem('jh_kkt_nuna_legacy_backup',JSON.stringify(old));
+        }
+      }catch(e){}
+      const messages=Array.isArray(old.messages)?old.messages:[];
+      const hasOldIntro=messages.length>=4 &&
+        String(messages[0]?.[1]||'').includes('2026년 10월 19일') &&
+        messages[1]?.[1]==='오늘도 늦어?' &&
+        messages[2]?.[1]==='응 연습 끝나고 들어갈 것 같아' &&
+        messages[3]?.[1]==='알겠어 밥은 꼭 챙겨 먹어';
+      earlier.push(...addUnique(hasOldIntro?messages.slice(0,4):[]));
+      later.push(...addUnique(hasOldIntro?messages.slice(4):messages));
+      if(later.length && (!latest || Number(old.updatedAt||0)>Number(latest.updatedAt||0)))latest=old;
+    }
+    sister.messages=[...earlier,...existing,...later];
+    if(latest && Number(latest.updatedAt||0)>Number(sister.updatedAt||0)){
+      sister.preview=latest.preview||sister.preview;
+      sister.time=latest.time||sister.time;
+      sister.updatedAt=latest.updatedAt;
+    }
+    for(let i=data.length-1;i>=0;i--){
+      if(data[i]?.id==='nuna')data.splice(i,1);
+    }
   }
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
@@ -390,7 +422,7 @@ const LOCAL_CHAT_LINES={
       fallback:['原来你说这个啊','哥你说得有点模糊ㅋㅋ','嗯 我在看']
     }
   },
-  nuna:{
+  sister:{
     ko:{
       hello:['응 왜','무슨 일이야','나 지금 집이야'],
       meal:['넌 밥 먹었어?','나는 먹었지 너나 챙겨','또 대충 먹은 건 아니지?'],
