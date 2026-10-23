@@ -18,7 +18,7 @@
       "historyButton": "查看历史公告",
       "hideHistoryButton": "收起历史公告",
       "historyTitle": "历史公告",
-      "contact": "遇到问题请联系微博：淹到你了很抱歉",
+      "contact": "遇到问题请联系微博/抖音：淹到你了很抱歉",
       "button": "知道了，开始体验",
       "help": "看不到最新更新？请先在 Safari 无痕浏览中打开网站确认。若无痕模式仍是旧版，请等待网站完成部署；必要时再清除该网站的缓存和数据（这会重置已保存的聊天进度及设置）。"
     },
@@ -33,7 +33,7 @@
       "historyButton": "지난 업데이트 보기",
       "hideHistoryButton": "지난 업데이트 접기",
       "historyTitle": "지난 업데이트",
-      "contact": "문제가 있다면 웨이보 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.",
+      "contact": "문제가 있다면 웨이보/더우인 ‘淹到你了很抱歉’ 계정으로 문의해 주세요.",
       "button": "확인하고 시작하기",
       "help": "최신 업데이트가 보이지 않나요? 먼저 Safari 개인정보 보호 브라우징에서 열어 확인해 주세요. 그래도 이전 버전이라면 배포가 완료될 때까지 기다려 주세요. 사이트 데이터를 삭제하면 저장된 대화 진행 상황과 설정이 초기화될 수 있어요."
     },
@@ -170,10 +170,8 @@
           const header=document.createElement('div');
           header.className='site-announcement-history-head';
           const name=document.createElement('strong');
-          name.textContent=toText(recordData.title,lang==='zh'?'历史更新':'이전 업데이트');
-          const version=document.createElement('span');
-          version.textContent=toText(record.version);
-          header.append(name,version);
+          name.textContent=toText(record.version);
+          header.appendChild(name);
           const recordList=document.createElement('ul');
           recordList.className='site-announcement-history-list';
           const recordLines=Array.isArray(recordData.updates)?recordData.updates.filter(x=>typeof x==='string'&&x.trim()):[];
