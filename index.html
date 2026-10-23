@@ -794,18 +794,87 @@ function messageHTML(m){const item=typeof m==='string'?{who:'other',text:m}:m;if
 function conversationHead(c){return `<div class="ig14-head">${b('back',ico('back'),'ig14-icon')}${b('contactprofile',def()+`<span><b>${esc(c.name)}</b><small>Instagram</small></span>`,'ig14-chathead-profile',`data-id="${c.id}"`)}<span class="ig14-grow"></span>${b('noop',ico('phone',23),'ig14-icon')}${b('noop',ico('video',24),'ig14-icon')}</div>`}
 function conversation(cid,request=false){let c=request?fanRequests.find(x=>x.id===cid):privateChats.find(x=>x.id===cid),msgs=request?c.messages.map(text=>({who:'other',text})):state.messages[cid]||[],headHTML=request?head(esc(c.name),'',true):conversationHead(c);return `${headHTML}<div class="ig14-chat" id="ig14-chat">${msgs.length?msgs.map(messageHTML).join(''):'<div class="ig14-empty">아직 메시지가 없습니다</div>'}${!request&&aiTyping?'<div class="ig14-typing"><i></i><i></i><i></i></div>':''}${!request&&aiError?`<div class="ig14-aierror">${esc(aiError)}</div>`:''}</div>${request?'<div class="ig14-readonly">요청을 수락하지 않은 상태입니다</div>':`<form class="ig14-chatinput" data-chat="${cid}"><input placeholder="메시지 보내기..." autocomplete="off" maxlength="300"><button ${aiSending?'disabled':''}>전송</button></form>`}`}
 function contactProfile(cid){let c=privateChats.find(x=>x.id===cid);if(!c)return inbox();return `${head(esc(c.name),'',true)}<main class="scroll"><div class="ig14-profiletop">${def('ig14-bigav')}<div class="ig14-stats"><span><b>0</b><small>게시물</small></span><span><b>${c.followers}</b><small>팔로워</small></span><span><b>${c.following}</b><small>팔로잉</small></span></div></div><div class="ig14-bio"><b>${esc(c.name)}</b><p>비공개 계정</p></div><div class="ig14-buttons"><button>팔로잉</button>${b('messagecontact','메시지','','data-id="'+c.id+'"')}</div><div class="ig14-profilenav two">${ico('grid')} ${ico('reel')}</div><div class="ig14-empty"><b>아직 게시물이 없습니다</b><span class="ig14-private-note">비공개 계정</span></div></main>`}
+const igrIcons={
+ back:'<path d="m15 18-6-6 6-6"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ heart:'<path d="M20.8 4.6a5.6 5.6 0 0 0-8.8 0 5.6 5.6 0 0 0-8.8 0 5.8 5.8 0 0 0 0 8.2L12 21l8.8-8.2a5.8 5.8 0 0 0 0-8.2Z"/>',
+ comment:'<path d="M20.5 11.2a8.5 8.5 0 0 1-8.7 8.5c-1.4 0-2.7-.2-3.8-.8L3.5 20l1.2-4.3a8.6 8.6 0 1 1 15.8-4.5Z"/>',
+ repost:'<path d="m17 2 4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
+ share:'<path d="m21 3-9 18-3.3-8.2L1 9.5 21 3Z"/><path d="m9 13 12-10"/>',
+ save:'<path d="M5 3h14v19l-7-5-7 5V3Z"/>',
+ more:'<path d="M4 7h16M4 12h16M4 17h10"/>',
+ music:'<path d="M9 18V5l12-2v13M9 9l12-2"/><ellipse cx="6" cy="18.5" rx="3" ry="2"/><ellipse cx="18" cy="16.5" rx="3" ry="2"/>',
+ play:'<path d="m7 4 14 8-14 8V4Z"/>',
+ mute:'<path d="M3 9v6h4l5 4V5L7 9H3M16 9l5 6m0-6-5 6"/>',
+ volume:'<path d="M3 9v6h4l5 4V5L7 9H3M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>'
+};
+function igrI(name,filled=false){
+ return '<svg viewBox="0 0 24 24" fill="'+(filled?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">'+(igrIcons[name]||igrIcons.more)+'</svg>';
+}
+let igrActivity={};
+try{igrActivity=JSON.parse(localStorage.getItem('jh_ig_reels_ui_v1')||'{}')||{}}catch{}
+let igrMuted=true,igrSheet='',igrTemporaryPause=false;
+function igrKey(v){return String(acct())+'|'+String(v.id||v.url||'');}
+function igrCurrent(){const v=getReelVideos();return v[reelIndex[acct()]||0]||null;}
+function igrEntry(v){
+ const key=igrKey(v);
+ if(!igrActivity[key]||typeof igrActivity[key]!=='object')igrActivity[key]={};
+ const a=igrActivity[key];
+ if(!Array.isArray(a.comments))a.comments=[];
+ return a;
+}
+function igrSave(){try{localStorage.setItem('jh_ig_reels_ui_v1',JSON.stringify(igrActivity))}catch{}}
+function igrCount(raw,extra=0){
+ const str=String(raw||'0');
+ if(!extra)return str;
+ const number=Number(str.replace(/,/g,''));
+ if(Number.isFinite(number))return (number+extra).toLocaleString('ko-KR');
+ if(str.endsWith('만')){
+  const n=parseFloat(str);
+  if(Number.isFinite(n))return (Math.round(n*10000)+extra>=10000?(Math.round(n*10000)+extra)/10000:Math.round(n*10000)+extra).toLocaleString('ko-KR',{maximumFractionDigits:1})+'만';
+ }
+ return str;
+}
+function igrAction(kind,title,count,active){
+ return '<button type="button" class="igr-action'+(active?' igr-'+(kind==='reellike'?'liked':kind==='reelsave'?'saved':'selected'):'')+(kind==='reelmore'?' igr-more-action':'')+'" data-a="'+kind+'" aria-label="'+esc(title)+'" aria-pressed="'+(active?'true':'false')+'">'+igrI(({reellike:'heart',reelcomments:'comment',reelrepost:'repost',reelshare:'share',reelsave:'save',reelmore:'more'})[kind])+(count?'<span class="igr-count">'+esc(count)+'</span>':'')+'</button>';
+}
 function reels(){
  const videos=getReelVideos(),account=acct();
  const upload='<input id="ig14-video" type="file" accept="video/mp4,video/quicktime,video/*" hidden>';
- if(!videos.length)return `${head('릴스',b('reeladd',ico('plus'),'ig14-icon'))}<div class="scroll"><div class="ig14-reelmsg"><div><b>${reelManifestBusy?'릴스를 불러오는 중…':'릴스 동영상이 없습니다'}</b><p>${account==='public'?'공연·댄스·패션 동영상을':'일상·음식·반려동물 동영상을'} 추가해 보세요.</p><label class="ig14-file">기기에서 동영상 선택<input id="ig14-video" type="file" accept="video/mp4,video/quicktime,video/*"></label></div></div></div>${tabs()}`;
+ if(!videos.length)return head('릴스',b('reeladd',ico('plus'),'ig14-icon'))+
+ '<div class="scroll"><div class="ig14-reelmsg"><div><b>'+(reelManifestBusy?'릴스를 불러오는 중…':'릴스 동영상이 없습니다')+'</b><p>'+
+ (account==='public'?'공연·댄스·패션 동영상을':'일상·음식·반려동물 동영상을')+' 추가해 보세요.</p>'+
+ '<label class="ig14-file">기기에서 동영상 선택<input id="ig14-video" type="file" accept="video/mp4,video/quicktime,video/*"></label></div></div></div>'+tabs();
  reelIndex[account]=Math.min(reelIndex[account],videos.length-1);
- const i=reelIndex[account],v=videos[i];
- return `<div class="ig14-reels ig26-reels">
- <video src="${esc(v.url)}" autoplay muted loop playsinline controls preload="metadata"></video>
- <div class="ig26-reel-top">${b('reeladd',ico('plus'),'ig14-icon','aria-label="동영상 추가"')}<span>${i+1} / ${videos.length}</span></div>
- <div class="ig26-reel-nav">${b('reelprev','⌃','ig26-reel-arrow','aria-label="이전 릴스"')}${b('reelnext','⌄','ig26-reel-arrow','aria-label="다음 릴스"')}</div>
- <div class="ig14-reelcontrols"><b>@${esc(id())}</b><p>${esc(v.caption||'오늘의 릴스')}</p></div>
- ${upload}</div>${tabs()}`;
+ const i=reelIndex[account],v=videos[i],a=igrEntry(v);
+ const artist=v.username||id(),isMine=artist===id();
+ const liked=!!a.liked,saved=!!a.saved,followed=!!a.followed;
+ const avatar=v.avatar&&/^(https:\/\/|assets\/|photos\/)/i.test(v.avatar)?'<img src="'+esc(v.avatar)+'" alt="">':esc(artist.slice(0,1).toUpperCase());
+ const social=v.likedBy?'<div class="igr-socialproof"><span class="igr-social-stack"><i>♥</i><i>♥</i></span><span>'+esc(v.likedBy)+'</span></div>':'';
+ return '<div class="ig14-reels igr-view" data-igr-index="'+i+'">'+
+ '<video class="igr-video" src="'+esc(v.url)+'" autoplay '+(igrMuted?'muted':'')+' playsinline webkit-playsinline loop preload="metadata"></video>'+
+ '<div class="igr-shade"></div>'+
+ b('reelplay','','igr-video-tap','aria-label="재생 및 일시 정지"')+
+ '<header class="igr-top">'+b('reelback',igrI('back'),'igr-back','aria-label="뒤로"')+b('reeladd',igrI('plus'),'igr-plus','aria-label="릴스 추가"')+'</header>'+
+ '<aside class="igr-side">'+
+ igrAction('reellike','좋아요',igrCount(v.likes,liked?1:0),liked)+
+ igrAction('reelcomments','댓글',igrCount(v.comments,a.comments.length),false)+
+ igrAction('reelrepost','리포스트',igrCount(v.reposts,a.reposted?1:0),!!a.reposted)+
+ igrAction('reelshare','공유',v.shares,false)+
+ igrAction('reelsave','저장',igrCount(v.saves,saved?1:0),saved)+
+ igrAction('reelmore','더 보기','',false)+
+ '</aside>'+
+ '<div class="igr-info">'+social+
+ '<div class="igr-author"><span class="igr-avatar">'+avatar+'</span><b class="igr-username">'+esc(artist)+(v.verified?' ✓':'')+'</b>'+
+ (!isMine?b('reelfollow',followed?'팔로잉':'팔로우','igr-follow'+(followed?' igr-following':''),'aria-pressed="'+followed+'"'):'')+
+ '</div>'+
+ '<div class="igr-music">'+igrI('music')+'<span>'+esc(v.audio||'원본 오디오')+'</span></div>'+
+ '<p class="igr-caption">'+esc(v.caption||'')+'</p></div>'+
+ b('reelsound',igrI(igrMuted?'mute':'volume'),'igr-sound','aria-label="소리 켜기/끄기"')+
+ '<div class="igr-progress"><i id="igr-progress-bar"></i></div>'+
+ '<div class="igr-bottom">'+b('reelcomments','<span>댓글 추가...</span>','igr-comment-open')+'</div>'+
+ '<div id="igr-pause-indicator" class="igr-pause-indicator" hidden>'+igrI('play',true)+'</div>'+
+ upload+'</div>';
 }
 function search(){let users=acct()==='public'?Object.keys(teammate):privateFeed.map(x=>x.user);return `${head('검색')}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input id="ig14-search" placeholder="검색"></label><div id="ig14-results">${users.map(u=>b('user',(acct()==='public'?av(teammate[u].avatar):def())+`<span class="ig14-rowtext"><b>${u}</b><small>${acct()==='public'?teammate[u].name:'추천 계정'}</small></span>`,'ig14-row',`data-id="${u}"`)).join('')}</div></main>${tabs()}`}
 function detail(pid){let p=getPost(pid);return `${head('게시물','',true)}<main class="scroll">${post(p)}</main>`}
