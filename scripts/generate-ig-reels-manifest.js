@@ -18,7 +18,7 @@ for(const account of Object.keys(groups)){
   const digest=crypto.createHash('sha1').update(fs.readFileSync(full)).digest('hex').slice(0,12);
   const filename=path.parse(name).name;
   groups[account].push({
-   id:account+'-'+digest,
+   id:account+'-'+crypto.createHash('sha1').update(name,'utf8').digest('hex').slice(0,10)+'-'+digest,
    url:encode('instagram/reels/'+account+'/'+name)+'?v='+digest,
    caption:filename.replace(/[-_]+/g,' ').trim(),
    size
