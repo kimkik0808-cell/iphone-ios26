@@ -757,12 +757,47 @@ async function loadGithubReels(force=false){
   if(typeof mode!=='undefined'&&mode==='instagram'&&state.activeTab==='reels'&&!view)render14();
  }
 }
+let igrSlideDirection=0;
 function changeReel(direction){
  const videos=getReelVideos();
- if(videos.length<2)return;
+ if(videos.length<2||!direction)return;
+ igrCloseSheet();
  const account=acct();
  reelIndex[account]=(Math.min(reelIndex[account],videos.length-1)+direction+videos.length)%videos.length;
+ igrSlideDirection=direction>0?1:-1;
  render14();
+ igrSlideDirection=0;
+}
+const igrTouch={active:false,startX:0,startY:0,vertical:false};
+function igrSwipeStart(event){
+ igrTouch.active=false;
+ if(typeof mode==='undefined'||mode!=='instagram'||state.activeTab!=='reels'||view||igrSheet)return;
+ if(!event.target.closest('.igr-view')||event.target.closest('button,input,textarea,.igr-sheet-overlay'))return;
+ if(event.touches.length!==1)return;
+ igrTouch.active=true;
+ igrTouch.startX=event.touches[0].clientX;
+ igrTouch.startY=event.touches[0].clientY;
+ igrTouch.vertical=false;
+}
+function igrSwipeMove(event){
+ if(!igrTouch.active||event.touches.length!==1)return;
+ const dx=event.touches[0].clientX-igrTouch.startX;
+ const dy=event.touches[0].clientY-igrTouch.startY;
+ if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)*1.2){
+  igrTouch.vertical=true;
+  if(event.cancelable)event.preventDefault();
+ }
+}
+function igrSwipeEnd(event){
+ if(!igrTouch.active)return false;
+ igrTouch.active=false;
+ const point=event.changedTouches?.[0];
+ if(!point||!igrTouch.vertical)return false;
+ const dx=point.clientX-igrTouch.startX;
+ const dy=point.clientY-igrTouch.startY;
+ if(Math.abs(dy)<48||Math.abs(dy)<Math.abs(dx)*1.2)return false;
+ changeReel(dy<0?1:-1);
+ return true;
 }
 function persist(){try{localStorage.setItem('jh_ig14',JSON.stringify(state))}catch(e){toast14('저장 공간이 부족합니다')}}
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -851,7 +886,7 @@ function reels(){
  const liked=!!a.liked,saved=!!a.saved,followed=!!a.followed;
  const avatar=v.avatar&&/^(https:\/\/|assets\/|photos\/)/i.test(v.avatar)?'<img src="'+esc(v.avatar)+'" alt="">':esc(artist.slice(0,1).toUpperCase());
  const social=v.likedBy?'<div class="igr-socialproof"><span class="igr-social-stack"><i>♥</i><i>♥</i></span><span>'+esc(v.likedBy)+'</span></div>':'';
- return '<div class="ig14-reels igr-view" data-igr-index="'+i+'">'+
+ return '<div class="ig14-reels igr-view'+(igrSlideDirection>0?' igr-slide-up':igrSlideDirection<0?' igr-slide-down':'')+'" data-igr-index="'+i+'">'+
  '<video class="igr-video" src="'+esc(v.url)+'" autoplay '+(igrMuted?'muted':'')+' playsinline webkit-playsinline loop preload="metadata"></video>'+
  '<div class="igr-shade"></div>'+
  b('reelplay','','igr-video-tap','aria-label="재생 및 일시 정지"')+
@@ -1042,7 +1077,26 @@ const content=document.querySelector('#appcontent');content.addEventListener('cl
   e.preventDefault();e.stopImmediatePropagation();igrSubmitComment(form);return;
  }
  if(!form.matches('[data-chat],[data-comment]'))return;e.preventDefault();e.stopImmediatePropagation();let inp=form.querySelector('input'),s=inp.value.trim();if(!s)return;if(form.dataset.chat){let cid=form.dataset.chat;if(aiSending)return;(state.messages[cid]||(state.messages[cid]=[])).push({who:'mine',text:s,time:igTime()});persist();inp.value='';render14();runIgReply(cid,s)}else{let p=form.dataset.comment;(state.comments[acct()][p]||(state.comments[acct()][p]=[])).push(s);persist();render14()}},true);
-content.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;touchY=e.touches[0].clientY},{passive:true});content.addEventListener('touchend',e=>{if(mode!=='instagram')return;let dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY,p=e.target.closest('.ig14-photo');if(!view&&state.activeTab==='reels'&&e.target.closest('.igr-view')&&!igrSheet&&Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)){changeReel(dy<0?1:-1);return}if(p&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){let po=getPost(p.dataset.post);slide[po.id]=Math.max(0,Math.min(po.photos.length-1,(slide[po.id]||0)+(dx<0?1:-1)));render14()}},{passive:true});
+content.addEventListener('touchstart',e=>{
+ if(!e.touches?.length)return;
+ touchX=e.touches[0].clientX;touchY=e.touches[0].clientY;
+ igrSwipeStart(e);
+},{passive:true});
+content.addEventListener('touchmove',igrSwipeMove,{passive:false});
+content.addEventListener('touchend',e=>{
+ if(mode!=='instagram')return;
+ if(igrSwipeEnd(e))return;
+ const point=e.changedTouches?.[0];if(!point)return;
+ const dx=point.clientX-touchX,dy=point.clientY-touchY;
+ const p=e.target.closest('.ig14-photo');
+ if(p&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){
+  const po=getPost(p.dataset.post);
+  if(!po)return;
+  slide[po.id]=Math.max(0,Math.min(po.photos.length-1,(slide[po.id]||0)+(dx<0?1:-1)));
+  render14();
+ }
+},{passive:true});
+content.addEventListener('touchcancel',()=>{igrTouch.active=false},{passive:true});
 const baseRender=render,baseBack=back;render=function(){baseRender();if(mode==='instagram'){view='';render14();if(state.activeTab==='reels')void loadGithubReels()}else document.querySelector('#app')?.classList.remove('igr-mode')};back=function(){if(mode==='instagram'){if(view){view='';render14()}else if(state.activeTab!=='home'){state.activeTab='home';render14()}else baseBack()}else baseBack()};
 window.__IG14_TEST__={get state(){return state},ownPosts,teammate,privateFeed,fanRequests,privateChats,render:render14};
 if(mode==='instagram')render14();
