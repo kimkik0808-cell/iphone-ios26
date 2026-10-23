@@ -1164,7 +1164,7 @@ if(mode==='instagram')render14();
 .k15-input{z-index:5}.k15-input.keyboard{bottom:226px}.k15-chatbody.keyboard{bottom:285px}.k15-send{background:#ededed;color:#aaa}.k15-send.ready{background:#fee500;color:#171717}.k15-keyboard{position:absolute;left:0;right:0;bottom:0;height:226px;background:#d1d4da;padding:8px 5px 17px;z-index:4}.k15-keyrow{display:flex;justify-content:center;gap:5px;margin-bottom:8px}.k15-key{position:relative;height:39px;min-width:31px;padding:0 8px;border:0;border-radius:5px;background:#fff;box-shadow:0 1px 1px #7778;font-size:15px;transition:background .07s,color .07s,transform .07s}.k15-key.wide{min-width:58px;background:#aeb3bc}.k15-key.space{width:145px}.k15-key.pressed{background:#8f949c;color:#fff;transform:scale(.94);box-shadow:none}.k15-key.pressed:not(.wide)::after{content:attr(data-key);position:absolute;left:50%;bottom:31px;transform:translateX(-50%);min-width:36px;height:44px;display:grid;place-items:center;border-radius:7px 7px 10px 10px;background:#fff;color:#111;font-size:22px;box-shadow:0 1px 4px #0004;z-index:9}.k15-typing{display:inline-flex;align-items:center;gap:4px;background:#fff;border-radius:3px 11px 11px 11px;padding:12px 14px}.k15-typing i{width:5px;height:5px;border-radius:50%;background:#a9a9a9;animation:k15dot 1.15s infinite}.k15-typing i:nth-child(2){animation-delay:.2s}.k15-typing i:nth-child(3){animation-delay:.4s}@keyframes k15dot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}
 .k15-moreprofile{margin:0;padding:14px 18px;background:#fff;border-radius:0;border-bottom:1px solid #eee}.k15-pay{margin:12px 16px;background:#f6f6f6;border-radius:12px;padding:15px}.k15-paytop{display:flex;align-items:center;gap:8px;font-size:14px}.k15-paytop b{font-size:17px}.k15-paytop button{margin-left:auto;background:none;font-size:12px;color:#777}.k15-payactions{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #e6e6e6;padding-top:12px}.k15-payactions button{background:none;border-right:1px solid #e2e2e2;font-size:12px}.k15-payactions button:last-child{border:0}.k15-servicegrid{display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 15px}.k15-servicegrid button{height:70px;background:none;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:8px}.k15-servicegrid i{font-style:normal;font-size:23px}.k15-ad{margin:4px 16px 14px;border-radius:11px;background:#fee500;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;font-size:12px}.k15-ad b{font-size:14px;display:block;margin-bottom:4px}.k15-opentabs{display:flex;gap:7px;padding:0 15px 12px;overflow:auto}.k15-opentabs button{border:1px solid #e2e2e2;background:#fff;border-radius:18px;padding:8px 13px;white-space:nowrap;font-size:12px}.k15-opentabs button.active{background:#222;color:#fff;border-color:#222}.k15-openhero{height:132px;margin:0 15px 14px;border-radius:13px;background:linear-gradient(130deg,#fee86a,#ffd342);padding:20px;position:relative;overflow:hidden}.k15-openhero b{font-size:18px;display:block;line-height:1.35}.k15-openhero p{font-size:12px;color:#665a18}.k15-openhero:after{content:'OPEN';position:absolute;right:-2px;bottom:-12px;font-size:46px;font-weight:900;color:#fff8}.k15-openheading{display:flex;align-items:center;padding:4px 18px 8px}.k15-openheading b{font-size:16px}.k15-openheading span{margin-left:auto;font-size:11px;color:#888}.k15-openrow{margin:0 15px 10px;border:1px solid #ededed;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}.k15-openpic{width:52px;height:52px;border-radius:10px;background:linear-gradient(145deg,#98c8d8,#6c92b2);display:grid;place-items:center;font-size:24px}.k15-openrow strong{font-size:14px}.k15-openrow p{font-size:11px;color:#888;margin:5px 0 0}
 </style>
-<script src="./kakao/episodes.js?build=ep001-v12"></script>
+<script src="./kakao/episodes.js?build=ep001-v14"></script>
 <script id="kkt15-script">
 (()=>{
 const S=document.querySelector('#appcontent');if(!S)return;
@@ -1198,6 +1198,7 @@ let data15=seed.map(s=>Object.assign({},s,stored15.find(x=>x.id===s.id)||{}));
 let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0;
 let episodeTimer15=0,episodeToken15=0;
 const EPKEY15='jh_kkt_episode_KKT_EP001',episode15=window.__KKT_EPISODES__?.KKT_EP001;
+const epStep15=index=>window.IphoneLocale?.language==='zh'?(episode15?.zhSteps?.[index]||episode15?.steps?.[index]):episode15?.steps?.[index];
 const EPSTATUS15=Object.freeze({NOT_STARTED:'NOT_STARTED',RUNNING:'RUNNING',WAITING_TO_SEND:'WAITING_TO_SEND',UNSENT_DRAFT:'UNSENT_DRAFT',COMPLETED:'COMPLETED'});
 const freshEp15=()=>({schema:episode15?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',completed:false});
 let epState15;try{epState15=JSON.parse(localStorage.getItem(EPKEY15)||'null')}catch(e){}
@@ -1205,11 +1206,12 @@ if(!episode15||!epState15||epState15.schema!==episode15.version||!Object.values(
 epState15.sentSteps=Array.isArray(epState15.sentSteps)?[...new Set(epState15.sentSteps.filter(Number.isInteger))]:[];
 epState15.cursor=Number.isInteger(epState15.cursor)?Math.max(0,epState15.cursor):0;
 epState15.draft=typeof epState15.draft==='string'?epState15.draft:'';
+if(epState15.status===EPSTATUS15.WAITING_TO_SEND&&Number.isInteger(epState15.pendingStep))epState15.draft=epStep15(epState15.pendingStep)?.[1]||'';
 const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}catch(e){}};
 const epChat15=()=>data15.find(c=>c.id==='xxx');
 function syncEpChat15(){
  const x=epChat15();if(!x||!episode15)return;
- x.messages=epState15.sentSteps.sort((a,b)=>a-b).map(i=>episode15.steps[i]).filter(Array.isArray).map(m=>[...m]);
+ x.messages=epState15.sentSteps.sort((a,b)=>a-b).map(epStep15).filter(Array.isArray).map(m=>[...m]);
  const last=x.messages.at(-1);x.preview=last?.[1]||'';x.time=last?.[2]||'';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;
  save15();
 }
@@ -1242,7 +1244,7 @@ function runEp15(delay=500){
   key()
  }
  function next(){
-  const index=epState15.cursor,step=episode15.steps[index];
+  const index=epState15.cursor,step=epStep15(index);
   if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
   if(Array.isArray(step)){
    if(step[0]==='other'){
@@ -1257,7 +1259,7 @@ function runEp15(delay=500){
     if(!window.__KKT_SHOP__?.recordEpisodeTransfer){wait(next,120);return}
     window.__KKT_SHOP__.recordEpisodeTransfer(event);epState15.transferCompleted=true;saveEp15();
    }
-   if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',sender:step.bank,message:'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
+   if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',sender:step.bank,message:window.IphoneLocale?.language==='zh'?'银行转账支出 1,000,000韩元':'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
    epState15.cursor=index+1;saveEp15();wait(next,900);return
   }
   if(step.type==='unsentDraft'){
@@ -1270,7 +1272,7 @@ function runEp15(delay=500){
 }
 function sendEp15(){
  if(!episode15||epState15.status!==EPSTATUS15.WAITING_TO_SEND)return;
- const index=epState15.pendingStep,step=episode15.steps[index];
+ const index=epState15.pendingStep,step=epStep15(index);
  if(!Array.isArray(step)||step[0]!=='mine'||draft15!==step[1])return;
  epState15.status=EPSTATUS15.RUNNING;commitEpStep15(index);keyboard15=false;epRender15();runEp15(650);
 }
@@ -1295,6 +1297,18 @@ S.addEventListener('beforeinput',e=>{if(mode==='kakao'&&chat15==='xxx'&&e.target
 S.addEventListener('input',e=>{if(mode==='kakao'&&e.target.id==='k15-search'){query15=e.target.value;let p=e.target.selectionStart;render15();let q=document.querySelector('#k15-search');if(q){q.focus();q.setSelectionRange(p,p)}}else if(mode==='kakao'&&chat15==='xxx'&&e.target.id==='k15-input'){e.target.value=draft15}},true);
 S.addEventListener('submit',e=>{if(mode!=='kakao'||e.target.id!=='k15-form')return;e.preventDefault();e.stopImmediatePropagation();if(chat15==='xxx'){sendEp15();return}let x=data15.find(c=>c.id===chat15),t=draft15.trim();if(!t||t!==x?.scriptReply||x.scriptDone)return;clearTimeout(typeTimer15);let now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date()),sent=['mine',t,now,'','unread'];x.messages.push(sent);x.preview=t;x.time='방금';draft15='';keyboard15=false;save15();render15();replyTimer15=setTimeout(()=>{sent[4]='read';typing15=true;save15();render15();replyTimer15=setTimeout(()=>{typing15=false;if(x.scriptNext){let at=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());x.messages.push(['other',x.scriptNext,at]);x.preview=x.scriptNext;x.time='방금'}x.scriptDone=true;save15();render15()},1800)},1200)},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseEp15();else if(epVisible15())runEp15(250)});
+window.addEventListener('iphone26:languagechange',()=>{
+ if(!episode15)return;
+ const wasVisible=epVisible15();pauseEp15();
+ if(epState15.status===EPSTATUS15.WAITING_TO_SEND&&Number.isInteger(epState15.pendingStep)){
+  epState15.draft=epStep15(epState15.pendingStep)?.[1]||'';draft15=epState15.draft;
+ }else if(epState15.status===EPSTATUS15.RUNNING||epState15.status===EPSTATUS15.UNSENT_DRAFT){
+  epState15.draft='';draft15='';
+  if(epState15.status===EPSTATUS15.UNSENT_DRAFT)epState15.status=EPSTATUS15.RUNNING;
+ }
+ syncEpChat15();saveEp15();
+ if(wasVisible){render15();if(epState15.status!==EPSTATUS15.WAITING_TO_SEND)runEp15(250)}
+});
 const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')render15();else prevRender15()};back=function(){if(mode==='kakao'&&view15){pauseEp15();view15='';render15()}else prevBack15()};window.__KKT15_TEST__={get data(){return data15},get contacts(){return contacts.map(c=>({...c}))},render:render15,open(){tab15='chats';view15='';render15()},openChat(id){pauseEp15();chat15=id;view15='room';keyboard15=false;draft15=id==='xxx'?epState15.draft:'';typing15=false;render15();if(id==='xxx')runEp15()},get tab(){return tab15},get view(){return view15},get episode(){return JSON.parse(JSON.stringify(epState15))},get episodeLoaded(){return !!episode15}};if(mode==='kakao')render15();
 })();
 </script>
@@ -1309,5 +1323,5 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v12"></script>
 <script src="./kakao/shop.js?v=2&amp;build=ep001-v12"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V013';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V014';proof.removeAttribute('hidden')}}</script>
 </body></html>
