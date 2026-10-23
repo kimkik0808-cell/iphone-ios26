@@ -73,10 +73,24 @@
     return new Date(start + hash % span);
   }
 
+  const vmZh = () => window.IphoneLocale?.language === 'zh';
+  const vmT = (ko, zh) => vmZh() ? zh : ko;
+
   function koreanStamp(stamp) {
     const period = stamp.getHours() < 12 ? '오전' : '오후';
     const hour = stamp.getHours() % 12 || 12;
     return `${stamp.getFullYear()}년 ${stamp.getMonth() + 1}월 ${stamp.getDate()}일 ${period} ${hour}시 ${String(stamp.getMinutes()).padStart(2, '0')}분 ${String(stamp.getSeconds()).padStart(2, '0')}초`;
+  }
+
+  function chineseStamp(stamp) {
+    const period = stamp.getHours() < 12 ? '上午' : '下午';
+    const hour = stamp.getHours() % 12 || 12;
+    return `${stamp.getFullYear()}年${stamp.getMonth() + 1}月${stamp.getDate()}日 ${period}${hour}时${String(stamp.getMinutes()).padStart(2, '0')}分${String(stamp.getSeconds()).padStart(2, '0')}秒`;
+  }
+
+  function voicemailTitle(item) {
+    const stamp = new Date(item.timestamp);
+    return vmZh() ? chineseStamp(stamp) : koreanStamp(stamp);
   }
 
   function normalize(file, meta = {}) {
@@ -144,7 +158,7 @@
       state.loaded = true;
       state.error = '';
     })().catch(err => {
-      state.error = '음성 메시지를 불러오지 못했습니다.';
+      state.error = vmT('음성 메시지를 불러오지 못했습니다.','无法载入语音留言');
       state.loaded = false;
       console.warn('[Voicemail] Failed to load audio list:', err);
     }).finally(() => {
@@ -159,15 +173,15 @@
     const open = state.opened === index;
     const isPlaying = open && state.playing && playingFile === item.file;
     return `<article class="vm26-item ${open ? 'vm26-is-open' : ''}">
-      <button type="button" class="vm26-entry" data-vm26="open" data-vm-index="${index}" aria-expanded="${open}" aria-label="${escape(item.name)} 음성 메시지">
+      <button type="button" class="vm26-entry" data-vm26="open" data-vm-index="${index}" aria-expanded="${open}" aria-label="${escape(voicemailTitle(item))} ${vmT('음성 메시지','语音留言')}">
         <span class="vm26-dot" aria-hidden="true"></span>
-        <span class="vm26-main"><strong>${escape(item.name)}</strong><small>${escape(item.number || '음성 메시지')}</small></span>
+        <span class="vm26-main"><strong>${escape(voicemailTitle(item))}</strong><small>${escape(item.number || vmT('음성 메시지','语音留言'))}</small></span>
         <span class="vm26-right">${item.date ? `<time>${escape(item.date)}</time>` : ''}<span class="vm26-chevron">${open ? '⌄' : '›'}</span></span>
       </button>
       ${open ? `<div class="vm26-detail">
         ${item.note ? `<p class="vm26-note">${escape(item.note)}</p>` : ''}
         <div class="vm26-controls">
-          <button type="button" class="vm26-play" data-vm26="play" data-vm-index="${index}" aria-label="${isPlaying ? '일시 정지' : '재생'}">${isPlaying ? pauseIcon : playIcon}</button>
+          <button type="button" class="vm26-play" data-vm26="play" data-vm-index="${index}" aria-label="${isPlaying ? vmT('일시 정지','暂停') : vmT('재생','播放')}">${isPlaying ? pauseIcon : playIcon}</button>
           <div class="vm26-track">
             <input class="vm26-seek" data-vm26-seek="${index}" type="range" min="0" max="1000" value="0" aria-label="재생 위치" />
             <div class="vm26-clock"><span class="vm26-position">0:00</span><span class="vm26-duration">0:00</span></div>
@@ -178,12 +192,12 @@
   }
 
   function markup() {
-    if (state.loading && !state.loaded) return `<div class="vm26-status" role="status"><div class="vm26-spinner"></div><p>음성 메시지를 불러오는 중…</p></div>`;
+    if (state.loading && !state.loaded) return `<div class="vm26-status" role="status"><div class="vm26-spinner"></div><p>${vmT('음성 메시지를 불러오는 중…','正在载入语音留言…')}</p></div>`;
     if (state.error) return `<div class="vm26-status" role="alert"><p>${escape(state.error)}</p><button type="button" data-vm26="refresh">다시 시도</button></div>`;
-    if (!state.loaded) return `<div class="vm26-status" role="status"><div class="vm26-spinner"></div><p>음성 메시지를 확인하는 중…</p></div>`;
-    if (!state.items.length) return `<div class="phone-empty vm26-empty"><i>◉</i><b>음성 메시지 없음</b><span>새로운 음성 메시지가 없습니다.</span><button type="button" data-vm26="refresh">새로고침</button></div>`;
-    return `<div class="vm26-list" aria-label="음성 사서함 메시지">${state.items.map(itemHTML).join('')}</div>
-      <div class="vm26-footer"><span>${state.items.length}개의 음성 메시지</span><button type="button" data-vm26="refresh" aria-label="목록 새로고침">새로고침</button></div>`;
+    if (!state.loaded) return `<div class="vm26-status" role="status"><div class="vm26-spinner"></div><p>${vmT('음성 메시지를 확인하는 중…','正在检查语音留言…')}</p></div>`;
+    if (!state.items.length) return `<div class="phone-empty vm26-empty"><i>◉</i><b>${vmT('음성 메시지 없음','没有语音留言')}</b><span>${vmT('새로운 음성 메시지가 없습니다','没有新的语音留言')}</span><button type="button" data-vm26="refresh">${vmT('새로고침','刷新')}</button></div>`;
+    return `<div class="vm26-list" aria-label="${vmT('음성 사서함 메시지','语音信箱留言')}">${state.items.map(itemHTML).join('')}</div>
+      <div class="vm26-footer"><span>${vmZh()?state.items.length+'条语音留言':state.items.length+'개의 음성 메시지'}</span><button type="button" data-vm26="refresh" aria-label="${vmT('목록 새로고침','刷新列表')}">${vmT('새로고침','刷新')}</button></div>`;
   }
 
   function paint() {
@@ -213,7 +227,7 @@
     if (button) {
       const playing = active && state.playing;
       button.innerHTML = playing ? pauseIcon : playIcon;
-      button.setAttribute('aria-label', playing ? '일시 정지' : '재생');
+      button.setAttribute('aria-label', playing ? vmT('일시 정지','暂停') : vmT('재생','播放'));
     }
   }
 
@@ -231,7 +245,7 @@
       if (root) {
         const info = root.querySelector('.vm26-detail');
         if (info && !info.querySelector('.vm26-audio-error')) {
-          info.insertAdjacentHTML('beforeend', '<p class="vm26-audio-error">오디오 파일을 재생할 수 없습니다.</p>');
+          info.insertAdjacentHTML('beforeend', `<p class="vm26-audio-error">${vmT('오디오 파일을 재생할 수 없습니다.','无法播放音频文件')}</p>`);
         }
       }
     }
