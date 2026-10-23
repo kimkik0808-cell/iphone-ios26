@@ -11,7 +11,21 @@
       "shares": "1만",
       "saves": "3,323",
       "verified": false,
-      "avatar": ""
+      "avatar": "",
+      "featuredComments": [
+        {
+          "user": "deobi_97",
+          "text": "97즈 조합 너무 좋다 🥹"
+        },
+        {
+          "user": "ourwinter_12",
+          "text": "첫 눈이랑 진짜 찰떡이야 🎄"
+        },
+        {
+          "user": "theb_heart",
+          "text": "메리 크리스마스 🤍"
+        }
+      ]
     },
     "sunwoo.MP4": {
       "username": "official_theboyz",
@@ -23,11 +37,25 @@
       "publishedAt": "2024년 8월 31일",
       "avatar": "",
       "verified": false,
-      "likes": "",
-      "comments": "",
-      "reposts": "",
-      "shares": "",
-      "saves": ""
+      "likes": "18.4만",
+      "comments": "2,581",
+      "reposts": "672",
+      "shares": "1.2만",
+      "saves": "8,214",
+      "featuredComments": [
+        {
+          "user": "deobi_01",
+          "text": "선우 춤선 진짜 미쳤다 🔥"
+        },
+        {
+          "user": "shinewithtbz",
+          "text": "キラキラ✨ 계속 보게 돼"
+        },
+        {
+          "user": "lovesunwoo",
+          "text": "이번 영상 너무 좋다ㅋㅋ"
+        }
+      ]
     },
     "moonrock.MP4": {
       "username": "tbzuyeon",
@@ -36,11 +64,25 @@
       "publishedAt": "2024년 5월 17일",
       "avatar": "",
       "verified": true,
-      "likes": "",
-      "comments": "",
-      "reposts": "",
-      "shares": "",
-      "saves": ""
+      "likes": "12.7만",
+      "comments": "1,406",
+      "reposts": "283",
+      "shares": "4,126",
+      "saves": "5,937",
+      "featuredComments": [
+        {
+          "user": "deobi_02",
+          "text": "주연아 이거 뭐야ㅋㅋㅋㅋ"
+        },
+        {
+          "user": "moon_light17",
+          "text": "몰래 올린 거 너무 귀엽잖아"
+        },
+        {
+          "user": "theb_daily",
+          "text": "몇 번째 돌려보는 중인지 몰라 😭"
+        }
+      ]
     }
   },
   "private": {}
