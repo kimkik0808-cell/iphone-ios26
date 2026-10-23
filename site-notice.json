@@ -6,7 +6,8 @@
     "updatesTitle": "本次更新内容",
     "updates": [
       "更新 KakaoTalk「xxx」剧情 EP001。",
-      "更新 Instagram 小号私信记录及 Reels／帖子分享卡片，支持进入联系人私密主页。"
+      "更新 Instagram 小号私信记录及 Reels／帖子分享卡片，支持进入联系人私密主页。",
+      "开启勿扰模式时也可以收到剧情短信弹窗。"
     ],
     "historyButton": "查看历史公告",
     "hideHistoryButton": "收起历史公告",
@@ -20,7 +21,8 @@
     "updatesTitle": "이번 업데이트",
     "updates": [
       "KakaoTalk 「xxx」 스토리 EP001을 업데이트했어요.",
-      "Instagram 부계정 DM 기록 및 릴스／게시물 공유 카드를 업데이트하고, 연락처의 비공개 프로필로 이동할 수 있도록 개선했어요."
+      "Instagram 부계정 DM 기록 및 릴스／게시물 공유 카드를 업데이트하고, 연락처의 비공개 프로필로 이동할 수 있도록 개선했어요.",
+      "방해금지 모드에서도 스토리 문자 알림을 받을 수 있어요."
     ],
     "historyButton": "지난 업데이트 보기",
     "hideHistoryButton": "지난 업데이트 접기",
