@@ -157,6 +157,17 @@
       }catch(err){
         if(!found.length)throw new Error('음악 목록을 불러올 수 없습니다. 새로고침해 주세요.');
       }
+      // Auto-match cover images by exact audio basename in the same music folder.
+      try{
+        const response=await fetch(api,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+        if(response.ok){
+          const files=await response.json();
+          if(Array.isArray(files)){
+            const covers=new Map(files.filter(x=>x.type==='file'&&/\.(jpe?g|png|webp)$/i.test(x.name)).map(x=>[x.name.replace(/\.[^.]+$/,'').normalize('NFC'),x.download_url]));
+            for(const t of found)if(!t.cover){const url=covers.get(t.name.replace(/\.[^.]+$/,'').normalize('NFC'));if(url)t.cover=url}
+          }
+        }
+      }catch{}
       built=found;
       loaded=true;loadTime=Date.now();
     }catch(err){error=String(err?.message||'음악 목록을 불러올 수 없습니다');loaded=true;loadTime=Date.now()}
