@@ -1,0 +1,35 @@
+name: Update Instagram Reels list
+on:
+  push:
+    branches: [main]
+    paths:
+      - "instagram/reels/public/**"
+      - "instagram/reels/private/**"
+      - "scripts/generate-ig-reels-manifest.js"
+      - ".github/workflows/update-ig-reels.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ig-reels-manifest
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild video list
+        run: node scripts/generate-ig-reels-manifest.js
+      - name: Commit generated list
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add instagram/reels/manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh Instagram Reels manifest"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
