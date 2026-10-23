@@ -17,6 +17,7 @@
   let toastTimer=0;
   const isSettings=()=>typeof mode!=='undefined'&&mode==='settings';
   const isDnd=()=>{try{return localStorage.getItem(DND_KEY)==='1'}catch{return false}};
+  const isSilent=()=>window.__IPHONE_SOUND__?.silent===true;
   const icons={
     chevron:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m14.7 4.5-7.5 7.5 7.5 7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5" stroke-linecap="round"/></svg>`,
@@ -42,7 +43,7 @@
       <div class="ios26-settings-avatar">재</div><span class="ios26-settings-account-text"><strong>이재현</strong><small>Apple 계정, iCloud 및 기타 서비스</small></span><span class="ios26-settings-chevron">›</span>
     </button>
     ${group(row('에어플레인 모드','plane','#ff9e0b','끔')+row('Wi-Fi','wifi','#1685ee','연결됨')+row('Bluetooth','bluetooth','#1685ee','켬')+row('셀룰러','cellular','#34c759'))}
-    ${group(row('알림','bell','#ff3b30')+row('사운드 및 햅틱','volume','#ff315e')+row('집중 모드','moon','#675bd5',isDnd()?'방해금지 켬':'끔','focus')+row('스크린 타임','display','#6f62e4'))}
+    ${group(row('알림','bell','#ff3b30')+row('사운드 및 햅틱','volume','#ff315e',isSilent()?'무음':'','sound')+row('집중 모드','moon','#675bd5',isDnd()?'방해금지 켬':'끔','focus')+row('스크린 타임','display','#6f62e4'))}
     ${group(row('일반','gear','#858589','','general')+row('언어 및 지역','gear','#858589',currentLanguage()==='zh'?'简体中文':'한국어','language')+row('디스플레이 및 밝기','display','#2688ef')+row('개인정보 보호 및 보안','privacy','#367eeb'))}
     </main>`;
   }
@@ -67,6 +68,19 @@
       <p class="ios26-settings-subtitle">알림 설정</p>
       ${group(row('사람','privacy','#94939b','추후 지원')+row('앱','bell','#94939b','추후 지원')+row('옵션','gear','#94939b','추후 지원'))}
       <p class="ios26-settings-focusinfo">이 가상 iPhone에서는 방해금지 모드의 알림 배너 표시 여부만 실제로 동작합니다. 다른 설정은 추후 구현될 예정입니다.</p>
+    </main>`;
+  }
+
+  function soundPage(){
+    const on=isSilent();
+    return `${head('사운드 및 햅틱',true)}<main class="ios26-settings-scroll">
+      <h1 class="ios26-settings-title">사운드 및 햅틱</h1>
+      <section class="ios26-settings-focusstate">
+        <span><strong>무음 모드</strong><p>${on?'알림음과 벨소리가 재생되지 않습니다':'알림음과 벨소리를 재생합니다'}</p></span>
+        <button class="ios26-settings-switch" type="button" role="switch" aria-label="무음 모드" aria-checked="${on}" data-s26="toggle-silent"><i></i></button>
+      </section>
+      <p class="ios26-settings-caption">무음 모드는 문자 메시지 카카오톡 알림과 전화 벨소리에 적용됩니다</p>
+      <p class="ios26-settings-caption">음악과 통화 음량에는 영향을 주지 않습니다</p>
     </main>`;
   }
 
@@ -110,7 +124,7 @@
     gesture?.classList.add('ink');
     frame.style.overflow='hidden';
     frame.style.bottom='calc(var(--safe-bottom) + 28px)';
-    frame.innerHTML=`<div class="ios26-settings-root">${page==='language'?languagePage():page==='general'?generalPage():page==='dnd'?dnd():page==='focus'?focus():main()}</div>`;
+    frame.innerHTML=`<div class="ios26-settings-root">${page==='language'?languagePage():page==='general'?generalPage():page==='sound'?soundPage():page==='dnd'?dnd():page==='focus'?focus():main()}</div>`;
   }
   const oldOpenApp=openApp;
   openApp=function(next,...args){
@@ -126,7 +140,7 @@
   back=function(...args){
     if(isSettings()){
       if(page==='dnd')page='focus';
-      else if(page==='focus'||page==='general')page='main';
+      else if(page==='focus'||page==='general'||page==='sound')page='main';
       else if(page==='language')page=languagePreviousPage;
       else return closeApp();
       paint();
@@ -141,9 +155,10 @@
     e.preventDefault();e.stopImmediatePropagation();
     const a=btn.dataset.s26;
     if(a==='back'){
-      if(page==='dnd')page='focus';else if(page==='focus'||page==='general')page='main';else if(page==='language')page=languagePreviousPage;else return closeApp();
+      if(page==='dnd')page='focus';else if(page==='focus'||page==='general'||page==='sound')page='main';else if(page==='language')page=languagePreviousPage;else return closeApp();
       paint();
     }else if(a==='focus'){page='focus';paint()}
+    else if(a==='sound'){page='sound';paint()}
     else if(a==='general'){page='general';paint()}
     else if(a==='language'){languagePreviousPage=page;page='language';paint()}
     else if(a==='lang'){
@@ -160,11 +175,16 @@
       window.dispatchEvent(new CustomEvent('ios26:dndchange',{detail:{enabled:next}}));
       paint();
     }
+    else if(a==='toggle-silent'){
+      window.__IPHONE_SOUND__?.setSilent(!isSilent());
+      paint();
+    }
   },true);
   window.__IOS26_SETTINGS__={
     get dnd(){return isDnd()},
     get page(){return page},
     showDnd:()=>{page='dnd';if(isSettings())paint()},
+    showSound:()=>{page='sound';if(isSettings())paint()},
     showLanguage:()=>{page='language';if(isSettings())paint()},
     get language(){return currentLanguage()}
   };

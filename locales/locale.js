@@ -82,6 +82,7 @@
   }
   function translateTextNode(node) {
     if(node.nodeType!==3||ignored(node))return;
+    const element=node.parentElement;
     const actual=node.nodeValue;
     let record=originalText.get(node);
     if(!record||record.last!==actual){
@@ -89,7 +90,7 @@
       originalText.set(node,record);
     }
     let next=language==='zh'?translateString(record.original):record.original;
-    if(element.closest('.sms-risk-chat,.krq-row-main,.krq-chat'))next=next.replace(/[,.，。]/g,'');
+    if(element?.closest('.sms-risk-chat,.krq-row-main,.krq-chat'))next=next.replace(/[,.，。]/g,'');
     if(actual!==next){
       record.last=next;
       node.nodeValue=next;

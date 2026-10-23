@@ -145,9 +145,11 @@
         if (!response.ok) throw new Error('GitHub API ' + response.status);
         const body = await response.json();
         if (!Array.isArray(body)) throw new Error('응답 형식 오류');
-        filenames = [...new Set([...filenames, ...body
+        // A successful directory scan is authoritative. Deleted audio must not
+        // survive just because an older messages.json still mentions it.
+        filenames = [...new Set(body
           .filter(x => x && x.type === 'file' && AUDIO_EXT.test(x.name))
-          .map(x => x.name)])];
+          .map(x => x.name))];
       } catch (err) {
         if (!filenames.length) throw new Error('No bundled voicemail manifest and directory discovery failed: ' + err);
         console.warn('[Voicemail] Directory discovery skipped:', err);

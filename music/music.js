@@ -6,6 +6,8 @@
   const api=`https://api.github.com/repos/${owner}/${repo}/contents/music?ref=main`;
   const raw=`https://raw.githubusercontent.com/${owner}/${repo}/main/music/`;
   const mediaType=/\.(mp3|m4a|aac|wav|ogg|flac|mp4|webm)$/i;
+  const mediaMime=name=>({mp3:'audio/mpeg',m4a:'audio/mp4',mp4:'audio/mp4',aac:'audio/aac',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',webm:'audio/webm'})[(String(name).split('.').pop()||'').toLowerCase()]||'application/octet-stream';
+  const coverKey=name=>String(name||'').replace(/\.[^.]+$/,'').normalize('NFC').toLocaleLowerCase().replace(/[\s_\-–—,.·'’()\[\]]+/g,'');
   const e=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const basename=n=>n.replace(/\.[a-z\d]+$/i,'').replace(/[_]+/g,' ').trim();
   const safeStorage=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
@@ -20,7 +22,7 @@
   let tab='home', view='list', sheet='', query='', sort='recent', loading=false, loaded=false, loadTime=0, error='';
   let built=[], links=safeStorage('am26_links',[]), locals=[], ephemeral=[], currentId='', currentSrc='', shuffle=false, repeat=false;
   let fav=new Set(safeStorage('am26_favorites',[]));
-  let wantPlay=false, fallbackTriedFor='', failedNoticeFor='';
+  let wantPlay=false, fallbackTriedFor='', blobFallbackTriedFor='', failedNoticeFor='';
   const audio=new Audio();
   audio.preload='metadata';
   audio.playsInline=true;
@@ -171,8 +173,8 @@
         if(response.ok){
           const files=await response.json();
           if(Array.isArray(files)){
-            const covers=new Map(files.filter(x=>x.type==='file'&&/\.(jpe?g|png|webp)$/i.test(x.name)).map(x=>[x.name.replace(/\.[^.]+$/,'').normalize('NFC'),x.download_url]));
-            for(const t of found)if(!t.cover){const url=covers.get(t.name.replace(/\.[^.]+$/,'').normalize('NFC'));if(url)t.cover=url}
+            const covers=new Map(files.filter(x=>x.type==='file'&&/\.(jpe?g|png|webp)$/i.test(x.name)).map(x=>[coverKey(x.name),x.download_url]));
+            for(const t of found)if(!t.cover){const url=covers.get(coverKey(t.name));if(url)t.cover=url}
           }
         }
       }catch{}
@@ -196,7 +198,10 @@
   function playerSrc(t){
     if(t.source==='local'){
       const obj=t.blob;
-      return obj?URL.createObjectURL(obj):'';
+      if(!obj)return '';
+      const mime=mediaMime(t.filename||t.title);
+      const typed=mime!=='application/octet-stream'&&obj.type!==mime?new Blob([obj],{type:mime}):obj;
+      return URL.createObjectURL(typed);
     }
     return t.src;
   }
@@ -216,7 +221,7 @@
     const id=currentId,src=currentSrc;
     audio.play().catch(err=>{
       if(id!==currentId||src!==currentSrc||!wantPlay||err?.name==='AbortError')return;
-      if(!tryFallback())playbackFailed();
+      if(!tryFallback())tryBlobFallback();
     });
   }
   function tryFallback(){
@@ -232,12 +237,28 @@
     playCurrent();
     return true;
   }
+  async function tryBlobFallback(){
+    if(!wantPlay||!currentId||blobFallbackTriedFor===currentId){playbackFailed();return}
+    const id=currentId,t=current();
+    if(!t||t.source!=='official'){playbackFailed();return}
+    blobFallbackTriedFor=id;
+    try{
+      const response=await fetch(t.fallbackSrc||t.src,{cache:'no-store'});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      const bytes=await response.arrayBuffer();
+      if(id!==currentId||!wantPlay)return;
+      if(currentSrc.startsWith('blob:'))URL.revokeObjectURL(currentSrc);
+      currentSrc=URL.createObjectURL(new Blob([bytes],{type:mediaMime(t.filename)}));
+      audio.src=currentSrc;audio.load();playCurrent();
+    }catch{if(id===currentId)playbackFailed()}
+  }
   function selectSong(id,shouldPlay=true){
     const t=trById(id);if(!t){showNotice('노래를 찾을 수 없습니다.');return}
     if(currentId!==id||!audio.src){
       if(currentSrc.startsWith('blob:'))URL.revokeObjectURL(currentSrc);
       currentId=id;currentSrc=playerSrc(t);
       fallbackTriedFor='';
+      blobFallbackTriedFor='';
       if(!currentSrc){showNotice('오디오 파일을 읽을 수 없습니다.');return}
       audio.src=currentSrc;audio.load();
     }
@@ -283,7 +304,7 @@
   audio.addEventListener('play',syncProgress);
   audio.addEventListener('pause',syncProgress);
   audio.addEventListener('ended',()=>{if(repeat){audio.currentTime=0;audio.play().catch(()=>{})}else nextSong(1)});
-  audio.addEventListener('error',()=>{if(wantPlay&&currentId&&!tryFallback())playbackFailed()});
+  audio.addEventListener('error',()=>{if(wantPlay&&currentId&&!tryFallback())tryBlobFallback()});
   function row(t){
     return `<div class="am-row"><button class="am-row-main" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></span></button></div>`;
   }
