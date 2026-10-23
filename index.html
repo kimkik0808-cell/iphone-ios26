@@ -1223,7 +1223,7 @@ function commitEpStep15(index){
  if(!epState15.sentSteps.includes(index))epState15.sentSteps.push(index);
  epState15.cursor=index+1;epState15.pendingStep=null;epState15.draft='';draft15='';syncEpChat15();saveEp15();
 }
-function runEp15(delay=500){
+function runEp15(delay=500,activateComposer=false){
  if(!episode15||!epVisible15()||epState15.status===EPSTATUS15.COMPLETED)return;
  if(epState15.status===EPSTATUS15.NOT_STARTED){epState15=freshEp15();epState15.status=EPSTATUS15.RUNNING;syncEpChat15();saveEp15()}
  draft15=epState15.draft;
@@ -1243,6 +1243,21 @@ function runEp15(delay=500){
   }
   key()
  }
+ function eraseText(done){
+  const backspace=document.querySelector('.k15-key[data-key="⌫"]');
+  function remove(){
+   if(token!==episodeToken15||!epVisible15())return;
+   const chars=Array.from(draft15);
+   if(!chars.length){backspace?.classList.remove('pressed');done();return}
+   backspace?.classList.add('pressed');
+   wait(()=>{
+    backspace?.classList.remove('pressed');chars.pop();draft15=chars.join('');epState15.draft=draft15;saveEp15();
+    const input=document.querySelector('#k15-input');if(input)input.value=draft15;
+    wait(remove,95)
+   },70)
+  }
+  remove()
+ }
  function next(){
   const index=epState15.cursor,step=epStep15(index);
   if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
@@ -1250,7 +1265,9 @@ function runEp15(delay=500){
    if(step[0]==='other'){
     typing15=true;keyboard15=false;epRender15();wait(()=>{typing15=false;commitEpStep15(index);for(const m of epChat15().messages)if(m[0]==='mine'&&m[4]==='unread')m[4]='read';save15();epRender15();wait(next,650)},850);return
    }
-   epState15.status=EPSTATUS15.RUNNING;epState15.pendingStep=index;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
+   if(epState15.pendingStep!==index){epState15.status=EPSTATUS15.RUNNING;epState15.pendingStep=index;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
+   if(!activateComposer){keyboard15=false;typing15=false;draft15=epState15.draft||'';epRender15();return}
+   epState15.status=EPSTATUS15.RUNNING;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
    typeText(step[1],()=>{epState15.status=EPSTATUS15.WAITING_TO_SEND;epState15.draft=step[1];draft15=step[1];saveEp15();epRender15()});return
   }
   if(step.type==='transfer'){
@@ -1264,7 +1281,7 @@ function runEp15(delay=500){
   }
   if(step.type==='unsentDraft'){
    epState15.status=EPSTATUS15.UNSENT_DRAFT;epState15.pendingStep=index;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
-   typeText(step.text,()=>wait(()=>{epState15.cursor=index+1;epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;saveEp15();epRender15()},step.holdMs));return
+   typeText(step.text,()=>wait(()=>eraseText(()=>{epState15.cursor=index+1;epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;saveEp15();epRender15()}),step.holdMs));return
   }
   epState15.cursor=index+1;saveEp15();wait(next,300)
  }
@@ -1292,6 +1309,11 @@ function keyParts15(ch){if(!ch)return [];if(ch===' ')return ['space'];let n=ch.c
 function typeFixed15(){let x=data15.find(c=>c.id===chat15);if(!x?.scriptReply||x.scriptDone)return;clearTimeout(typeTimer15);keyboard15=true;draft15='';render15();let chars=Array.from(x.scriptReply),ci=0,ki=0,parts=keyParts15(chars[0]||'');function next(){if(ci>=chars.length){document.querySelector('.k15-send')?.classList.add('ready');return}let ch=chars[ci],key=parts[ki],btn=key?document.querySelector(`.k15-key[data-key="${key}"]`):null;if(btn)btn.classList.add('pressed');typeTimer15=setTimeout(()=>{btn?.classList.remove('pressed');ki++;if(ki>=parts.length){draft15+=ch;let input=document.querySelector('#k15-input');if(input)input.value=draft15;ci++;ki=0;parts=keyParts15(chars[ci]||'');typeTimer15=setTimeout(next,parts.length?28:45)}else typeTimer15=setTimeout(next,18)},key?48:40)}next()}
 function render15(){if(typeof mode==='undefined'||mode!=='kakao')return;document.querySelector('#app').classList.add('kkt15-mode');let html=view15==='room'?room15():tab15==='friends'?friends15():tab15==='open'?open15():tab15==='shop'?shop15():tab15==='more'?more15():chats15();S.innerHTML=`<div id="kkt15">${html}</div>`;let b=document.querySelector('#k15-chatbody');if(b)b.scrollTop=b.scrollHeight}
 function click15(e){if(mode!=='kakao')return;let b=e.target.closest('[data-k15]');if(!b)return;let a=b.dataset.k15,v=b.dataset.v,id=b.dataset.id;if(a==='compose'&&chat15==='xxx'){b.focus({preventScroll:true});return}e.preventDefault();e.stopImmediatePropagation();if(a==='tab'){pauseEp15();tab15=v;view15='';keyboard15=false;render15()}else if(a==='chat'){pauseEp15();chat15=id;let x=data15.find(c=>c.id===id);if(x)x.unread=0;save15();view15='room';blocked15=false;keyboard15=false;draft15=id==='xxx'?epState15.draft:'';typing15=false;render15();if(id==='xxx')runEp15()}else if(a==='back'){pauseEp15();clearTimeout(typeTimer15);clearTimeout(replyTimer15);view15='';keyboard15=false;draft15='';typing15=false;render15()}else if(a==='friend'){pauseEp15();let x=data15.find(c=>c.id===id);if(x){chat15=id;x.unread=0;view15='room';draft15=id==='xxx'?epState15.draft:'';render15();if(id==='xxx')runEp15()}else toast('프로필을 확인했습니다')}else if(a==='key'){if(chat15!=='xxx'&&!draft15)typeFixed15()}else if(a==='block'){blocked15=true;toast('신고 및 차단 처리되었습니다');render15()}else if(a==='report'){toast('매니저에게 대화 내용을 공유했습니다')}else if(a==='call'||a==='video'){toast('통화 기능 시연')}else if(a==='find'){let q=document.querySelector('#k15-search');if(q)q.focus();else toast('검색')}else if(a==='add')toast('새 채팅 만들기');else if(a==='attach')toast('사진 · 동영상 · 파일 첨부');else toast('화면 시연 기능입니다')}
+S.addEventListener('click',e=>{
+ const input=e.target.closest?.('[data-k15="compose"]');
+ if(mode!=='kakao'||chat15!=='xxx'||!input||epState15.status!==EPSTATUS15.RUNNING||epState15.pendingStep!==epState15.cursor)return;
+ e.preventDefault();e.stopImmediatePropagation();runEp15(0,true);
+},true);
 S.addEventListener('click',click15,true);
 S.addEventListener('beforeinput',e=>{if(mode==='kakao'&&chat15==='xxx'&&e.target.id==='k15-input')e.preventDefault()},true);
 S.addEventListener('input',e=>{if(mode==='kakao'&&e.target.id==='k15-search'){query15=e.target.value;let p=e.target.selectionStart;render15();let q=document.querySelector('#k15-search');if(q){q.focus();q.setSelectionRange(p,p)}}else if(mode==='kakao'&&chat15==='xxx'&&e.target.id==='k15-input'){e.target.value=draft15}},true);
@@ -1323,5 +1345,5 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v12"></script>
 <script src="./kakao/shop.js?v=2&amp;build=ep001-v12"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V014';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V015';proof.removeAttribute('hidden')}}</script>
 </body></html>
