@@ -57,6 +57,15 @@
 .am-playerfeet{display:flex;justify-content:space-around;margin:3px 0 14px;color:#fffc}.am-playerfeet button{font-size:23px;color:#ffffffc9}
 .am-player-note{text-align:center;font-size:11px;color:#ffffffad;margin-bottom:4px}
 .am-titleinfo small.am-source{color:#fb426d}
+.am-simple-root{background:#fff}
+.am-simple-scroll{padding:18px 18px 30px}
+.am-simple-list{margin:0;padding:0}
+.am-simple-list .am-row{padding:11px 0;border-bottom:.5px solid #e8e8ec}
+.am-simple-list .am-row-main{gap:13px}
+.am-simple-list .am-art{width:64px;height:64px;border-radius:8px;font-size:26px;box-shadow:none}
+.am-simple-list .am-titleinfo strong{font-size:16px;font-weight:650;color:#17171a}
+.am-simple-list .am-titleinfo small{font-size:13px;color:#8a8a90;margin-top:5px}
+.am-simple-empty{padding:70px 10px;text-align:center;color:#999;font-size:14px}
 @media(max-height:720px){.am-playing-art{width:min(58vw,208px);height:min(58vw,208px);margin-top:15px;margin-bottom:14px}.am-bigcontrols{margin:3px 0 12px}.am-player-meta{margin-bottom:12px}}
 @media(prefers-reduced-motion:reduce){.am-mini-line{transition:none}}
 

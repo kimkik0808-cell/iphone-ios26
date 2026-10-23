@@ -14,7 +14,8 @@
   const DND_KEY='iphone26_dnd_enabled';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isDnd=()=>{try{return localStorage.getItem(DND_KEY)==='1'}catch{return false}};
-  const canDisplay=(force=false)=>(force||!isDnd()) && (typeof isLocked==='undefined'||!isLocked) && !document.hidden;
+  const canRun=()=>(typeof isLocked==='undefined'||!isLocked) && !document.hidden;
+  const canDisplay=(force=false)=>(force||!isDnd()) && canRun();
   const zh=()=>window.IphoneLocale?.language==='zh';
   const translate=value=>zh()?(window.IphoneLocale?.t(value)||value):value;
   const kakaoName=()=>zh()?'KakaoTalk':'카카오톡';
@@ -155,7 +156,6 @@
     });
   }
   function show(kind){
-    if(!canDisplay())return false;
     const info=nextData();
     const requestedKind=kind==='instagram'||kind==='kakao'?kind:info.kind;
     if(requestedKind==='kakao'){
@@ -166,7 +166,7 @@
         info.kind='kakao';
         info.name=kakaoName();
         info.sender=delivery.name;
-        info.message=delivery.text;
+        info.message=String(delivery.text).replace(/[,.，。]/g,'');
         info.requestId=delivery.id;
         info.icon=kakaoIcon;
       }else if(kind==='kakao'){
@@ -174,6 +174,7 @@
       }
       // With all scripted messages delivered, normal ticks remain IG-only.
     }
+    if(!canDisplay())return false;
     return displayInfo(info);
   }
   function stop(){
@@ -184,36 +185,36 @@
   }
   function schedule(initialDelay=1500){
     stop();
-    if(!canDisplay())return;
+    if(!canRun())return;
     const token=generation;
     function tick(){
-      if(token!==generation||!canDisplay())return;
+      if(token!==generation||!canRun())return;
       show();
       tickTimer=setTimeout(tick,5000);
     }
     tickTimer=setTimeout(tick,initialDelay);
   }
   window.addEventListener('ios26:dndchange',e=>{
-    if(e.detail?.enabled===true){stop();}
-    else if(e.detail?.enabled===false){schedule(900);}
+    clearNotice();
+    if(typeof e.detail?.enabled==='boolean')schedule(900);
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)stop();
-    else if(canDisplay())schedule(1100);
+    else if(canRun())schedule(1100);
   });
   if(typeof lockOff==='function'){
     const oldLockOff=lockOff;
     lockOff=function(...args){
       const result=oldLockOff.apply(this,args);
-      if(canDisplay())schedule(1200);
+      if(canRun())schedule(1200);
       else stop();
       return result;
     };
   }
-  if(canDisplay())schedule(1200);
+  if(canRun())schedule(1200);
   window.addEventListener('iphone26:languagechange',()=>clearNotice());
   window.__IOS26_NOTIFICATIONS__={
-    show,showSMS,showKakao,stop,replay:()=>{if(canDisplay())schedule(100);},
+    show,showSMS,showKakao,stop,replay:()=>{if(canRun())schedule(100);},
     get enabled(){return !isDnd()},
     get shown(){return displayed?[displayed.dataset.notification]:[]},
     get count(){return counter}

@@ -75,7 +75,7 @@
     return `<span class="am-art" data-hue="${e(String((track?.title||'').length%4))}" ${large?'style="width:100%;height:100%;font-size:100px;border-radius:inherit"':''}>${imgCover(track)||'♫'}</span>`;
   }
   function origin(t){return t.source==='official'?'보관함 · 기본 음악':t.source==='url'?'내 링크':'이 기기에 저장됨'}
-  function info(t){return `${t.artist} · ${origin(t)}`}
+  function info(t){return t.artist}
   function icon(type){
     const paths={
       play:'<path d="M8 4.9c0-.8.9-1.3 1.6-.9l10 7c.7.5.7 1.5 0 2l-10 7c-.7.4-1.6-.1-1.6-.9z" fill="currentColor" stroke="none"/>',
@@ -245,7 +245,7 @@
   audio.addEventListener('ended',()=>{if(repeat){audio.currentTime=0;audio.play().catch(()=>{})}else nextSong(1)});
   audio.addEventListener('error',()=>{if(currentId)showNotice('오디오 파일을 열 수 없습니다. 링크를 확인해 주세요.')});
   function row(t){
-    return `<div class="am-row"><button class="am-row-main" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(info(t))}</small></span></button><button class="am-row-more" data-am="menu" data-id="${e(t.id)}" aria-label="곡 옵션">•••</button></div>`;
+    return `<div class="am-row"><button class="am-row-main" data-am="song" data-id="${e(t.id)}" aria-label="${e(t.title)} 재생">${art(t)}<span class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></span></button></div>`;
   }
   function list(filter='all'){
     let found=tracks();
@@ -301,7 +301,11 @@
     const dur=Number.isFinite(audio.duration)?audio.duration:0,pct=dur>0?audio.currentTime/dur*100:0;
     return `<div class="am-player"><div class="am-playerbar"><button data-am="back" aria-label="보관함으로">${icon('down')}</button><span>재생 중</span><button data-am="menu" data-id="${e(t.id)}" aria-label="더 보기">${icon('more')}</button></div><div class="am-playing-art">${imgCover(t)||'♫'}</div><div class="am-player-meta"><div class="am-titleinfo"><strong>${e(t.title)}</strong><small>${e(t.artist)}</small></div><button class="am-heart" data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button></div><div><input type="range" class="am-range" min="0" max="100" step=".1" id="am26-seek" value="${pct}" style="--pct:${pct}%" aria-label="재생 위치"><div class="am-timeline"><span id="am26-current">${fmt(audio.currentTime)}</span><span id="am26-total">-${fmt(Math.max(0,dur-audio.currentTime))}</span></div></div><div class="am-bigcontrols"><button data-am="previous" aria-label="이전 곡">${icon('prev')}</button><button data-am="toggle" class="am-central" aria-label="재생 또는 일시 정지" data-am-icon="play">${icon(audio.paused?'play':'pause')}</button><button data-am="next" aria-label="다음 곡">${icon('next')}</button></div><div class="am-playerfeet"><button data-am="shuffle" aria-label="셔플" data-active="${shuffle}">${icon('shuffle')}</button><button data-am="favorite" data-id="${e(t.id)}" aria-label="즐겨찾기">${icon(fav.has(t.id)?'heartFill':'heart')}</button><button data-am="repeat" aria-label="반복 재생" data-active="${repeat}">${icon('repeat')}</button></div><div class="am-player-note">${e(origin(t))}</div>${uploadSheet()}</div>`;
   }
-  function listPage(){return `<div class="am-root"><div class="am-scroll">${content()}</div>${bottom()}${uploadSheet()}</div>`}
+  function listPage(){
+    const songs=tracks();
+    const body=songs.map(row).join('')||`<div class="am-simple-empty">${loading?'음악 불러오는 중…':'음악이 없습니다'}</div>`;
+    return `<div class="am-root am-simple-root"><div class="am-scroll am-simple-scroll"><div class="am-list am-simple-list">${body}</div></div></div>`;
+  }
   const oldMusicPage=musicPage;
   musicPage=function(){return view==='player'?playingPage():listPage()};
   const oldRender=render;
@@ -338,7 +342,7 @@
     if(command==='sheet'){sheet='add';refresh();return}
     if(command==='pick'){frame.querySelector('#am26-file')?.click();return}
     if(command==='menu'){sheet='options:'+id;refresh();return}
-    if(command==='song'){selectSong(id);return}
+    if(command==='song'){if(currentId===id&&!audio.paused){audio.pause();refresh()}else selectSong(id);return}
     if(command==='player'){view='player';refresh();return}
     if(command==='back'){view='list';refresh();return}
     if(command==='toggle'){togglePlay();return}

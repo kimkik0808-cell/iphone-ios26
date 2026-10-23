@@ -88,7 +88,8 @@
       record={original:actual,last:actual};
       originalText.set(node,record);
     }
-    const next=language==='zh'?translateString(record.original):record.original;
+    let next=language==='zh'?translateString(record.original):record.original;
+    if(element.closest('.sms-risk-chat,.krq-row-main,.krq-chat'))next=next.replace(/[,.，。]/g,'');
     if(actual!==next){
       record.last=next;
       node.nodeValue=next;
