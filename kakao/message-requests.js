@@ -249,16 +249,6 @@ function ensureAiChats(){
     ]};
     data.splice(Math.min(3,data.length),0,nuna);
   }
-  const visibleOrder=['xxx','sw','nuna','jy'];
-  const visibleChats=visibleOrder.map(id=>data.find(item=>item.id===id)).filter(Boolean);
-  // Keep only the original interactive rooms plus chats containing sent gifts.
-  // Gift delivery must survive opening a Gemini chat or switching KKT tabs.
-  for(const item of data){
-    if(visibleChats.includes(item))continue;
-    if(item.giftChat||item.messages?.some(m=>typeof m[5]==='string'&&m[5].startsWith('gift:')))
-      visibleChats.push(item);
-  }
-  data.splice(0,data.length,...visibleChats);
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
     if(!item.aiInteractive&&item.id!=='xxx'){
@@ -615,7 +605,7 @@ function restrictReadOnlyRooms(){
   const form=room?.querySelector('#k15-form');
   if(!room||!form)return;
   const title=room.querySelector('.k15-roomtitle')?.textContent?.trim()||'';
-  if(['선우','누나','주연'].includes(title))return;
+  if(['xxx','선우','누나','주연'].includes(title))return;
   form.outerHTML='<div class="kai-readonly">읽기 전용 대화</div>';
   room.querySelector('.k15-keyboard')?.remove();
 }
