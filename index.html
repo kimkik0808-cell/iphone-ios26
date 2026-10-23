@@ -1296,7 +1296,9 @@ function runEp15(delay=500,activateComposer=false){
    },2000);return
   }
   if(step.type==='unsentDraft'){
-   epState15.status=EPSTATUS15.UNSENT_DRAFT;epState15.pendingStep=index;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
+   if(epState15.pendingStep!==index){epState15.status=EPSTATUS15.UNSENT_DRAFT;epState15.pendingStep=index;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
+   if(!activateComposer){keyboard15=false;typing15=false;draft15=epState15.draft||'';epRender15();return}
+   epState15.status=EPSTATUS15.UNSENT_DRAFT;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
    typeText(step.text,()=>wait(()=>eraseText(()=>{epState15.cursor=index+1;epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;saveEp15();epRender15()}),step.holdMs));return
   }
   epState15.cursor=index+1;saveEp15();wait(next,300)
@@ -1327,7 +1329,7 @@ function render15(){if(typeof mode==='undefined'||mode!=='kakao')return;document
 function click15(e){if(mode!=='kakao')return;let b=e.target.closest('[data-k15]');if(!b)return;let a=b.dataset.k15,v=b.dataset.v,id=b.dataset.id;if(a==='compose'&&chat15==='xxx'){b.focus({preventScroll:true});return}e.preventDefault();e.stopImmediatePropagation();if(a==='tab'){pauseEp15();tab15=v;view15='';keyboard15=false;render15()}else if(a==='chat'){pauseEp15();chat15=id;let x=data15.find(c=>c.id===id);if(x)x.unread=0;save15();view15='room';blocked15=false;keyboard15=false;draft15=id==='xxx'?epState15.draft:'';typing15=false;render15();if(id==='xxx')runEp15()}else if(a==='back'){pauseEp15();clearTimeout(typeTimer15);clearTimeout(replyTimer15);view15='';keyboard15=false;draft15='';typing15=false;render15()}else if(a==='friend'){pauseEp15();let x=data15.find(c=>c.id===id);if(x){chat15=id;x.unread=0;view15='room';draft15=id==='xxx'?epState15.draft:'';render15();if(id==='xxx')runEp15()}else toast('프로필을 확인했습니다')}else if(a==='key'){if(chat15!=='xxx'&&!draft15)typeFixed15()}else if(a==='block'){blocked15=true;toast('신고 및 차단 처리되었습니다');render15()}else if(a==='report'){toast('매니저에게 대화 내용을 공유했습니다')}else if(a==='call'||a==='video'){toast('통화 기능 시연')}else if(a==='find'){let q=document.querySelector('#k15-search');if(q)q.focus();else toast('검색')}else if(a==='add')toast('새 채팅 만들기');else if(a==='attach')toast('사진 · 동영상 · 파일 첨부');else toast('화면 시연 기능입니다')}
 S.addEventListener('click',e=>{
  const input=e.target.closest?.('[data-k15="compose"]');
- if(mode!=='kakao'||chat15!=='xxx'||!input||epState15.status!==EPSTATUS15.RUNNING||epState15.pendingStep!==epState15.cursor)return;
+ if(mode!=='kakao'||chat15!=='xxx'||!input||![EPSTATUS15.RUNNING,EPSTATUS15.UNSENT_DRAFT].includes(epState15.status)||epState15.pendingStep!==epState15.cursor)return;
  e.preventDefault();e.stopImmediatePropagation();runEp15(0,true);
 },true);
 S.addEventListener('click',click15,true);
@@ -1362,5 +1364,5 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v18"></script>
 <script src="./kakao/shop.js?v=2&amp;build=ep001-v12"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V019';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V020';proof.removeAttribute('hidden')}}</script>
 </body></html>
