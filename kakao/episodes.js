@@ -1,4 +1,11 @@
 /* KKT episodic story data. Fictional transaction; no payment API. */
+try{
+ const resetKey='jh_kkt_episode_KKT_EP001_content_v2';
+ if(localStorage.getItem(resetKey)!=='1'){
+  localStorage.removeItem('jh_kkt_episode_KKT_EP001');
+  localStorage.setItem(resetKey,'1');
+ }
+}catch(e){}
 window.__KKT_EPISODES__={
  KKT_EP001:{
   id:'KKT_EP001',name:'转账',contact:'xxx',mode:'AUTO',

@@ -67,43 +67,6 @@ let requestView='';
 let currentId='';
 let listScroll=0;
 let modalAction='';
-let xxxView=false;
-let xxxDraft='';
-let xxxKeyboard=false;
-let xxxTyping=false;
-let xxxTypeTimer=0;
-let xxxReplyTimer=0;
-// Every outgoing ("mine") message needs its own user press on Send.
-// Incoming ("other") replies are the only scripted messages sent by a timer.
-const XXX_SEQUENCE=[
-  ['other','끝났어?'],
-  ['mine','거의 다 끝났어'],
-  ['mine','밥 먹었어?'],
-  ['mine','뭐 먹고 싶어?'],
-  ['mine','배달 시켜줄게'],
-  ['other','넌 다이어트하면서 왜 나만 자꾸 먹여ㅋㅋ'],
-  ['mine','배달 오면 사진 찍어서 보내줘'],
-  ['other','아니 이 사람 진짜 뭐야ㅋㅋㅋ']
-];
-let xxxReplyPending=false;
-const xxxReadTimers=new Map();
-const XXX_ZH={
-  '끝났어?':'结束了？',
-  '거의 다 끝났어':'快了',
-  '밥 먹었어?':'吃饭了吗',
-  '뭐 먹고 싶어?':'想吃什么',
-  '배달 시켜줄게':'给你点外卖',
-  '넌 다이어트하면서 왜 나만 자꾸 먹여ㅋㅋ':'为什么你在减肥但是总是让我吃',
-  '배달 오면 사진 찍어서 보내줘':'外卖到了记得给我拍照片',
-  '아니 이 사람 진짜 뭐야ㅋㅋㅋ':'这人搞什么啊',
-  '2026년 10월 21일 수요일':'2026年10月21日 星期三'
-};
-function xxxText(value){
-  const text=String(value??'');
-  if(!isZh())return text;
-  return XXX_ZH[text]||text.replace(/^오전\s+/,'上午 ').replace(/^오후\s+/,'下午 ');
-}
-const xxxNextMessage=chat=>XXX_SEQUENCE[Number.isInteger(chat?.scriptStep)?chat.scriptStep:1]||null;
 const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))}catch(e){}};
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const seenCount=item=>typeof readState[item.id]==='number'?readState[item.id]:0;
@@ -261,231 +224,6 @@ function saveKktData(){
   if(!Array.isArray(data))return;
   try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch(e){}
 }
-function prepareXxxFlow(){
-  const data=window.__KKT15_TEST__?.data;
-  const chat=Array.isArray(data)?data.find(item=>item.id==='xxx'):null;
-  if(!chat)return null;
-  try{
-    // Reset this fictional demonstration once so existing automatic messages
-    // from the older version do not appear as if the visitor sent them.
-    if(localStorage.getItem('jh_kkt_xxx_flow_v4')!=='1'){
-      chat.messages=[['date','2026년 10월 21일 수요일'],['other',XXX_SEQUENCE[0][1],'오후 9:12']];
-      chat.preview=XXX_SEQUENCE[0][1];
-      chat.time='방금';
-      chat.unread=1;
-      chat.scriptStep=1;
-      chat.scriptDone=false;
-      delete chat.scriptReply;
-      delete chat.scriptNext;
-      localStorage.setItem('jh_kkt_xxx_flow_v4','1');
-      saveKktData();
-    }
-  }catch(e){}
-  if(!Number.isInteger(chat.scriptStep)||chat.scriptStep<1||chat.scriptStep>XXX_SEQUENCE.length){
-    chat.scriptStep=Math.min(XXX_SEQUENCE.length,Math.max(1,(chat.messages?.length||2)-1));
-  }
-  chat.scriptDone=chat.scriptStep>=XXX_SEQUENCE.length;
-  // Restore the remaining read delay after reopening; settle old saved unread
-  // flags without replaying messages that the visitor already sent.
-  let changed=false;
-  for(const message of chat.messages){
-    if(message[0]!=='mine'||message[4]!=='unread')continue;
-    const deadline=Number(message[5]);
-    if(!Number.isFinite(deadline)||deadline<=Date.now()){
-      message[4]='read';
-      changed=true;
-    }else{
-      scheduleXxxRead(chat,message,deadline-Date.now());
-    }
-  }
-  if(changed)saveKktData();
-  return chat;
-}
-function scheduleXxxRead(chat,message,delay){
-  if(xxxReadTimers.has(message)||message[4]!=='unread')return;
-  const timer=setTimeout(()=>{
-    xxxReadTimers.delete(message);
-    if(message[4]!=='unread')return;
-    message[4]='read';
-    saveKktData();
-    if(xxxView)renderXxxRoom();
-    // An incoming message starts typing only after its unread "1" disappears.
-    queueXxxIncoming();
-  },Math.max(0,delay));
-  xxxReadTimers.set(message,timer);
-}
-function xxxTime(){
-  return new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
-}
-function xxxAvatar(){
-  return '<span class="k15-avatar friend" style="--avbg:#efd1db;--avfg:#cb849b"></span>';
-}
-function xxxKeyboardHTML(){
-  const rows=isZh()
-    ? [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['⇧','z','x','c','v','b','n','m','⌫']]
-    : [['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];
-  return '<div class="k15-keyboard">'+rows.map((row,rowIndex)=>'<div class="k15-keyrow">'+row.map(key=>'<button type="button" class="k15-key '+(rowIndex===2&&(key==='⇧'||key==='⌫')?'wide':'')+'" data-xxx="key" data-xxx-key="'+key+'">'+key+'</button>').join('')+'</div>').join('')+'<div class="k15-keyrow"><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="123">123</button><button type="button" class="k15-key space" data-xxx="key" data-xxx-key="space">'+(isZh()?'空格':'간격')+'</button><button type="button" class="k15-key wide" data-xxx="key" data-xxx-key="입력">'+(isZh()?'换行':'입력')+'</button></div></div>';
-}
-const XXX_PINYIN={
-  '快':'kuai','了':'le','吃':'chi','饭':'fan','吗':'ma',
-  '想':'xiang','什':'shen','么':'me','给':'gei','你':'ni',
-  '点':'dian','外':'wai','卖':'mai','到':'dao','记':'ji',
-  '得':'de','我':'wo','拍':'pai','照':'zhao','片':'pian'
-};
-function xxxTypingParts(ch){
-  return isZh()?Array.from(XXX_PINYIN[ch]||''):xxxKeyParts(ch);
-}
-function xxxKeyParts(ch){
-  if(!ch)return [];
-  if(ch===' ')return ['space'];
-  const n=ch.charCodeAt(0)-44032;
-  if(!Number.isFinite(n)||n<0||n>11171)return [];
-  const first=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-  const vowel=[['ㅏ'],['ㅐ'],['ㅑ'],['ㅒ'],['ㅓ'],['ㅔ'],['ㅕ'],['ㅖ'],['ㅗ'],['ㅗ','ㅏ'],['ㅗ','ㅐ'],['ㅗ','ㅣ'],['ㅛ'],['ㅜ'],['ㅜ','ㅓ'],['ㅜ','ㅔ'],['ㅜ','ㅣ'],['ㅠ'],['ㅡ'],['ㅡ','ㅣ'],['ㅣ']];
-  const last=['','ㄱ','ㄱ','ㄱ','ㄴ','ㄴ','ㄴ','ㄷ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅅ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-  const f=Math.floor(n/588),v=Math.floor(n%588/28),l=n%28;
-  return [first[f],...vowel[v],...(last[l]?[last[l]]:[])];
-}
-function renderXxxRoom(){
-  const chat=prepareXxxFlow();
-  const app=document.querySelector('#appcontent');
-  if(!chat||!app)return;
-  xxxView=true;
-  requestView='';
-  chat.unread=0;
-  saveKktData();
-  const messages=chat.messages.map(message=>{
-    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(xxxText(message[1]))+'</span></div>';
-    const mine=message[0]==='mine';
-    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?xxxAvatar():'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(xxxText(message[1]))+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(xxxText(message[2]||'방금'))+'</time></span></div></div></div>';
-  }).join('');
-  const typing=xxxTyping?'<div class="k15-message">'+xxxAvatar()+'<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>':'';
-  const placeholder=isZh()?'输入消息':'메시지를 입력하세요';
-  const next=xxxNextMessage(chat);
-  const canWrite=next?.[0]==='mine';
-  const composer=chat.scriptDone?'<div class="k15-input k15-replay-bar"><button type="button" class="k15-replay-button" data-xxx="replay">↻ '+(isZh()?'重新体验对话':'대화 다시 보기')+'</button></div>':!canWrite?'<div class="k15-input"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly placeholder="'+placeholder+'"><button type="button" class="k15-send">↑</button></label></div>':'<div class="k15-input '+(xxxKeyboard?'keyboard':'')+'"><button type="button" class="k15-plus">＋</button><label class="k15-inputbox"><input readonly data-xxx="compose" value="'+esc(xxxDraft)+'" placeholder="'+placeholder+'"><button type="button" data-xxx="send" class="k15-send '+(xxxDraft===xxxText(next[1])?'ready':'')+'">↑</button></label></div>';
-  app.innerHTML='<div id="kkt15"><section class="k15-chatroom"><header class="k15-head"><button class="k15-ico k15-back" type="button" data-xxx="back">‹</button><h1 class="k15-roomtitle">xxx</h1><span class="k15-grow"></span></header><main class="k15-chatbody '+(xxxKeyboard?'keyboard':'')+'" id="k15-chatbody">'+messages+typing+'</main>'+composer+(xxxKeyboard?xxxKeyboardHTML():'')+'</section></div>';
-  requestAnimationFrame(()=>{const body=document.querySelector('#k15-chatbody');if(body)body.scrollTop=body.scrollHeight});
-}
-function startXxxTyping(){
-  const chat=prepareXxxFlow();
-  const next=chat?xxxNextMessage(chat):null;
-  if(!chat||!next||next[0]!=='mine'||xxxDraft||xxxKeyboard||xxxReplyPending)return;
-  clearTimeout(xxxTypeTimer);
-  xxxKeyboard=true;
-  xxxDraft='';
-  renderXxxRoom();
-  const chars=Array.from(xxxText(next[1]));
-  let charIndex=0,keyIndex=0,parts=xxxTypingParts(chars[0]||'');
-  function typeNext(){
-    if(!xxxView||!xxxKeyboard)return;
-    if(charIndex>=chars.length){
-      document.querySelector('[data-xxx="send"]')?.classList.add('ready');
-      return;
-    }
-    const ch=chars[charIndex],key=parts[keyIndex];
-    const button=key?document.querySelector('[data-xxx-key="'+key+'"]'):null;
-    button?.classList.add('pressed');
-    xxxTypeTimer=setTimeout(()=>{
-      button?.classList.remove('pressed');
-      const input=document.querySelector('[data-xxx="compose"]');
-      // Simulate pinyin composition before the Chinese character is committed.
-      if(isZh()&&key&&input)input.value=xxxDraft+parts.slice(0,keyIndex+1).join('');
-      keyIndex++;
-      if(keyIndex>=parts.length){
-        xxxDraft+=ch;
-        if(input)input.value=xxxDraft;
-        charIndex++;
-        keyIndex=0;
-        parts=xxxTypingParts(chars[charIndex]||'');
-        xxxTypeTimer=setTimeout(typeNext,isZh()?145:(parts.length?30:46));
-      }else xxxTypeTimer=setTimeout(typeNext,isZh()?45:20);
-    },key?64:65);
-  }
-  typeNext();
-}
-function sendXxxReply(){
-  const chat=prepareXxxFlow();
-  const next=chat?xxxNextMessage(chat):null;
-  // Never append a user's outgoing message until the send button is pressed.
-  if(!chat||!next||next[0]!=='mine'||xxxDraft!==xxxText(next[1]))return;
-  clearTimeout(xxxTypeTimer);
-  const sent=['mine',next[1],xxxTime(),'','unread',Date.now()+2000];
-  chat.messages.push(sent);
-  chat.scriptStep+=1;
-  chat.scriptDone=chat.scriptStep>=XXX_SEQUENCE.length;
-  chat.preview=next[1];
-  chat.time='방금';
-  xxxDraft='';
-  xxxKeyboard=false;
-  saveKktData();
-  renderXxxRoom();
-  queueXxxIncoming();
-}
-function queueXxxIncoming(){
-  const chat=prepareXxxFlow();
-  const next=chat?xxxNextMessage(chat):null;
-  if(!xxxView||xxxReplyPending||!next||next[0]!=='other'||chat.messages.some(message=>message[0]==='mine'&&message[4]==='unread'))return;
-  xxxReplyPending=true;
-  xxxTyping=true;
-  renderXxxRoom();
-  xxxReplyTimer=setTimeout(()=>{
-    xxxReplyTimer=0;
-    xxxReplyPending=false;
-    xxxTyping=false;
-    if(!xxxView)return;
-    const incoming=xxxNextMessage(chat);
-    if(!incoming||incoming[0]!=='other')return;
-    chat.messages.forEach(message=>{if(message[0]==='mine')message[4]='read'});
-    chat.messages.push(['other',incoming[1],xxxTime()]);
-    chat.scriptStep+=1;
-    chat.scriptDone=chat.scriptStep>=XXX_SEQUENCE.length;
-    chat.preview=incoming[1];
-    chat.time='방금';
-    saveKktData();
-    renderXxxRoom();
-  },3000);
-}
-function syncXxxPreview(){
-  const chat=window.__KKT15_TEST__?.data?.find(item=>item.id==='xxx');
-  const preview=document.querySelector('#kkt15 .k15-row[data-k15="chat"][data-id="xxx"] .k15-rowtext p');
-  if(chat&&preview){
-    const text=xxxText(chat.preview);
-    if(preview.textContent!==text)preview.textContent=text;
-  }
-}
-function replayXxxRoom(){
-  const chat=prepareXxxFlow();
-  if(!chat)return;
-  clearTimeout(xxxTypeTimer);
-  clearTimeout(xxxReplyTimer);
-  xxxReplyPending=false;
-  xxxTyping=false;
-  xxxKeyboard=false;
-  xxxDraft='';
-  for(const timer of xxxReadTimers.values())clearTimeout(timer);
-  xxxReadTimers.clear();
-  chat.messages=[['date','2026년 10월 21일 수요일'],['other',XXX_SEQUENCE[0][1],'오후 9:12']];
-  chat.preview=XXX_SEQUENCE[0][1];
-  chat.time='방금';
-  chat.unread=0;
-  chat.scriptStep=1;
-  chat.scriptDone=false;
-  saveKktData();
-  renderXxxRoom();
-}
-function closeXxxRoom(){
-  clearTimeout(xxxTypeTimer);
-  clearTimeout(xxxReplyTimer);
-  xxxReplyPending=false;
-  xxxView=false;
-  xxxDraft='';
-  xxxKeyboard=false;
-  xxxTyping=false;
-  window.__KKT15_TEST__?.render?.();
-  requestAnimationFrame(injectEntry);
-}
-
 const AI_CHAT_IDS=new Set(['sw','nuna','jy']);
 const AI_PERSONAS={
   sw:'너는 선우다. 재현을 형이라고 부르는 친한 같은 팀 멤버다. 장난스럽고 짧게 자연스러운 한국어 카톡 말투로 답한다. 과하게 다정하거나 문어체로 말하지 않는다. 보통 한두 문장만 보낸다.',
@@ -541,7 +279,7 @@ function injectAiStyles(){
   if(document.querySelector('#kai-styles'))return;
   const style=document.createElement('style');
   style.id='kai-styles';
-  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}.k15-replay-bar{align-items:center;justify-content:center}.k15-replay-button{background:#fee500;color:#252525;border:0;border-radius:18px;padding:9px 22px;font-size:13px;font-weight:650}.kai-retry{display:block;margin:12px auto 14px;padding:10px 17px;border:0;border-radius:14px;background:#fee500;color:#252525;font-size:13px;font-weight:650}';
+  style.textContent='.kai-form .k15-inputbox input{user-select:text;-webkit-user-select:text}.kai-form .k15-send{opacity:.35;transition:.16s}.kai-form:focus-within .k15-send,.kai-form .k15-send.ready{opacity:1;background:#fee500}.kai-error{margin:8px auto 12px;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.07);color:#666;font-size:12px}.kai-readonly{height:52px;display:flex;align-items:center;justify-content:center;border-top:1px solid rgba(0,0,0,.08);background:#fafafa;color:#9a9a9f;font-size:12px}.kai-retry{display:block;margin:12px auto 14px;padding:10px 17px;border:0;border-radius:14px;background:#fee500;color:#252525;font-size:13px;font-weight:650}';
   document.head.appendChild(style);
 }
 function aiMessages(item){
@@ -896,18 +634,6 @@ function handleClick(event){
       event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();renderAiRoom(aiId);return;
     }
   }
-  const xxxButton=event.target.closest('[data-xxx],[data-k15="chat"][data-id="xxx"],[data-k15="friend"][data-id="xxx"]');
-  if(xxxButton){
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    if(xxxButton.matches('[data-k15="chat"][data-id="xxx"],[data-k15="friend"][data-id="xxx"]')){renderXxxRoom();queueXxxIncoming();}
-    else if(xxxButton.dataset.xxx==='back')closeXxxRoom();
-    else if(xxxButton.dataset.xxx==='replay')replayXxxRoom();
-    else if(xxxButton.dataset.xxx==='compose'||xxxButton.dataset.xxx==='key')startXxxTyping();
-    else if(xxxButton.dataset.xxx==='send')sendXxxReply();
-    return;
-  }
   const button=event.target.closest('[data-krq]');
   if(!button)return;
   const action=button.dataset.krq;
@@ -950,7 +676,6 @@ function renderRoomWithModal(){
 injectStyles();
 injectAiStyles();
 removeLegacyRiskChat();
-prepareXxxFlow();
 ensureAiChats();
 document.addEventListener('click',handleClick,true);
 document.addEventListener('submit',handleAiSubmit,true);
@@ -973,33 +698,17 @@ if(app){
         currentId='';
         modalAction='';
       }
-      if(xxxView){
-        clearTimeout(xxxTypeTimer);
-        clearTimeout(xxxReplyTimer);
-        xxxReplyPending=false;
-        xxxView=false;
-        xxxDraft='';
-        xxxKeyboard=false;
-        xxxTyping=false;
-      }
     }
     injectEntry();
-    syncXxxPreview();
     restrictReadOnlyRooms();
   }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
-  if(xxxView){
-    clearTimeout(xxxTypeTimer);
-    xxxDraft='';
-    xxxKeyboard=false;
-    renderXxxRoom();
-  }
   if(requestView==='list')renderList();
   else if(requestView==='room')renderRoom(currentId);
   else{
     document.querySelector('.krq-entry')?.remove();
-    requestAnimationFrame(()=>{injectEntry();syncXxxPreview()});
+    requestAnimationFrame(injectEntry);
   }
 });
 window.addEventListener('pageshow',()=>{removeLegacyRiskChat();injectEntry()});
@@ -1013,5 +722,5 @@ window.__KKT_REQUESTS__={
   get readState(){return {...readState}},
   get view(){return requestView}
 };
-requestAnimationFrame(()=>{injectEntry();syncXxxPreview()});
+requestAnimationFrame(injectEntry);
 })();
