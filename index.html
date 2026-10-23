@@ -423,6 +423,7 @@ function smsTakeFresh(pool,n,prefix){const all=pool.map((make,i)=>({make,key:`${
 function makeTexts(){const selected=smsShuffle([...smsTakeFresh(smsAuth,3,'auth'),...smsTakeFresh(smsCommerce,5,'commerce'),...smsTakeFresh(smsFinance,4,'finance'),...smsTakeFresh(smsService,4,'service'),...smsTakeFresh(smsRisk,4,'risk')]);smsLastKeys=new Set(selected.map(x=>x.key));return selected.map((x,i)=>{const messages=x.messages||[];const preview=messages[messages.length-1]||'',baseTime=smsTimes[i%smsTimes.length];return{name:x.name,initial:x.initial,color:x.color,risk:!!x.risk,unread:i<9,preview,time:baseTime,chat:messages.map((text,j)=>['other',text,j===messages.length-1?baseTime:''])}})}
 let texts=makeTexts();
 let smsListScrollY=0;
+const smsScroller=()=>{const list=frame.querySelector('#threadlist');return list&&list.scrollHeight>list.clientHeight+4?list:frame};
 const kakaoChats=[{name:'민지',initial:'민',preview:'주말에 뭐 해?',time:'오후 1:42',chat:[['other','주말에 뭐 해?'],['mine','아직 계획 없어!']]},{name:'친구들',initial:'친',preview:'다 같이 만나는 날!',time:'월요일',chat:[['other','다 같이 만나는 날!'],['mine','좋아~']]}];
 const photoColors=['linear-gradient(160deg,#e4bbb1,#bd8ca8 55%,#5c7293)','linear-gradient(155deg,#d7dec7,#8bb6af 50%,#527785)','linear-gradient(140deg,#f6dec3,#e7afad 43%,#95aecf)','linear-gradient(150deg,#bcd6db,#6e8eb5,#314879)','linear-gradient(140deg,#e1dfc8,#c4c7aa,#78938a)','linear-gradient(140deg,#d2bbdb,#ad8bbb,#516c9e)','linear-gradient(130deg,#daacbd,#c8d7ef,#637cb5)','linear-gradient(160deg,#b5d6dd,#83aa98,#456e86)','linear-gradient(150deg,#f0d0a6,#e49f88,#8d8eb9)'];
 function fallbackPhotoDate(index){
@@ -520,11 +521,11 @@ function youtubePage(){
 function instagramPage(){return `<div class="ig-top"><span style="font-family:Georgia;font-style:italic;font-size:27px">Instagram</span><span style="font-size:25px">♡　✉</span></div><div class="ig-stories">${['내 스토리','minji','seoyeon','today','travel'].map((n,i)=>`<div class="ig-story"><i><span>${n[0].toUpperCase()}</span></i>${n}</div>`).join('')}</div><div style="display:flex;align-items:center;padding:11px 15px;gap:9px"><span class="avatar" style="width:33px;height:33px;font-size:14px">S</span><b style="font-size:14px">seoul.days</b><span style="margin-left:auto">•••</span></div><div class="ig-pic">✦</div><div style="font-size:27px;padding:12px 16px"><button data-like style="background:none;color:${liked?'#ef345b':'#161616'};font-size:26px">${liked?'♥':'♡'}</button>　♡　↗</div><div style="font-size:13px;padding:0 20px"><b>좋아요 ${liked?'2':'1'}개</b><p><b>seoul.days</b> 오늘의 기록 ☁️</p></div>${tabs([['home','⌂','홈'],['search','⌕','검색'],['reels','▶','릴스'],['profile','◎','프로필']],'home')}`}
 function render(){let d=(mode==='kakao'||mode==='youtube'||mode==='instagram'||mode==='music'||(mode==='phone'&&sub==='call'))?'black':mode==='safari'||mode==='messages'||mode==='photos'?'white':mode==='notes'?'white':'';if(mode==='kakao')d='kakao-bg';if(mode==='music')d='music-bg';appEl.className='layer appscreen active '+d+(mode==='photos'?' photos-mode':'');$('#status').classList.toggle('dark',d!=='black'&&d!=='music-bg');$('#gesture').classList.toggle('ink',d!=='black'&&d!=='music-bg');frame.style.bottom=(sub==='chat')?'calc(var(--safe-bottom) + 75px)':'calc(var(--safe-bottom) + 28px)';frame.style.overflow=(mode==='calendar'||mode==='safari'||mode==='notes'||mode==='music'||mode==='phone'||mode==='kakao'||mode==='photos'||mode==='youtube'||(mode==='messages'&&sub==='chat'))?'hidden':'auto';let page=mode==='calendar'?(sub==='calendar-edit'?calendarEditor():calendarPage()):mode==='phone'?(sub==='call'?callPage():phonePage()):mode==='messages'?messagesPage(false):mode==='kakao'?messagesPage(true):mode==='safari'?safariPage():mode==='music'?musicPage():mode==='photos'?photosPage():mode==='notes'?notesPage():mode==='youtube'?youtubePage():instagramPage();frame.innerHTML=page;const ytLocalVideo=frame.querySelector('.yt-local-video');if(ytLocalVideo){const missing=frame.querySelector('.yt-local-missing');ytLocalVideo.addEventListener('error',()=>{if(missing)missing.hidden=false},{once:true});ytLocalVideo.addEventListener('loadeddata',()=>{if(missing)missing.hidden=true},{once:true})}if(sub==='chat'){let sc=frame.querySelector('.chat-scroller');if(sc)sc.scrollTop=sc.scrollHeight}}
 function persist(){try{localStorage.setItem('iphone_demo_notes',JSON.stringify(notes))}catch{}}
-function back(){if(mode==='messages'&&sub==='chat'){sub='root';render();const list=frame.querySelector('#threadlist');if(list)list.scrollTop=smsListScrollY;else frame.scrollTop=smsListScrollY;return}if(mode==='youtube'&&ytActiveVideo){ytActiveVideo='';render();return}if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render();return}if(sub==='edit'){notes[noteIndex]=$('#noteedit')?.value||'';persist();sub='root';render();return}if(sub!=='root'){sub='root';render();return}closeApp()}
+function back(){if(mode==='messages'&&sub==='chat'){sub='root';render();requestAnimationFrame(()=>{smsScroller().scrollTop=smsListScrollY});return}if(mode==='youtube'&&ytActiveVideo){ytActiveVideo='';render();return}if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render();return}if(sub==='edit'){notes[noteIndex]=$('#noteedit')?.value||'';persist();sub='root';render();return}if(sub!=='root'){sub='root';render();return}closeApp()}
 frame.addEventListener('click',e=>{
  if(mode!=='messages'||sub!=='root')return;
  const row=e.target.closest('[data-chat]');if(!row)return;
- smsListScrollY=frame.querySelector('#threadlist')?.scrollTop||frame.scrollTop||0;
+ smsListScrollY=smsScroller().scrollTop;
  const thread=texts[Number(row.dataset.chat)];if(!thread)return;
  thread.unread=false;window.__IPHONE_SMS__?.markRead?.(thread);
 },true);
@@ -657,586 +658,586 @@ const privateFeed=[
 const fanRequests=[
  {
   "id": "fan1",
-  "name": "ugh__08_0",
-  "text": "진짜 왜 자꾸 그 표정임",
+  "name": "hyunjae__today",
+  "text": "오빠 오늘 왜 이렇게 신남ㅋㅋ",
   "at": "방금",
   "messages": [
    {
-    "text": "진짜 왜 자꾸 그 표정임",
-    "textZh": "为什么老是那个表情"
+    "text": "오빠 오늘 왜 이렇게 신남ㅋㅋ",
+    "textZh": "今天怎么这么兴奋哈哈"
    }
   ],
-  "textZh": "为什么老是那个表情"
+  "textZh": "今天怎么这么兴奋哈哈"
  },
  {
   "id": "fan2",
-  "name": "sodaa.07",
-  "text": "오빠 머리색 이거 계속 해주라 제발",
+  "name": "xoxo_041",
+  "text": "WHO LET HIM POST THIS 😭",
   "at": "3분 전",
   "messages": [
    {
-    "text": "오빠 머리색 이거 계속 해주라 제발",
-    "textZh": "拜托这个发色一定要多留一阵"
+    "text": "WHO LET HIM POST THIS 😭"
    }
-  ],
-  "textZh": "拜托这个发色一定要多留一阵"
+  ]
  },
  {
   "id": "fan3",
-  "name": "_bluej.12",
-  "text": "wait the second pic??? 😭",
+  "name": "m__sun7",
+  "text": "不是这张谁顶得住啊",
   "at": "18분 전",
   "messages": [
    {
-    "text": "wait the second pic??? 😭"
+    "text": "不是这张谁顶得住啊",
+    "textZh": "이 사진 누가 버팀"
    }
-  ]
+  ],
+  "textZh": "이 사진 누가 버팀"
  },
  {
   "id": "fan4",
-  "name": "하트는_하나만",
-  "text": "아 인스타 알림 뜨길래 개놀람",
+  "name": "a.0924",
+  "text": "아니 이 사진 언제 찍음",
   "at": "어제",
   "messages": [
    {
-    "text": "아 인스타 알림 뜨길래 개놀람",
-    "textZh": "突然弹出IG通知吓我一跳"
+    "text": "아니 이 사진 언제 찍음",
+    "textZh": "这照片什么时候拍的"
    }
   ],
-  "textZh": "突然弹出IG通知吓我一跳"
+  "textZh": "这照片什么时候拍的"
  },
  {
   "id": "fan5",
-  "name": "jj_zzzip",
-  "text": "나만 이 사진 20번 봄?",
+  "name": "noon_12x",
+  "text": "can u drop the playlist already",
   "at": "2일 전",
   "messages": [
    {
-    "text": "나만 이 사진 20번 봄?",
-    "textZh": "只有我把这张图看了20遍吗"
+    "text": "can u drop the playlist already"
    }
-  ],
-  "textZh": "只有我把这张图看了20遍吗"
+  ]
  },
  {
   "id": "fan6",
-  "name": "notafan_2_5",
-  "text": "yall overhype everything lol",
+  "name": "bbang__08",
+  "text": "아ㅋㅋㅋㅋ 표정 개웃김",
   "at": "1시간 전",
   "messages": [
    {
-    "text": "yall overhype everything lol"
+    "text": "아ㅋㅋㅋㅋ 표정 개웃김",
+    "textZh": "哈哈哈这表情笑死"
    }
-  ]
+  ],
+  "textZh": "哈哈哈这表情笑死"
  },
  {
   "id": "fan7",
-  "name": "어쩌다_더비",
-  "text": "아니 이재현 진짜 개웃기네ㅋㅋ",
+  "name": "yuyu_28",
+  "text": "今天这件衣服真的好好看",
   "at": "방금",
   "messages": [
    {
-    "text": "아니 이재현 진짜 개웃기네ㅋㅋ",
-    "textZh": "不是李在贤真的笑死我了哈哈"
+    "text": "今天这件衣服真的好好看",
+    "textZh": "오늘 옷 진짜 예쁨"
    }
   ],
-  "textZh": "不是李在贤真的笑死我了哈哈"
+  "textZh": "오늘 옷 진짜 예쁨"
  },
  {
   "id": "fan8",
-  "name": "xiǎo_7",
-  "text": "啊啊啊今天的造型我真的不行了",
+  "name": "coldbrew_0",
+  "text": "i kinda hate this outfit sorry",
   "at": "3분 전",
   "messages": [
    {
-    "text": "啊啊啊今天的造型我真的不行了",
-    "textZh": "아 오늘 스타일링 진짜 미쳤다"
+    "text": "i kinda hate this outfit sorry"
    }
-  ],
-  "textZh": "아 오늘 스타일링 진짜 미쳤다"
+  ]
  },
  {
   "id": "fan9",
-  "name": "s00n_ish",
-  "text": "뭐야 이 사진 언제 찍은 거임",
+  "name": "h4ppy_7",
+  "text": "뭐야 나만 또 저장함?",
   "at": "18분 전",
   "messages": [
    {
-    "text": "뭐야 이 사진 언제 찍은 거임",
-    "textZh": "这照片什么时候拍的啊"
+    "text": "뭐야 나만 또 저장함?",
+    "textZh": "只有我又保存了吗"
    }
   ],
-  "textZh": "这照片什么时候拍的啊"
+  "textZh": "只有我又保存了吗"
  },
  {
   "id": "fan10",
-  "name": "r0gue____",
-  "text": "the outfit is not it sorry",
+  "name": "vv_040",
+  "text": "哈哈哈哈怎么还有这种照片",
   "at": "어제",
   "messages": [
    {
-    "text": "the outfit is not it sorry"
+    "text": "哈哈哈哈怎么还有这种照片",
+    "textZh": "ㅋㅋㅋ 이런 사진도 있네"
    }
-  ]
+  ],
+  "textZh": "ㅋㅋㅋ 이런 사진도 있네"
  },
  {
   "id": "fan11",
-  "name": "srsly.404_10",
-  "text": "팬들 호구로 보냐",
+  "name": "starr.33",
+  "text": "not me replaying this 20 times",
   "at": "2일 전",
   "messages": [
    {
-    "text": "팬들 호구로 보냐",
-    "textZh": "把粉丝当冤大头吗"
+    "text": "not me replaying this 20 times"
    }
-  ],
-  "textZh": "把粉丝当冤大头吗"
+  ]
  },
  {
   "id": "fan12",
-  "name": "jj._w",
-  "text": "어제는 좋았는데 오늘은 좀 별로",
+  "name": "j__blue",
+  "text": "오늘도 늦게 자지 마라",
   "at": "1시간 전",
   "messages": [
    {
-    "text": "어제는 좋았는데 오늘은 좀 별로",
-    "textZh": "昨天还不错 今天有点一般"
+    "text": "오늘도 늦게 자지 마라",
+    "textZh": "今天也别熬夜"
    }
   ],
-  "textZh": "昨天还不错 今天有点一般"
+  "textZh": "今天也别熬夜"
  },
  {
   "id": "fan13",
-  "name": "milk.t.99",
-  "text": "谁懂啊刷到这里直接停住",
+  "name": "r0gue.9",
+  "text": "요즘 사진 너무 똑같지 않냐",
   "at": "방금",
   "messages": [
    {
-    "text": "谁懂啊刷到这里直接停住",
-    "textZh": "이거 보고 스크롤 멈췄음"
+    "text": "요즘 사진 너무 똑같지 않냐",
+    "textZh": "最近照片是不是太像了"
    }
   ],
-  "textZh": "이거 보고 스크롤 멈췄음"
+  "textZh": "最近照片是不是太像了"
  },
  {
   "id": "fan14",
-  "name": "noturfan_0",
-  "text": "bro this is getting embarrassing",
+  "name": "bby_88",
+  "text": "求你别删这张自拍",
   "at": "3분 전",
   "messages": [
    {
-    "text": "bro this is getting embarrassing"
+    "text": "求你别删这张自拍",
+    "textZh": "이 셀카 지우지 마"
    }
-  ]
+  ],
+  "textZh": "이 셀카 지우지 마"
  },
  {
   "id": "fan15",
-  "name": "y2k_031",
-  "text": "나도 모르게 저장함ㅋㅋㅋ",
+  "name": "daisy__1",
+  "text": "THIS HAIR IS EVERYTHING",
   "at": "18분 전",
   "messages": [
    {
-    "text": "나도 모르게 저장함ㅋㅋㅋ",
-    "textZh": "不知不觉就保存了哈哈"
+    "text": "THIS HAIR IS EVERYTHING"
    }
-  ],
-  "textZh": "不知不觉就保存了哈哈"
+  ]
  },
  {
   "id": "fan16",
-  "name": "xy_98_15",
-  "text": "这次真的有点敷衍了",
+  "name": "mang0_0",
+  "text": "아니 웃는 거 왜 이렇게 귀엽냐",
   "at": "어제",
   "messages": [
    {
-    "text": "这次真的有点敷衍了",
-    "textZh": "이번엔 좀 성의 없었음"
+    "text": "아니 웃는 거 왜 이렇게 귀엽냐",
+    "textZh": "怎么笑起来这么可爱"
    }
   ],
-  "textZh": "이번엔 좀 성의 없었음"
+  "textZh": "怎么笑起来这么可爱"
  },
  {
   "id": "fan17",
-  "name": "lowkey.j",
-  "text": "lowkey miss the old styling",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "lowkey miss the old styling"
-   }
-  ]
- },
- {
-  "id": "fan18",
-  "name": "zuzu_31",
-  "text": "笑死 这张怎么这么像表情包",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "笑死 这张怎么这么像表情包",
-    "textZh": "ㅋㅋ 이거 완전 짤 같음"
-   }
-  ],
-  "textZh": "ㅋㅋ 이거 완전 짤 같음"
- },
- {
-  "id": "fan19",
-  "name": "404__user",
-  "text": "이게 그렇게 잘생긴 거임?",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "이게 그렇게 잘생긴 거임?",
-    "textZh": "这也叫帅吗"
-   }
-  ],
-  "textZh": "这也叫帅吗"
- },
- {
-  "id": "fan20",
-  "name": "mimi_5am",
-  "text": "ok but drop the playlist pls",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "ok but drop the playlist pls"
-   }
-  ]
- },
- {
-  "id": "fan21",
-  "name": "f0rreal___20",
-  "text": "can we be serious for one sec",
-  "at": "18분 전",
-  "messages": [
-   {
-    "text": "can we be serious for one sec"
-   }
-  ]
- },
- {
-  "id": "fan22",
-  "name": "so__what00",
-  "text": "답장 안 할 거 아는데 그냥 보냄ㅋㅋ",
-  "at": "어제",
-  "messages": [
-   {
-    "text": "답장 안 할 거 아는데 그냥 보냄ㅋㅋ",
-    "textZh": "知道你不会回 但还是发了哈哈"
-   }
-  ],
-  "textZh": "知道你不会回 但还是发了哈哈"
- },
- {
-  "id": "fan23",
-  "name": "xoxo.aug",
-  "text": "这张自拍能不能别删啊求你了",
-  "at": "2일 전",
-  "messages": [
-   {
-    "text": "这张自拍能不能别删啊求你了",
-    "textZh": "이 셀카 제발 지우지 마"
-   }
-  ],
-  "textZh": "이 셀카 제발 지우지 마"
- },
- {
-  "id": "fan24",
-  "name": "ugh___08",
-  "text": "he's doing the bare minimum and yall eat it up",
-  "at": "1시간 전",
-  "messages": [
-   {
-    "text": "he's doing the bare minimum and yall eat it up"
-   }
-  ]
- },
- {
-  "id": "fan25",
-  "name": "p0p__star",
-  "text": "아니 근데 오늘 라이브 음향 실화냐",
-  "at": "방금",
-  "messages": [
-   {
-    "text": "아니 근데 오늘 라이브 음향 실화냐",
-    "textZh": "今天直播音响是认真的吗"
-   }
-  ],
-  "textZh": "今天直播音响是认真的吗"
- },
- {
-  "id": "fan26",
-  "name": "_nn_02_25",
-  "text": "뭐야 이건 또ㅋㅋ",
-  "at": "3분 전",
-  "messages": [
-   {
-    "text": "뭐야 이건 또ㅋㅋ",
-    "textZh": "这又是什么啊哈哈"
-   }
-  ],
-  "textZh": "这又是什么啊哈哈"
- },
- {
-  "id": "fan27",
-  "name": "nightowl_17",
+  "name": "yooni.4",
   "text": "我真的要被这个视频笑死了",
-  "textZh": "이 영상 보고 진짜 웃겨 죽는 줄",
-  "at": "18분 전",
+  "at": "2일 전",
   "messages": [
    {
     "text": "我真的要被这个视频笑死了",
-    "textZh": "이 영상 보고 진짜 웃겨 죽는 줄"
+    "textZh": "이 영상 진짜 웃겨"
+   }
+  ],
+  "textZh": "이 영상 진짜 웃겨"
+ },
+ {
+  "id": "fan18",
+  "name": "ghost_0x",
+  "text": "the lighting is doing you no favors",
+  "at": "1시간 전",
+  "messages": [
+   {
+    "text": "the lighting is doing you no favors"
+   }
+  ]
+ },
+ {
+  "id": "fan19",
+  "name": "choco__",
+  "text": "이거 보고 출근할 힘 생김",
+  "at": "방금",
+  "messages": [
+   {
+    "text": "이거 보고 출근할 힘 생김",
+    "textZh": "看完这个有力气上班了"
+   }
+  ],
+  "textZh": "看完这个有力气上班了"
+ },
+ {
+  "id": "fan20",
+  "name": "b00m_8",
+  "text": "오늘 무대 좀 아쉬웠음",
+  "at": "3분 전",
+  "messages": [
+   {
+    "text": "오늘 무대 좀 아쉬웠음",
+    "textZh": "今天舞台有点遗憾"
+   }
+  ],
+  "textZh": "今天舞台有点遗憾"
+ },
+ {
+  "id": "fan21",
+  "name": "xiao_77",
+  "text": "这个角度也太绝了吧",
+  "at": "18분 전",
+  "messages": [
+   {
+    "text": "这个角度也太绝了吧",
+    "textZh": "이 각도 미쳤다"
+   }
+  ],
+  "textZh": "이 각도 미쳤다"
+ },
+ {
+  "id": "fan22",
+  "name": "zzip_08",
+  "text": "no because WHAT is that face 😭",
+  "at": "어제",
+  "messages": [
+   {
+    "text": "no because WHAT is that face 😭"
+   }
+  ]
+ },
+ {
+  "id": "fan23",
+  "name": "nightowl7",
+  "text": "팬들 댓글 보는 거 재밌지ㅋㅋ",
+  "at": "2일 전",
+  "messages": [
+   {
+    "text": "팬들 댓글 보는 거 재밌지ㅋㅋ",
+    "textZh": "看粉丝评论很有意思吧哈哈"
+   }
+  ],
+  "textZh": "看粉丝评论很有意思吧哈哈"
+ },
+ {
+  "id": "fan24",
+  "name": "peach_05",
+  "text": "终于更新了啊啊啊",
+  "at": "1시간 전",
+  "messages": [
+   {
+    "text": "终于更新了啊啊啊",
+    "textZh": "드디어 업데이트했네"
+   }
+  ],
+  "textZh": "드디어 업데이트했네"
+ },
+ {
+  "id": "fan25",
+  "name": "min.404",
+  "text": "사진 더 줘요 현기증남",
+  "at": "방금",
+  "messages": [
+   {
+    "text": "사진 더 줘요 현기증남",
+    "textZh": "多发点照片要晕了"
+   }
+  ],
+  "textZh": "多发点照片要晕了"
+ },
+ {
+  "id": "fan26",
+  "name": "b___99",
+  "text": "this one is lowkey iconic",
+  "at": "3분 전",
+  "messages": [
+   {
+    "text": "this one is lowkey iconic"
+   }
+  ]
+ },
+ {
+  "id": "fan27",
+  "name": "tangerine_",
+  "text": "오늘 왜 이렇게 피곤해 보임",
+  "textZh": "今天看起来怎么这么累",
+  "at": "18분 전",
+  "messages": [
+   {
+    "text": "오늘 왜 이렇게 피곤해 보임",
+    "textZh": "今天看起来怎么这么累"
    }
   ]
  },
  {
   "id": "fan28",
-  "name": "jj_00x",
-  "text": "no bc WHY is nobody talking about this",
+  "name": "luna_31",
+  "text": "笑死你自己看过这张吗",
   "at": "어제",
   "messages": [
    {
-    "text": "no bc WHY is nobody talking about this"
+    "text": "笑死你自己看过这张吗",
+    "textZh": "ㅋㅋ 본인도 이 사진 봤어"
    }
-  ]
+  ],
+  "textZh": "ㅋㅋ 본인도 이 사진 봤어"
  },
  {
   "id": "fan29",
-  "name": "yoon_062",
-  "text": "아무튼 잘 먹고 잘 자라",
-  "textZh": "反正好好吃饭好好睡觉",
+  "name": "8pm_09",
+  "text": "이제 좀 쉬어라 진짜",
+  "textZh": "现在真的休息一下吧",
   "at": "2일 전",
   "messages": [
    {
-    "text": "아무튼 잘 먹고 잘 자라",
-    "textZh": "反正好好吃饭好好睡觉"
+    "text": "이제 좀 쉬어라 진짜",
+    "textZh": "现在真的休息一下吧"
    }
   ]
  },
  {
   "id": "fan30",
-  "name": "n0t_yours",
-  "text": "팬서비스 좀 하라고",
+  "name": "n0filter",
+  "text": "not everything needs to be a selfie",
   "at": "1시간 전",
   "messages": [
    {
-    "text": "팬서비스 좀 하라고",
-    "textZh": "能不能多营业一下"
+    "text": "not everything needs to be a selfie"
    }
-  ],
-  "textZh": "能不能多营业一下"
+  ]
  },
  {
   "id": "fan31",
-  "name": "8pm.s_30",
-  "text": "今天这套好好看",
-  "textZh": "오늘 착장 너무 좋다",
+  "name": "miso.02",
+  "text": "아니 저 반지 어디 거임",
+  "textZh": "那个戒指是哪家的",
   "at": "방금",
   "messages": [
    {
-    "text": "今天这套好好看",
-    "textZh": "오늘 착장 너무 좋다"
+    "text": "아니 저 반지 어디 거임",
+    "textZh": "那个戒指是哪家的"
    }
   ]
  },
  {
   "id": "fan32",
-  "name": "sodaa.07_220",
-  "text": "오빠 머리색 이거 계속 해주라 제발",
+  "name": "xiaoyu_8",
+  "text": "好久没看到这个发色了",
   "at": "3분 전",
   "messages": [
    {
-    "text": "오빠 머리색 이거 계속 해주라 제발",
-    "textZh": "拜托这个发色一定要多留一阵"
+    "text": "好久没看到这个发色了",
+    "textZh": "이 머리색 오랜만이다"
    }
   ],
-  "textZh": "拜托这个发色一定要多留一阵"
+  "textZh": "이 머리색 오랜만이다"
  },
  {
   "id": "fan33",
-  "name": "_bluej.12_227",
-  "text": "wait the second pic??? 😭",
+  "name": "w00dy.7",
+  "text": "i'm actually crying at the last slide",
   "at": "18분 전",
   "messages": [
    {
-    "text": "wait the second pic??? 😭"
+    "text": "i'm actually crying at the last slide"
    }
   ]
  },
  {
   "id": "fan34",
-  "name": "하트는_하나만_234",
-  "text": "아 인스타 알림 뜨길래 개놀람",
+  "name": "d0nt_08",
+  "text": "솔직히 이번 건 별로임",
   "at": "어제",
   "messages": [
    {
-    "text": "아 인스타 알림 뜨길래 개놀람",
-    "textZh": "突然弹出IG通知吓我一跳"
+    "text": "솔직히 이번 건 별로임",
+    "textZh": "说实话这次一般"
    }
   ],
-  "textZh": "突然弹出IG通知吓我一跳"
+  "textZh": "说实话这次一般"
  },
  {
   "id": "fan35",
-  "name": "jj_zzzip_241",
-  "text": "나만 이 사진 20번 봄?",
-  "textZh": "只有我把这张图看了20遍吗",
+  "name": "momo.17",
+  "text": "这套真的很适合你",
+  "textZh": "이 착장 진짜 잘 어울려",
   "at": "2일 전",
   "messages": [
    {
-    "text": "나만 이 사진 20번 봄?",
-    "textZh": "只有我把这张图看了20遍吗"
+    "text": "这套真的很适合你",
+    "textZh": "이 착장 진짜 잘 어울려"
    }
   ]
  },
  {
   "id": "fan36",
-  "name": "ugh__08_35",
-  "text": "진짜 왜 자꾸 그 표정임",
+  "name": "cloud_99",
+  "text": "why is nobody talking about the shoes",
   "at": "1시간 전",
   "messages": [
    {
-    "text": "진짜 왜 자꾸 그 표정임",
-    "textZh": "为什么老是那个表情"
+    "text": "why is nobody talking about the shoes"
    }
-  ],
-  "textZh": "为什么老是那个表情"
+  ]
  },
  {
   "id": "fan37",
-  "name": "어쩌다_더비_255",
-  "text": "아니 이재현 진짜 개웃기네ㅋㅋ",
-  "textZh": "不是李在贤真的笑死我了哈哈",
+  "name": "theb__05",
+  "text": "아무튼 밥 잘 먹고 다녀",
+  "textZh": "总之好好吃饭",
   "at": "방금",
   "messages": [
    {
-    "text": "아니 이재현 진짜 개웃기네ㅋㅋ",
-    "textZh": "不是李在贤真的笑死我了哈哈"
+    "text": "아무튼 밥 잘 먹고 다녀",
+    "textZh": "总之好好吃饭"
    }
   ]
  },
  {
   "id": "fan_h38",
-  "name": "xiǎo_7_262",
-  "text": "啊啊啊今天的造型我真的不行了",
-  "textZh": "아 오늘 스타일링 진짜 미쳤다",
+  "name": "candy.4",
+  "text": "这视频我要看一百遍",
+  "textZh": "이 영상 백 번 볼 거야",
   "at": "3분 전",
   "messages": [
    {
-    "text": "啊啊啊今天的造型我真的不行了",
-    "textZh": "아 오늘 스타일링 진짜 미쳤다"
+    "text": "这视频我要看一百遍",
+    "textZh": "이 영상 백 번 볼 거야"
    }
   ]
  },
  {
   "id": "fan_h39",
-  "name": "s00n_ish_269",
-  "text": "뭐야 이 사진 언제 찍은 거임",
-  "textZh": "这照片什么时候拍的啊",
+  "name": "404_jj",
+  "text": "팬들 기다리게 하지 좀 마",
+  "textZh": "别总让粉丝等",
   "at": "18분 전",
   "messages": [
    {
-    "text": "뭐야 이 사진 언제 찍은 거임",
-    "textZh": "这照片什么时候拍的啊"
+    "text": "팬들 기다리게 하지 좀 마",
+    "textZh": "别总让粉丝等"
    }
   ]
  },
  {
   "id": "fan_h40",
-  "name": "r0gue_____276",
-  "text": "the outfit is not it sorry",
+  "name": "aftergl0w",
+  "text": "HELP I CANT STOP LAUGHING",
   "at": "어제",
   "messages": [
    {
-    "text": "the outfit is not it sorry"
+    "text": "HELP I CANT STOP LAUGHING"
    }
   ]
  },
  {
   "id": "fan_h41",
-  "name": "notafan_2_40",
-  "text": "yall overhype everything lol",
+  "name": "y2k_070",
+  "text": "아 이거 너무 킹받음ㅋㅋ",
   "at": "2일 전",
   "messages": [
    {
-    "text": "yall overhype everything lol"
+    "text": "아 이거 너무 킹받음ㅋㅋ",
+    "textZh": "这个真的有点欠揍哈哈"
    }
-  ]
+  ],
+  "textZh": "这个真的有点欠揍哈哈"
  },
  {
   "id": "fan_h42",
-  "name": "jj._w_290",
-  "text": "어제는 좋았는데 오늘은 좀 별로",
-  "textZh": "昨天还不错 今天有点一般",
+  "name": "b__light",
+  "text": "谁懂啊这一秒真的绝了",
+  "textZh": "이 순간 진짜 미쳤다",
   "at": "1시간 전",
   "messages": [
    {
-    "text": "어제는 좋았는데 오늘은 좀 별로",
-    "textZh": "昨天还不错 今天有点一般"
+    "text": "谁懂啊这一秒真的绝了",
+    "textZh": "이 순간 진짜 미쳤다"
    }
   ]
  },
  {
   "id": "fan_h43",
-  "name": "milk.t.99_297",
-  "text": "谁懂啊刷到这里直接停住",
-  "textZh": "이거 보고 스크롤 멈췄음",
+  "name": "orbit.8",
+  "text": "honestly miss the old styling",
   "at": "방금",
   "messages": [
    {
-    "text": "谁懂啊刷到这里直接停住",
-    "textZh": "이거 보고 스크롤 멈췄음"
+    "text": "honestly miss the old styling"
    }
   ]
  },
  {
   "id": "fan_h44",
-  "name": "noturfan_0_304",
-  "text": "bro this is getting embarrassing",
+  "name": "jelly_24",
+  "text": "오늘 라이브 음향 뭐였냐",
   "at": "3분 전",
   "messages": [
    {
-    "text": "bro this is getting embarrassing"
+    "text": "오늘 라이브 음향 뭐였냐",
+    "textZh": "今天直播音响什么情况"
    }
-  ]
+  ],
+  "textZh": "今天直播音响什么情况"
  },
  {
   "id": "fan_h45",
-  "name": "y2k_031_311",
-  "text": "나도 모르게 저장함ㅋㅋㅋ",
-  "textZh": "不知不觉就保存了哈哈",
+  "name": "kiki.33",
+  "text": "这个表情包我先收下了",
+  "textZh": "이 짤 저장함",
   "at": "18분 전",
   "messages": [
    {
-    "text": "나도 모르게 저장함ㅋㅋㅋ",
-    "textZh": "不知不觉就保存了哈哈"
+    "text": "这个表情包我先收下了",
+    "textZh": "이 짤 저장함"
    }
   ]
  },
  {
   "id": "fan_h46",
-  "name": "srsly.404_45",
-  "text": "팬들 호구로 보냐",
-  "textZh": "把粉丝当冤大头吗",
+  "name": "sunny__",
+  "text": "ok but the vocals????",
   "at": "어제",
   "messages": [
    {
-    "text": "팬들 호구로 보냐",
-    "textZh": "把粉丝当冤大头吗"
+    "text": "ok but the vocals????"
    }
   ]
  },
  {
   "id": "fan_h47",
-  "name": "lowkey.j_325",
-  "text": "lowkey miss the old styling",
+  "name": "jjae_5am",
+  "text": "ㅋㅋㅋㅋㅋㅋㅋ 진짜 뭐야",
   "at": "2일 전",
   "messages": [
    {
-    "text": "lowkey miss the old styling"
+    "text": "ㅋㅋㅋㅋㅋㅋㅋ 진짜 뭐야",
+    "textZh": "哈哈哈哈什么啊"
    }
-  ]
+  ],
+  "textZh": "哈哈哈哈什么啊"
  }
 ];
 const privateChats=[
