@@ -2,6 +2,17 @@
 window.__KKT_EPISODES__={
  KKT_EP001:{
   id:'KKT_EP001',version:3,name:'转账',contact:'xxx',mode:'INTERACTIVE_AUTO',
+  history:[
+   ['date','2026년 10월 21일 수요일'],
+   ['mine','xx로 xxx','오후 9:13'],
+   ['other','확인했어🫡','오후 9:13']
+  ],
+  historyZh:[
+   ['date','2026年10月21日 星期三'],
+   ['mine','xx路xxx号','晚上 9:13'],
+   ['other','收到🫡','晚上 9:13']
+  ],
+  episodeDate:['2026년 10월 22일 목요일','2026年10月22日 星期四'],
   steps:[
    ['mine','계좌번호 보내줘','오전 10:05'],
    ['other','?','오후 12:06'],['other','무슨 뜻이야?','오후 12:06'],['mine','왜','오후 12:06'],
