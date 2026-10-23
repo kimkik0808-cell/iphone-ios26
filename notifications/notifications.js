@@ -14,7 +14,7 @@
   const DND_KEY='iphone26_dnd_enabled';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const isDnd=()=>{try{return localStorage.getItem(DND_KEY)==='1'}catch{return false}};
-  const canDisplay=()=>!isDnd() && (typeof isLocked==='undefined'||!isLocked) && !document.hidden;
+  const canDisplay=(force=false)=>(force||!isDnd()) && (typeof isLocked==='undefined'||!isLocked) && !document.hidden;
   const zh=()=>window.IphoneLocale?.language==='zh';
   const translate=value=>zh()?(window.IphoneLocale?.t(value)||value):value;
   const kakaoName=()=>zh()?'KakaoTalk':'카카오톡';
@@ -133,7 +133,7 @@
     return true;
   }
   function showSMS(payload={}){
-    if(!canDisplay())return false;
+    if(!canDisplay(payload.story===true))return false;
     const gift=payload.type==='gift';
     if(payload.type==='bank')return displayInfo({kind:'messages',name:zh()?'信息':'메시지',sender:payload.sender||'카카오뱅크',message:payload.message||'은행 이체출금 1,000,000원',icon:messagesIcon},()=>navigate('messages'));
     return displayInfo({

@@ -38,7 +38,7 @@ function update(receipts){
  if(added&&typeof mode!=='undefined'&&mode==='messages'&&typeof render==='function')render();
 }
 function notify(event){
- if(!event||window.__IOS26_NOTIFICATIONS__?.enabled===false||document.hidden)return;
+ if(!event||(!event.story&&window.__IOS26_NOTIFICATIONS__?.enabled===false)||document.hidden)return;
  if(window.__IOS26_NOTIFICATIONS__?.showSMS){
   window.__IOS26_NOTIFICATIONS__.showSMS(event);
   return;

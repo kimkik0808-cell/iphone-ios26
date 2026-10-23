@@ -1291,7 +1291,7 @@ function runEp15(delay=500,activateComposer=false){
      if(!window.__KKT_SHOP__?.recordEpisodeTransfer){wait(next,120);return}
      window.__KKT_SHOP__.recordEpisodeTransfer(event);epState15.transferCompleted=true;saveEp15();
     }
-    if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',sender:step.bank,message:window.IphoneLocale?.language==='zh'?'银行转账支出 1,000,000韩元':'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
+    if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',story:true,sender:step.bank,message:window.IphoneLocale?.language==='zh'?'银行转账支出 1,000,000韩元':'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
     epState15.cursor=index+1;saveEp15();wait(next,900)
    },2000);return
   }
@@ -1358,9 +1358,9 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./settings/settings.js?v=5"></script>
 <script src="./kakao/message-requests-data.js?v=3"></script>
 <script src="./kakao/message-requests.js?v=16&amp;build=ep001-v12"></script>
-<script src="./notifications/notifications.js?v=8&amp;build=ep001-v12"></script>
-<script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v16"></script>
+<script src="./notifications/notifications.js?v=8&amp;build=ep001-v18"></script>
+<script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v18"></script>
 <script src="./kakao/shop.js?v=2&amp;build=ep001-v12"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V017';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V018';proof.removeAttribute('hidden')}}</script>
 </body></html>
