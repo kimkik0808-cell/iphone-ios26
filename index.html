@@ -741,7 +741,9 @@ async function loadGithubReels(force=false){
       caption:String(metadata.caption||x.caption||'릴스').slice(0,500),
       username:String(metadata.username||id()).slice(0,60),
       avatar:String(metadata.avatar||'').slice(0,300),
-      audio:String(metadata.audio||'원본 오디오').slice(0,110),
+      audio:String(metadata.audio||'').slice(0,110),
+      publishedAt:String(metadata.publishedAt||'').slice(0,90),
+      collaborators:Array.isArray(metadata.collaborators)?metadata.collaborators.filter(v=>typeof v==='string').slice(0,4).map(v=>v.slice(0,60)):[],
       likedBy:String(metadata.likedBy||'').slice(0,120),
       likes:String(metadata.likes||'0'),comments:String(metadata.comments||'0'),
       reposts:String(metadata.reposts||'0'),shares:String(metadata.shares||'0'),saves:String(metadata.saves||'0'),
@@ -860,7 +862,9 @@ function igrEntry(v){
 }
 function igrSave(){try{localStorage.setItem('jh_ig_reels_ui_v1',JSON.stringify(igrActivity))}catch{}}
 function igrCount(raw,extra=0){
- const str=String(raw||'0');
+ // Never invent engagement figures for screenshots without visible counts.
+ if(raw===null||raw===undefined||String(raw)==='')return '';
+ const str=String(raw);
  if(!extra)return str;
  const number=Number(str.replace(/,/g,''));
  if(Number.isFinite(number))return (number+extra).toLocaleString('ko-KR');
@@ -884,7 +888,14 @@ function reels(){
  const i=reelIndex[account],v=videos[i],a=igrEntry(v);
  const artist=v.username||id(),isMine=artist===id();
  const liked=!!a.liked,saved=!!a.saved,followed=!!a.followed;
- const avatar=v.avatar&&/^(https:\/\/|assets\/|photos\/)/i.test(v.avatar)?'<img src="'+esc(v.avatar)+'" alt="">':esc(artist.slice(0,1).toUpperCase());
+ const avatar=v.avatar&&/^(https:\/\/|assets\/|photos\/)/i.test(v.avatar)?'<img src="'+esc(v.avatar)+'" alt="">':
+ artist==='official_theboyz'?'<span class="igr-logo-text">TBZ</span>':
+ v.verified?'':esc(artist.slice(0,1).toUpperCase());
+ const collaborators=Array.isArray(v.collaborators)?v.collaborators:[];
+ const authorLabel=collaborators.length?artist+'님과 '+collaborators.join('님, ')+'님':artist;
+ const collaboratorAvatars=collaborators.includes('sunwoo')?
+ '<span class="igr-collab-avatar"><img src="assets/sw_avatar.jpg" alt="sunwoo"></span>':'';
+ const verifiedLabel=v.verified?'<span class="igr-verified" aria-label="인증된 계정">✓</span>':'';
  const social=v.likedBy?'<div class="igr-socialproof"><span class="igr-social-stack"><i>♥</i><i>♥</i></span><span>'+esc(v.likedBy)+'</span></div>':'';
  return '<div class="ig14-reels igr-view'+(igrSlideDirection>0?' igr-slide-up':igrSlideDirection<0?' igr-slide-down':'')+'" data-igr-index="'+i+'">'+
  '<video class="igr-video" src="'+esc(v.url)+'" autoplay '+(igrMuted?'muted':'')+' playsinline webkit-playsinline loop preload="metadata"></video>'+
@@ -900,11 +911,13 @@ function reels(){
  igrAction('reelmore','더 보기','',false)+
  '</aside>'+
  '<div class="igr-info">'+social+
- '<div class="igr-author"><span class="igr-avatar">'+avatar+'</span><b class="igr-username">'+esc(artist)+(v.verified?' ✓':'')+'</b>'+
+ '<div class="igr-author"><span class="igr-avatar">'+avatar+'</span>'+collaboratorAvatars+
+ '<b class="igr-username" title="'+esc(authorLabel)+'">'+esc(authorLabel)+'</b>'+verifiedLabel+
  (!isMine?b('reelfollow',followed?'팔로잉':'팔로우','igr-follow'+(followed?' igr-following':''),'aria-pressed="'+followed+'"'):'')+
  '</div>'+
- '<div class="igr-music">'+igrI('music')+'<span>'+esc(v.audio||'원본 오디오')+'</span></div>'+
- '<p class="igr-caption">'+esc(v.caption||'')+'</p></div>'+
+ (v.audio?'<div class="igr-music">'+igrI('music')+'<span>'+esc(v.audio)+'</span></div>':'')+
+ (v.caption?b('reeldetails','<span class="igr-caption-text">'+esc(v.caption)+'</span>','igr-caption','aria-label="전체 문구 보기"'):'')+
+ '</div>'+
  b('reelsound',igrI(igrMuted?'mute':'volume'),'igr-sound','aria-label="소리 켜기/끄기"')+
  '<div class="igr-progress"><i id="igr-progress-bar"></i></div>'+
  '<div class="igr-bottom">'+b('reelcomments','<span>댓글 추가...</span>','igr-comment-open')+'</div>'+
@@ -948,6 +961,22 @@ function igrOpenSheet(kind){
    data.comments.map(comment=>'<div class="igr-comment-row"><span class="igr-comment-avatar">☺</span><div><b>'+esc(id())+'</b><p>'+esc(comment)+'</p></div></div>').join(''):
    '<p class="igr-empty">아직 추가된 댓글이 없습니다.</p>')+'</div>'+
    '<form class="igr-comment-form" data-igr-comment="1"><input type="text" maxlength="300" autocomplete="off" placeholder="댓글 추가..." aria-label="댓글 추가"><button type="submit">게시</button></form>';
+ }else if(kind==='details'){
+  heading='게시물 정보';
+  const author=reel.username||id();
+  const collabs=Array.isArray(reel.collaborators)?reel.collaborators:[];
+  const authorText=author+(collabs.length?'님과 '+collabs.join('님, ')+'님':'');
+  const avatar=reel.avatar?'<img src="'+esc(reel.avatar)+'" alt="">':
+    author==='official_theboyz'?'<span class="igr-logo-text">TBZ</span>':'';
+  body='<div class="igr-details-list"><div class="igr-details-author">'+
+   '<span class="igr-details-avatar">'+avatar+'</span><strong>'+esc(authorText)+'</strong>'+
+   (reel.verified?'<span class="igr-verified" aria-label="인증된 계정">✓</span>':'')+
+   '</div>'+
+   (reel.audio?'<p class="igr-details-audio">'+igrI('music')+'<span>'+esc(reel.audio)+'</span></p>':'')+
+   (reel.caption?'<p class="igr-details-caption">'+
+    esc(reel.caption).replace(/(^|\s)(#[^\s#]+)/g,'$1<span class="igr-hashtag">$2</span>')+'</p>':'')+
+   (reel.publishedAt?'<p class="igr-details-date">'+esc(reel.publishedAt)+'</p>':'')+
+   '</div>';
  }else if(kind==='share'){
   heading='공유하기';
   body='<div class="igr-sheet-options">'+b('reelshareopen','공유 메뉴 열기')+
@@ -1006,6 +1035,7 @@ function igrHandleAction(kind,button){
   button.setAttribute('aria-pressed',data.followed?'true':'false');return;
  }
  if(kind==='reelcomments'){igrOpenSheet('comments');return;}
+ if(kind==='reeldetails'){igrOpenSheet('details');return;}
  if(kind==='reelshare'){igrOpenSheet('share');return;}
  if(kind==='reelmore'){igrOpenSheet('more');return;}
  if(kind==='reelcopy'){
@@ -1065,7 +1095,7 @@ function toast14(s){let r=document.querySelector('#ig14');if(!r)return;let t=doc
 function rerenderKeepScroll(){let old=document.querySelector('#ig14 .scroll'),top=old?.scrollTop||0;render14();requestAnimationFrame(()=>{let next=document.querySelector('#ig14 .scroll');if(next)next.scrollTop=top})}
 function toggle(key,pid,control){let a=list(key),i=a.indexOf(pid);i<0?a.push(pid):a.splice(i,1);persist();let active=a.includes(pid);if(key==='likes'&&control){control.innerHTML=ico('heart',27,active);control.classList.toggle('ig14-liked',active);let count=control.closest('.ig14-post')?.querySelector('.ig14-meta>b'),p=getPost(pid);if(count&&p)count.textContent=`좋아요 ${cnt((p.likes||0)+(active?1:0))}개`;return}rerenderKeepScroll()}
 function action(e){if(mode!=='instagram')return;let x=e.target.closest('[data-a]');if(!x)return;e.preventDefault();e.stopImmediatePropagation();let a=x.dataset.a,v=x.dataset.v,pid=x.dataset.id;
- if(['reelback','reelclose','reelplay','reelsound','reellike','reelsave','reelrepost','reelfollow','reelcomments','reelshare','reelmore','reelcopy','reelshareopen','reeladd'].includes(a)){
+ if(['reelback','reelclose','reelplay','reelsound','reellike','reelsave','reelrepost','reelfollow','reelcomments','reelshare','reelmore','reeldetails','reelcopy','reelshareopen','reeladd'].includes(a)){
   igrHandleAction(a,x);return;
  }
  if(a==='tab'){state.activeTab=v;view='';persist();render14();if(v==='reels')void loadGithubReels()}else if(a==='reelnext'){changeReel(1)}else if(a==='reelprev'){changeReel(-1)}else if(a==='reeladd'){document.querySelector('#ig14-video')?.click()}else if(a==='back'){if(view==='detail'&&sharedPostReturn){selected=sharedPostReturn;sharedPostReturn='';view='conversation'}else if(view==='contact'&&contactReturn==='conversation'){view='conversation';contactReturn=''}else view='';render14()}else if(a==='accounts'){view='accounts';render14()}else if(a==='switch'){state.account=v;state.activeTab='profile';view='';persist();render14()}else if(a==='like')toggle('likes',pid,x);else if(a==='save')toggle('saved',pid,x);else if(a==='prev'||a==='next'){let p=getPost(pid);slide[pid]=Math.max(0,Math.min(p.photos.length-1,(slide[pid]||0)+(a==='next'?1:-1)));rerenderKeepScroll()}else if(a==='user'){if(teammate[pid]){selected=pid;view='other';render14()}}else if(a==='contactprofile'){contactReturn=view==='conversation'?'conversation':'';selected=pid;view='contact';render14()}else if(a==='messagecontact'){selected=pid;view='conversation';contactReturn='';render14()}else if(a==='sharedpost'){sharedPostReturn=selected;selected=pid;view='detail';render14()}else if(a==='detail'){sharedPostReturn='';selected=pid;view='detail';render14()}else if(a==='comments'){selected=pid;view='comments';render14()}else if(a==='requests'){view='requests';render14()}else if(a==='request'){selected=pid;view='request';render14()}else if(a==='chat'){selected=pid;view='conversation';aiError='';render14()}else if(a==='opencreate'){view='create';render14()}else if(a==='storycreate'){view='storycreate';render14()}else if(a==='storyview'){selected=pid;view='storyview';render14()}else if(a==='publish'){if(!draftMedia)return toast14('사진을 먼저 선택하세요');if(draftKind==='story')state.stories[acct()].push({data:draftMedia,time:Date.now()});else{let cap=document.querySelector('#ig14-caption')?.value.trim()||'';state.userPosts[acct()].unshift({id:'u'+Date.now(),user:id(),avatar:acct()==='public'?'jh_avatar':null,photos:[draftMedia],caption:cap,likes:0,comments:0,time:'방금'});}draftMedia='';persist();view='';state.activeTab=draftKind==='story'?'home':'profile';render14()}}
