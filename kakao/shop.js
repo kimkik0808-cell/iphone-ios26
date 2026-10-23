@@ -74,7 +74,7 @@ const contacts=()=>{
  const from=window.__KKT15_TEST__?.contacts||[];
  const chats=window.__KKT15_TEST__?.data||[];
  const result=[],ids=new Set();
- for(const c of [{id:'nuna',name:'누나'},...from,...chats]){
+ for(const c of [...from,...chats]){
   if(!c?.id||!c.name||ids.has(c.id)||c.type==='service'||c.id==='kakao-gift'||c.id==='unknown'||c.id==='tbz'||c.id==='stage')continue;
   ids.add(c.id);result.push({id:c.id,name:c.name});
  }
@@ -243,7 +243,7 @@ const giftFallback=(id,p)=>{
   manager:`재현아 ${item} 고맙다 잘 받을게`,
   stylist:`재현 씨 ${item} 감사합니다 잘 쓸게요`,
   pd:`${item} 감사합니다 잘 받겠습니다`,
-  nuna:`갑자기 웬 ${item}이야ㅋㅋ 잘 받을게 고마워`
+  sister:`갑자기 웬 ${item}이야ㅋㅋ 잘 받을게 고마워`
  };
  return fixed[id]||`${item} 고마워 잘 받을게`;
 };
