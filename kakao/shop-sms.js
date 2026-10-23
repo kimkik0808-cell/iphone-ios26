@@ -3,8 +3,14 @@
 'use strict';
 if(window.__IPHONE_SMS__)return;
 const existing=new Set();
+const READ_KEY='iphone26_sms_read_receipts_v1';
+let readIds=new Set();
+try{readIds=new Set(JSON.parse(localStorage.getItem(READ_KEY)||'[]'))}catch{}
 function esc(s){return String(s??'');}
 function balance(n){return Math.max(0,Number(n)||0).toLocaleString('ko-KR')+'원';}
+function messageTime(at){
+ return new Intl.DateTimeFormat(window.IphoneLocale?.language==='zh'?'zh-CN':'ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(at||Date.now()));
+}
 function update(receipts){
  if(!Array.isArray(receipts)||typeof texts==='undefined'||!Array.isArray(texts))return;
  const openChat=(typeof mode!=='undefined'&&mode==='messages'&&sub==='chat')?texts[currentThread]:null;
@@ -19,12 +25,14 @@ function update(receipts){
    '[카카오페이 결제 완료]\n상품 '+esc(e.item||'선물')+'\n결제 금액 '+balance(e.price)+'\n결제 후 잔액 '+balance(e.balance)+'\n주문번호 '+e.id;
   let thread=texts.find(t=>t.shopSender===name);
   if(!thread){
-   thread={name,initial:'K',color:'#f9dd49',preview:'',time:'방금',chat:[],unread:false,shopSender:name};
+   thread={name,initial:'K',color:'#f9dd49',preview:'',time:'방금',chat:[],unread:false,shopSender:name,receiptIds:[]};
    texts.unshift(thread);
   }
-  thread.chat.push(['other',message]);
+  thread.receiptIds=Array.isArray(thread.receiptIds)?thread.receiptIds:[];
+  if(!thread.receiptIds.includes(e.id))thread.receiptIds.push(e.id);
+  thread.chat.push(['other',message,messageTime(e.at)]);
   thread.preview=message.split('\n')[0];
-  thread.time='방금';thread.unread=true;added++;
+  thread.time='방금';if(!readIds.has(e.id))thread.unread=true;added++;
  }
  if(openChat)currentThread=texts.indexOf(openChat);
  if(added&&typeof mode!=='undefined'&&mode==='messages'&&typeof render==='function')render();
@@ -36,5 +44,11 @@ function notify(event){
   return;
  }
 }
-window.__IPHONE_SMS__={sync:update,notify};
+function markRead(thread){
+ if(!thread)return;
+ thread.unread=false;
+ for(const id of thread.receiptIds||[])readIds.add(id);
+ try{localStorage.setItem(READ_KEY,JSON.stringify([...readIds]))}catch{}
+}
+window.__IPHONE_SMS__={sync:update,notify,markRead};
 })();

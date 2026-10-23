@@ -432,7 +432,7 @@ const smsRisk=[
 ];
 let smsLastKeys=new Set();
 function smsTakeFresh(pool,n,prefix){const all=pool.map((make,i)=>({make,key:`${prefix}-${i}`}));const fresh=smsShuffle(all.filter(x=>!smsLastKeys.has(x.key)));const fallback=smsShuffle(all.filter(x=>smsLastKeys.has(x.key)));return [...fresh,...fallback].slice(0,n).map(x=>({key:x.key,...x.make()}))}
-function makeTexts(){const selected=smsShuffle([...smsTakeFresh(smsAuth,3,'auth'),...smsTakeFresh(smsCommerce,5,'commerce'),...smsTakeFresh(smsFinance,4,'finance'),...smsTakeFresh(smsWork,4,'work'),...smsTakeFresh(smsService,4,'service'),...smsTakeFresh(smsRisk,4,'risk')]);smsLastKeys=new Set(selected.map(x=>x.key));return selected.map((x,i)=>{const messages=x.messages||[];const preview=messages[messages.length-1]||'';return{name:x.name,initial:x.initial,color:x.color,risk:!!x.risk,unread:i<9,preview,time:smsTimes[i%smsTimes.length],chat:messages.map(text=>['other',text])}})}
+function makeTexts(){const selected=smsShuffle([...smsTakeFresh(smsAuth,3,'auth'),...smsTakeFresh(smsCommerce,5,'commerce'),...smsTakeFresh(smsFinance,4,'finance'),...smsTakeFresh(smsWork,4,'work'),...smsTakeFresh(smsService,4,'service'),...smsTakeFresh(smsRisk,4,'risk')]);smsLastKeys=new Set(selected.map(x=>x.key));return selected.map((x,i)=>{const messages=x.messages||[];const preview=messages[messages.length-1]||'',baseTime=smsTimes[i%smsTimes.length];return{name:x.name,initial:x.initial,color:x.color,risk:!!x.risk,unread:i<9,preview,time:baseTime,chat:messages.map((text,j)=>['other',text,j===messages.length-1?baseTime:''])}})}
 let texts=makeTexts();
 const kakaoChats=[{name:'민지',initial:'민',preview:'주말에 뭐 해?',time:'오후 1:42',chat:[['other','주말에 뭐 해?'],['mine','아직 계획 없어!']]},{name:'친구들',initial:'친',preview:'다 같이 만나는 날!',time:'월요일',chat:[['other','다 같이 만나는 날!'],['mine','좋아~']]}];
 const photoColors=['linear-gradient(160deg,#e4bbb1,#bd8ca8 55%,#5c7293)','linear-gradient(155deg,#d7dec7,#8bb6af 50%,#527785)','linear-gradient(140deg,#f6dec3,#e7afad 43%,#95aecf)','linear-gradient(150deg,#bcd6db,#6e8eb5,#314879)','linear-gradient(140deg,#e1dfc8,#c4c7aa,#78938a)','linear-gradient(140deg,#d2bbdb,#ad8bbb,#516c9e)','linear-gradient(130deg,#daacbd,#c8d7ef,#637cb5)','linear-gradient(160deg,#b5d6dd,#83aa98,#456e86)','linear-gradient(150deg,#f0d0a6,#e49f88,#8d8eb9)'];
@@ -463,7 +463,7 @@ $('#gesture').addEventListener('click',()=>{if(isLocked)showPin();else if(mode!=
 function nav(name,back='',right=''){return `<div class="appnav"><button class="navback" data-back>‹ ${escapeHTML(back)}</button><div class="smallhead">${escapeHTML(name)}</div><button class="navright" data-right>${right}</button></div>`}
 function tabs(items,active){return `<div class="ios-tabs">${items.map(([key,ico,label])=>`<button data-tab="${key}" class="${active===key?'selected':''}"><span style="font-size:23px;line-height:1">${ico}</span><span>${label}</span></button>`).join('')}</div>`}
 function listMessages(data){return data.map(x=>`<button class="ios-row ${mode==='messages'?'sms-row':''} ${x.unread?'unread':''} ${x.risk?'risk':''}" data-chat="${(mode==='kakao'?kakaoChats:texts).indexOf(x)}">${mode==='messages'&&x.unread?'<i class="sms-dot"></i>':''}<span class="avatar" ${x.color?`style="background:${x.color}"`:''}>${escapeHTML(x.initial)}</span><div class="ios-main"><strong>${escapeHTML(x.name)}</strong><p>${escapeHTML(x.preview)}</p></div><small>${escapeHTML(x.time)}${mode==='messages'?'<b>›</b>':''}</small></button>`).join('')}
-function chatPage(kakao){const x=(kakao?kakaoChats:texts)[currentThread];return `<div class="chathead"><button class="chatback" data-back>‹ 뒤로</button><div class="chattitle">${escapeHTML(x.name)}</div><button class="navright" data-more>•••</button></div><div class="chat-scroller ${kakao?'kakao-chat':''}"><div class="chatbody" id="chatbody">${x.chat.map(([side,t])=>`<div class="bubble ${side==='mine'?'mine':''}">${escapeHTML(t)}</div>`).join('')}</div></div><form class="chatfooter" id="chatform"><input id="chatinput" placeholder="${kakao?'메시지 입력':'문자 메시지'}" autocomplete="off"><button aria-label="전송">↑</button></form>`}
+function chatPage(kakao){const x=(kakao?kakaoChats:texts)[currentThread];return `<div class="chathead"><button class="chatback" data-back>‹ 뒤로</button><div class="chattitle">${escapeHTML(x.name)}</div><button class="navright" data-more>•••</button></div><div class="chat-scroller ${kakao?'kakao-chat':''}"><div class="chatbody" id="chatbody">${x.chat.map(([side,t,time])=>kakao?`<div class="bubble ${side==='mine'?'mine':''}">${escapeHTML(t)}</div>`:`<div class="sms-bubble-wrap ${side==='mine'?'mine':''}"><div class="bubble ${side==='mine'?'mine':''}">${escapeHTML(t)}</div>${time?`<time class="sms-message-time">${escapeHTML(time)}</time>`:''}</div>`).join('')}</div></div><form class="chatfooter" id="chatform"><input id="chatinput" placeholder="${kakao?'메시지 입력':'문자 메시지'}" autocomplete="off"><button aria-label="전송">↑</button></form>`}
 function calendarPage(){
  const n=new Date(),k=koParts(n);let y=+k.year,m=+k.month+calOffset;
  y+=Math.floor((m-1)/12);m=(m-1)%12;if(m<0)m+=12;m++;
@@ -531,6 +531,12 @@ function instagramPage(){return `<div class="ig-top"><span style="font-family:Ge
 function render(){let d=(mode==='kakao'||mode==='youtube'||mode==='instagram'||mode==='music'||(mode==='phone'&&sub==='call'))?'black':mode==='safari'||mode==='messages'||mode==='photos'?'white':mode==='notes'?'white':'';if(mode==='kakao')d='kakao-bg';if(mode==='music')d='music-bg';appEl.className='layer appscreen active '+d+(mode==='photos'?' photos-mode':'');$('#status').classList.toggle('dark',d!=='black'&&d!=='music-bg');$('#gesture').classList.toggle('ink',d!=='black'&&d!=='music-bg');frame.style.bottom=(sub==='chat')?'calc(var(--safe-bottom) + 75px)':'calc(var(--safe-bottom) + 28px)';frame.style.overflow=(mode==='calendar'||mode==='safari'||mode==='notes'||mode==='music'||mode==='phone'||mode==='kakao'||mode==='photos'||mode==='youtube'||(mode==='messages'&&sub==='chat'))?'hidden':'auto';let page=mode==='calendar'?(sub==='calendar-edit'?calendarEditor():calendarPage()):mode==='phone'?(sub==='call'?callPage():phonePage()):mode==='messages'?messagesPage(false):mode==='kakao'?messagesPage(true):mode==='safari'?safariPage():mode==='music'?musicPage():mode==='photos'?photosPage():mode==='notes'?notesPage():mode==='youtube'?youtubePage():instagramPage();frame.innerHTML=page;const ytLocalVideo=frame.querySelector('.yt-local-video');if(ytLocalVideo){const missing=frame.querySelector('.yt-local-missing');ytLocalVideo.addEventListener('error',()=>{if(missing)missing.hidden=false},{once:true});ytLocalVideo.addEventListener('loadeddata',()=>{if(missing)missing.hidden=true},{once:true})}if(sub==='chat'){let sc=frame.querySelector('.chat-scroller');if(sc)sc.scrollTop=sc.scrollHeight}}
 function persist(){try{localStorage.setItem('iphone_demo_notes',JSON.stringify(notes))}catch{}}
 function back(){if(mode==='youtube'&&ytActiveVideo){ytActiveVideo='';render();return}if(mode==='phone'&&sub==='call'){clearCallTimers();activeCall=null;sub='root';phoneTab='recents';render();return}if(sub==='edit'){notes[noteIndex]=$('#noteedit')?.value||'';persist();sub='root';render();return}if(sub!=='root'){sub='root';render();return}closeApp()}
+frame.addEventListener('click',e=>{
+ if(mode!=='messages'||sub!=='root')return;
+ const row=e.target.closest('[data-chat]');if(!row)return;
+ const thread=texts[Number(row.dataset.chat)];if(!thread)return;
+ thread.unread=false;window.__IPHONE_SMS__?.markRead?.(thread);
+},true);
 frame.addEventListener('click',e=>{if(mode==='kakao')return;let b=e.target.closest('button');if(!b)return;let d=b.dataset;if(mode==='safari'&&'safariQuery' in d){if(d.safariUrl&&d.safariUrl.startsWith('https://www.tenasia.co.kr/article/')){window.open(d.safariUrl,'_blank','noopener,noreferrer');return}const input=$('#safariaddress');if(input){input.value=d.safariQuery;input.focus()}return}if(mode==='photos'){if('phTab' in d){photoTab=d.phTab;photoAlbum='all';photoSelectMode=false;photoSelected.clear();sub='root';render();return}if('photoReload' in d){photosLoaded=false;loadPhotoManifest(true);return}if('photoSelect' in d){photoSelectMode=!photoSelectMode;if(!photoSelectMode)photoSelected.clear();render();return}if('photoAlbum' in d){photoAlbum=d.photoAlbum;photoTab='library';sub='root';render();return}if('photoId' in d){if(photoSelectMode){photoSelected.has(d.photoId)?photoSelected.delete(d.photoId):photoSelected.add(d.photoId);render();return}const i=photoManifest.findIndex(p=>p.id===d.photoId);if(i>-1){photoIndex=i;photoScale=1;sub='photo';render()}return}if('photoBack' in d||'photoClose' in d){sub='root';photoScale=1;render();return}if('photoFav' in d){const p=photoManifest[photoIndex];if(p){photoFavorites.has(p.id)?photoFavorites.delete(p.id):photoFavorites.add(p.id);savePhotoFavorites();render()}return}if('photoInfo' in d){const p=photoManifest[photoIndex];toast(p?.date||p?.name||'사진 정보 없음');return}}if(mode==='phone'&&'phoneCall' in d){const call=phoneCalls.find(x=>x.id===d.phoneCall);if(call)startPhoneCall(call);return}if(mode==='phone'&&'phoneContact' in d){startPhoneCall(phoneContactCall(d.phoneContact));return}if('back' in d){back();return}
 if('calToday' in d){calOffset=0;selectedDay=0;sub='root';render();return}
 if('calAdd' in d){
@@ -1200,18 +1206,20 @@ let episodeTimer15=0,episodeToken15=0;
 const EPKEY15='jh_kkt_episode_KKT_EP001',episode15=window.__KKT_EPISODES__?.KKT_EP001;
 const epStep15=index=>window.IphoneLocale?.language==='zh'?(episode15?.zhSteps?.[index]||episode15?.steps?.[index]):episode15?.steps?.[index];
 const EPSTATUS15=Object.freeze({NOT_STARTED:'NOT_STARTED',RUNNING:'RUNNING',WAITING_TO_SEND:'WAITING_TO_SEND',UNSENT_DRAFT:'UNSENT_DRAFT',COMPLETED:'COMPLETED'});
-const freshEp15=()=>({schema:episode15?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',completed:false});
+const freshEp15=()=>({schema:episode15?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',unreadMineStep:null,unreadUntil:0,completed:false});
 let epState15;try{epState15=JSON.parse(localStorage.getItem(EPKEY15)||'null')}catch(e){}
 if(!episode15||!epState15||epState15.schema!==episode15.version||!Object.values(EPSTATUS15).includes(epState15.status))epState15=freshEp15();
 epState15.sentSteps=Array.isArray(epState15.sentSteps)?[...new Set(epState15.sentSteps.filter(Number.isInteger))]:[];
 epState15.cursor=Number.isInteger(epState15.cursor)?Math.max(0,epState15.cursor):0;
 epState15.draft=typeof epState15.draft==='string'?epState15.draft:'';
+epState15.unreadMineStep=Number.isInteger(epState15.unreadMineStep)?epState15.unreadMineStep:null;
+epState15.unreadUntil=Number(epState15.unreadUntil)||0;
 if(epState15.status===EPSTATUS15.WAITING_TO_SEND&&Number.isInteger(epState15.pendingStep))epState15.draft=epStep15(epState15.pendingStep)?.[1]||'';
 const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}catch(e){}};
 const epChat15=()=>data15.find(c=>c.id==='xxx');
 function syncEpChat15(){
  const x=epChat15();if(!x||!episode15)return;
- x.messages=epState15.sentSteps.sort((a,b)=>a-b).map(epStep15).filter(Array.isArray).map(m=>[...m]);
+ x.messages=epState15.sentSteps.sort((a,b)=>a-b).map(i=>{const m=epStep15(i);if(!Array.isArray(m))return null;const copy=[...m];if(i===epState15.unreadMineStep&&copy[0]==='mine')copy[4]='unread';return copy}).filter(Boolean);
  const last=x.messages.at(-1);x.preview=last?.[1]||'';x.time=last?.[2]||'';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;
  save15();
 }
@@ -1221,6 +1229,7 @@ function epVisible15(){return mode==='kakao'&&view15==='room'&&chat15==='xxx'}
 function epRender15(){if(epVisible15())render15()}
 function commitEpStep15(index){
  if(!epState15.sentSteps.includes(index))epState15.sentSteps.push(index);
+ const committed=epStep15(index);if(Array.isArray(committed)&&committed[0]==='mine'){epState15.unreadMineStep=index;epState15.unreadUntil=Date.now()+2000}
  epState15.cursor=index+1;epState15.pendingStep=null;epState15.draft='';draft15='';syncEpChat15();saveEp15();
 }
 function runEp15(delay=500,activateComposer=false){
@@ -1228,6 +1237,7 @@ function runEp15(delay=500,activateComposer=false){
  if(epState15.status===EPSTATUS15.NOT_STARTED){epState15=freshEp15();epState15.status=EPSTATUS15.RUNNING;syncEpChat15();saveEp15()}
  draft15=epState15.draft;
  if(epState15.status===EPSTATUS15.WAITING_TO_SEND){keyboard15=true;typing15=false;epRender15();return}
+ if(epState15.unreadMineStep!==null)delay=Math.max(delay,epState15.unreadUntil-Date.now());
  const token=++episodeToken15;
  const wait=(fn,ms)=>{clearTimeout(episodeTimer15);episodeTimer15=setTimeout(()=>{if(token===episodeToken15&&epVisible15())fn()},ms)};
  function typeText(text,done){
@@ -1259,11 +1269,12 @@ function runEp15(delay=500,activateComposer=false){
   remove()
  }
  function next(){
+  if(epState15.unreadMineStep!==null){epState15.unreadMineStep=null;epState15.unreadUntil=0;syncEpChat15();saveEp15()}
   const index=epState15.cursor,step=epStep15(index);
   if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
   if(Array.isArray(step)){
    if(step[0]==='other'){
-    typing15=true;keyboard15=false;epRender15();wait(()=>{typing15=false;commitEpStep15(index);for(const m of epChat15().messages)if(m[0]==='mine'&&m[4]==='unread')m[4]='read';save15();epRender15();wait(next,650)},850);return
+    typing15=true;keyboard15=false;epRender15();wait(()=>{typing15=false;commitEpStep15(index);epRender15();wait(next,episode15.steps[index+1]?.type==='transfer'?0:650)},850);return
    }
    if(epState15.pendingStep!==index){epState15.status=EPSTATUS15.RUNNING;epState15.pendingStep=index;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
    if(!activateComposer){keyboard15=false;typing15=false;draft15=epState15.draft||'';epRender15();return}
@@ -1271,13 +1282,15 @@ function runEp15(delay=500,activateComposer=false){
    typeText(step[1],()=>{epState15.status=EPSTATUS15.WAITING_TO_SEND;epState15.draft=step[1];draft15=step[1];saveEp15();epRender15()});return
   }
   if(step.type==='transfer'){
-   if(!epState15.transferCompleted){
-    const event={id:step.id,amount:step.amount,bank:step.bank,recipient:step.recipient,account:step.account,at:Date.now(),simulated:true};
-    if(!window.__KKT_SHOP__?.recordEpisodeTransfer){wait(next,120);return}
-    window.__KKT_SHOP__.recordEpisodeTransfer(event);epState15.transferCompleted=true;saveEp15();
-   }
-   if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',sender:step.bank,message:window.IphoneLocale?.language==='zh'?'银行转账支出 1,000,000韩元':'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
-   epState15.cursor=index+1;saveEp15();wait(next,900);return
+   wait(()=>{
+    if(!epState15.transferCompleted){
+     const event={id:step.id,amount:step.amount,bank:step.bank,recipient:step.recipient,account:step.account,at:Date.now(),simulated:true};
+     if(!window.__KKT_SHOP__?.recordEpisodeTransfer){wait(next,120);return}
+     window.__KKT_SHOP__.recordEpisodeTransfer(event);epState15.transferCompleted=true;saveEp15();
+    }
+    if(!epState15.smsNotified){window.__IPHONE_SMS__?.notify?.({type:'bank',sender:step.bank,message:window.IphoneLocale?.language==='zh'?'银行转账支出 1,000,000韩元':'은행 이체출금 1,000,000원'});epState15.smsNotified=true;saveEp15()}
+    epState15.cursor=index+1;saveEp15();wait(next,900)
+   },2000);return
   }
   if(step.type==='unsentDraft'){
    epState15.status=EPSTATUS15.UNSENT_DRAFT;epState15.pendingStep=index;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
@@ -1291,7 +1304,7 @@ function sendEp15(){
  if(!episode15||epState15.status!==EPSTATUS15.WAITING_TO_SEND)return;
  const index=epState15.pendingStep,step=epStep15(index);
  if(!Array.isArray(step)||step[0]!=='mine'||draft15!==step[1])return;
- epState15.status=EPSTATUS15.RUNNING;commitEpStep15(index);keyboard15=false;epRender15();runEp15(650);
+ epState15.status=EPSTATUS15.RUNNING;commitEpStep15(index);keyboard15=false;epRender15();runEp15(2000);
 }
 function save15(){try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}catch(e){}}
 function palette15(id=''){let p=[['#c8c1f6','#8a7bd6'],['#b8e8df','#5fb9aa'],['#b9dcfb','#63a9ea'],['#efd1db','#cb849b'],['#d6d6d6','#9d9d9d'],['#f2d3b8','#c79569']];let n=[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%p.length;return `--avbg:${p[n][0]};--avfg:${p[n][1]}`}
@@ -1334,6 +1347,7 @@ window.addEventListener('iphone26:languagechange',()=>{
 const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')render15();else prevRender15()};back=function(){if(mode==='kakao'&&view15){pauseEp15();view15='';render15()}else prevBack15()};window.__KKT15_TEST__={get data(){return data15},get contacts(){return contacts.map(c=>({...c}))},render:render15,open(){tab15='chats';view15='';render15()},openChat(id){pauseEp15();chat15=id;view15='room';keyboard15=false;draft15=id==='xxx'?epState15.draft:'';typing15=false;render15();if(id==='xxx')runEp15()},get tab(){return tab15},get view(){return view15},get episode(){return JSON.parse(JSON.stringify(epState15))},get episodeLoaded(){return !!episode15}};if(mode==='kakao')render15();
 })();
 </script>
+<style>.sms-bubble-wrap{display:flex;flex-direction:column;align-items:flex-start;margin:7px 0}.sms-bubble-wrap.mine{align-items:flex-end}.sms-bubble-wrap .bubble{margin:0}.sms-message-time{margin-top:4px;padding:0 5px;color:#8e8e93;font-size:10px;line-height:1}</style>
 <script src="./locales/locale.js?v=3"></script>
 <script src="./voicemail/voicemail.js?v=2"></script>
 <script src="./music/music.js?v=3"></script>
@@ -1342,8 +1356,8 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./kakao/message-requests-data.js?v=3"></script>
 <script src="./kakao/message-requests.js?v=16&amp;build=ep001-v12"></script>
 <script src="./notifications/notifications.js?v=8&amp;build=ep001-v12"></script>
-<script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v12"></script>
+<script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v16"></script>
 <script src="./kakao/shop.js?v=2&amp;build=ep001-v12"></script>
 <script src="./site-notice.js?v=8"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V015';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V016';proof.removeAttribute('hidden')}}</script>
 </body></html>
