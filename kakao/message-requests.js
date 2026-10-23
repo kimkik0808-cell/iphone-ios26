@@ -243,7 +243,15 @@ function ensureAiChats(){
   // has id="sister". Keep one contact and preserve any existing AI messages.
   const sister=data.find(item=>item.id==='sister');
   const legacy=data.filter(item=>item.id==='nuna');
-  if(sister&&legacy.length){
+  // The main seed loader can drop legacy-only chats during a reload; include
+  // the backup captured before that loader rewrites localStorage.
+  let savedLegacy=null,alreadyMerged=false;
+  try{
+    savedLegacy=JSON.parse(localStorage.getItem('jh_kkt_nuna_legacy_backup')||'null');
+    alreadyMerged=localStorage.getItem('jh_kkt_nuna_merged_sister_v1')==='1';
+  }catch(e){}
+  const sources=legacy.length?legacy:(savedLegacy?.id==='nuna'?[savedLegacy]:[]);
+  if(sister&&sources.length&&!alreadyMerged){
     const existing=Array.isArray(sister.messages)?sister.messages:[];
     const seen=new Set(existing.map(message=>JSON.stringify(message)));
     const addUnique=(items)=>items.filter(message=>{
@@ -254,7 +262,7 @@ function ensureAiChats(){
       return true;
     });
     let earlier=[],later=[],latest=null;
-    for(const old of legacy){
+    for(const old of sources){
       // Keep a local backup before folding the duplicate room into the original.
       try{
         if(!localStorage.getItem('jh_kkt_nuna_legacy_backup')){
@@ -277,9 +285,11 @@ function ensureAiChats(){
       sister.time=latest.time||sister.time;
       sister.updatedAt=latest.updatedAt;
     }
-    for(let i=data.length-1;i>=0;i--){
-      if(data[i]?.id==='nuna')data.splice(i,1);
-    }
+    try{localStorage.setItem('jh_kkt_nuna_merged_sister_v1','1')}catch(e){}
+  }
+  // Never show the deprecated second room, including on already migrated sites.
+  for(let i=data.length-1;i>=0;i--){
+    if(data[i]?.id==='nuna')data.splice(i,1);
   }
   for(const item of data){
     item.aiInteractive=AI_CHAT_IDS.has(item.id);
