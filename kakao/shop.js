@@ -164,7 +164,7 @@ function recipients(){
  return '<div class="ks-section"><h2>'+t('받는 친구 선택','选择赠送联系人')+'</h2><p>'+
  t('선물을 받을 친구를 선택해 주세요.','请选择接收礼物的 KakaoTalk 联系人。')+'</p></div>'+
  '<div class="ks-recipients">'+options.map(c=>'<button data-kshop="recipient" data-id="'+safe(c.id)+'" class="'+(recipient===c.id?'picked':'')+'">'+
- '<span class="ks-avatar">'+safe(c.name.slice(0,1))+'</span><strong>'+safe(c.name)+'</strong><span>'+(recipient===c.id?'✓':'○')+'</span></button>').join('')+'</div>'+
+ '<span class="ks-avatar">'+(c.id==='xxx'?'<img src="./assets/xxx-kkt-avatar.jpg" alt="" style="width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit">':safe(c.name.slice(0,1)))+'</span><strong>'+safe(c.name)+'</strong><span>'+(recipient===c.id?'✓':'○')+'</span></button>').join('')+'</div>'+
  button('recipient-next',t('확인','确定'),'ks-primary')+button('back',t('뒤로','返回'),'ks-outline');
 }
 function wallet(){
