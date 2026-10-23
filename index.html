@@ -352,7 +352,7 @@ function advancePhoneCall(){
 
 const smsTimes=['방금','1분 전','3분 전','7분 전','12분 전','18분 전','25분 전','39분 전','오전 9:18','오전 8:47','오전 8:12','어제','어제','어제','월요일','월요일','일요일','토요일','10월 18일','10월 17일','10월 16일','10월 15일','10월 13일','10월 11일'];
 const smsRand=n=>Math.floor(Math.random()*n),smsCode=()=>String(smsRand(900000)+100000),smsPhone=()=>`010-${String(smsRand(9000)+1000)}-${String(smsRand(9000)+1000)}`;
-const smsEntry=(name,initial,color,messages,extra={})=>({name,initial,color,messages,...extra});
+const smsEntry=(name,initial,color,messages,extra={})=>({name,initial,color,messages:extra.risk?messages.map(x=>x.replace(/[，。、,.]/g,'')):messages,...extra});
 function smsShuffle(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const smsAuth=[
  ()=>smsEntry('Apple','','#111',[`Apple ID 확인 코드: ${smsCode()}`, '이 코드는 다른 사람과 공유하지 마십시오']),
