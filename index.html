@@ -745,8 +745,11 @@ async function loadGithubReels(force=false){
       publishedAt:String(metadata.publishedAt||'').slice(0,90),
       collaborators:Array.isArray(metadata.collaborators)?metadata.collaborators.filter(v=>typeof v==='string').slice(0,4).map(v=>v.slice(0,60)):[],
       likedBy:String(metadata.likedBy||'').slice(0,120),
-      likes:String(metadata.likes||'0'),comments:String(metadata.comments||'0'),
-      reposts:String(metadata.reposts||'0'),shares:String(metadata.shares||'0'),saves:String(metadata.saves||'0'),
+      likes:String(metadata.likes??'0'),comments:String(metadata.comments??'0'),
+      reposts:String(metadata.reposts??'0'),shares:String(metadata.shares??'0'),saves:String(metadata.saves??'0'),
+      featuredComments:Array.isArray(metadata.featuredComments)?
+       metadata.featuredComments.filter(comment=>comment&&typeof comment.user==='string'&&typeof comment.text==='string')
+       .slice(0,30).map(comment=>({user:comment.user.slice(0,50),text:comment.text.slice(0,300)})):[],
       verified:metadata.verified===true
      };
     });
@@ -957,8 +960,14 @@ function igrOpenSheet(kind){
  let body='',heading='';
  if(kind==='comments'){
   heading='댓글';
-  body='<div class="igr-sheet-list">'+(data.comments.length?
-   data.comments.map(comment=>'<div class="igr-comment-row"><span class="igr-comment-avatar">☺</span><div><b>'+esc(id())+'</b><p>'+esc(comment)+'</p></div></div>').join(''):
+  const featured=Array.isArray(reel.featuredComments)?reel.featuredComments:[];
+  const sampleRows=featured.map(comment=>
+   '<div class="igr-comment-row"><span class="igr-comment-avatar">'+esc(comment.user.slice(0,1).toUpperCase())+'</span><div><b>'+esc(comment.user)+'</b><p>'+esc(comment.text)+'</p></div></div>'
+  );
+  const localRows=data.comments.map(comment=>
+   '<div class="igr-comment-row"><span class="igr-comment-avatar">☺</span><div><b>'+esc(id())+'</b><p>'+esc(comment)+'</p></div></div>'
+  );
+  body='<div class="igr-sheet-list">'+([...localRows,...sampleRows].join('')||
    '<p class="igr-empty">아직 추가된 댓글이 없습니다.</p>')+'</div>'+
    '<form class="igr-comment-form" data-igr-comment="1"><input type="text" maxlength="300" autocomplete="off" placeholder="댓글 추가..." aria-label="댓글 추가"><button type="submit">게시</button></form>';
  }else if(kind==='details'){
