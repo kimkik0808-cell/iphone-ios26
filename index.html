@@ -849,7 +849,7 @@ function igrI(name,filled=false){
 let igrActivity={};
 try{igrActivity=JSON.parse(localStorage.getItem('jh_ig_reels_ui_v1')||'{}')||{}}catch{}
 let igrMuted=true,igrSheet='',igrTemporaryPause=false;
-function igrKey(v){return String(acct())+'|'+String(v.id||v.url||'');}
+function igrKey(v){return String(acct())+'|'+String(v.url||v.id||'').split('?')[0];}
 function igrCurrent(){const v=getReelVideos();return v[reelIndex[acct()]||0]||null;}
 function igrEntry(v){
  const key=igrKey(v);
