@@ -1,0 +1,59 @@
+/* Reference-based full screen Instagram Reels styling, scoped to Reels. */
+#app.ig14-mode.igr-mode #appcontent{top:0!important;bottom:0!important;left:0!important;right:0!important}
+#app.ig14-mode.igr-mode #ig14{inset:0!important}
+#ig14 .igr-view{position:absolute;inset:0;background:#050505;color:#fff;overflow:hidden;isolation:isolate}
+#ig14 .igr-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover!important;background:#080808}
+#ig14 .igr-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(#0004,transparent 22%,transparent 53%,#000b)}
+#ig14 .igr-video-tap{position:absolute;z-index:2;inset:calc(var(--safe-top) + 108px) 56px 83px 0;background:transparent;border:0;touch-action:pan-y}
+#ig14 .igr-top{position:absolute;z-index:9;top:calc(var(--safe-top) + 59px);left:9px;right:13px;display:flex;justify-content:space-between;pointer-events:none}
+#ig14 .igr-top button{pointer-events:auto;background:none!important;color:white!important;width:44px;height:44px;display:grid;place-items:center}
+#ig14 .igr-top svg{width:32px;height:32px}
+#ig14 .igr-side{position:absolute;z-index:8;right:8px;bottom:99px;width:48px;display:flex;flex-direction:column;align-items:center;gap:13px;filter:drop-shadow(0 1px 2px #0007)}
+#ig14 .igr-action{display:flex!important;flex-direction:column;align-items:center;justify-content:center;min-height:54px;width:48px;gap:4px;color:white!important;background:transparent!important;border:0!important;padding:0!important}
+#ig14 .igr-action svg{width:33px;height:33px;stroke-width:1.8}
+#ig14 .igr-count{font-size:12px;line-height:1.1;color:white;font-weight:650}
+#ig14 .igr-action.igr-liked svg{fill:#ff1c4c;stroke:#ff1c4c}
+#ig14 .igr-action.igr-saved svg{fill:#fff}
+#ig14 .igr-more-action{min-height:24px}
+#ig14 .igr-more-action svg{height:26px;width:28px}
+#ig14 .igr-info{position:absolute;z-index:7;left:15px;right:66px;bottom:89px;display:flex;flex-direction:column;gap:9px;text-shadow:0 1px 3px #0009;pointer-events:none}
+#ig14 .igr-info button{pointer-events:auto}
+#ig14 .igr-socialproof{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:650}
+#ig14 .igr-social-stack{display:flex;padding-left:4px}
+#ig14 .igr-social-stack i{width:23px;height:23px;border:2px solid #fff9;border-radius:50%;margin-left:-5px;display:grid;place-items:center;background:#5e6472;font-size:13px;font-style:normal}
+#ig14 .igr-author{display:flex;align-items:center;gap:8px;min-height:35px}
+#ig14 .igr-avatar{width:34px;height:34px;border-radius:50%;border:1px solid #ffffff88;background:#4b5861;display:grid;place-items:center;flex:none;overflow:hidden}
+#ig14 .igr-avatar img{width:100%;height:100%;object-fit:cover}
+#ig14 .igr-username{font-size:14px;font-weight:750;max-width:54%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ig14 .igr-follow{background:#ffffff20!important;border:1px solid #fffc!important;border-radius:8px;padding:6px 11px!important;color:white!important;font-size:12px;font-weight:650;white-space:nowrap}
+#ig14 .igr-following{background:#ffffff55!important}
+#ig14 .igr-music{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px}
+#ig14 .igr-music svg{width:17px;height:17px;flex:none}
+#ig14 .igr-music span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#ig14 .igr-caption{margin:0;max-height:58px;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.4}
+#ig14 .igr-bottom{position:absolute;z-index:9;left:0;right:0;bottom:0;min-height:74px;padding:10px 13px 12px;background:#0f1114;display:flex;align-items:center}
+#ig14 .igr-comment-open{width:100%;border-radius:30px!important;min-height:49px;display:flex;align-items:center;padding:0 17px!important;text-align:left;background:#202227!important;color:#bebfc4!important;font-size:14px}
+#ig14 .igr-progress{position:absolute;z-index:8;left:0;right:0;bottom:74px;height:2px;background:#ffffff50;pointer-events:none}
+#ig14 .igr-progress i{display:block;height:100%;background:#fff;transition:width .3s linear}
+#ig14 .igr-pause-indicator[hidden]{display:none!important}
+#ig14 .igr-pause-indicator{position:absolute;z-index:5;left:50%;top:48%;transform:translate(-50%,-50%);height:70px;width:70px;border-radius:50%;display:grid;place-items:center;background:#0008;pointer-events:none}
+#ig14 .igr-pause-indicator svg{height:35px;width:35px}
+#ig14 .igr-sound{position:absolute;z-index:8;right:66px;bottom:95px;height:29px;width:29px;background:#0007!important;border-radius:50%;display:grid!important;place-items:center}
+#ig14 .igr-sound svg{width:18px;height:18px}
+#ig14 .igr-sheet-overlay{position:absolute;z-index:30;inset:0;background:#0009;display:flex;align-items:flex-end}
+#ig14 .igr-sheet{width:100%;max-height:76%;min-height:210px;background:#242428;border-radius:20px 20px 0 0;color:#fff;display:flex;flex-direction:column;padding:8px 0 14px}
+#ig14 .igr-sheet-handle{width:40px;height:4px;background:#62636b;border-radius:6px;margin:0 auto 12px}
+#ig14 .igr-sheet-head{padding:0 18px 15px;border-bottom:1px solid #ffffff22;display:flex;align-items:center;justify-content:center;position:relative;font-size:15px;font-weight:700}
+#ig14 .igr-sheet-head button{position:absolute;right:12px;top:-7px;width:40px;height:38px;font-size:26px;color:#fff}
+#ig14 .igr-sheet-list{flex:1;overflow:auto;padding:15px}
+#ig14 .igr-empty{text-align:center;color:#aaa;font-size:13px;padding:32px 8px}
+#ig14 .igr-comment-row{display:flex;gap:10px;margin-bottom:18px;font-size:13px}
+#ig14 .igr-comment-avatar{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;background:#636976}
+#ig14 .igr-comment-row b{display:block;font-size:12px;margin-bottom:5px}
+#ig14 .igr-comment-row p{margin:0;overflow-wrap:anywhere}
+#ig14 .igr-comment-form{display:flex;gap:8px;align-items:center;padding:10px 15px;border-top:1px solid #ffffff22}
+#ig14 .igr-comment-form input{min-width:0;flex:1;color:white;background:#393a40;border:0;border-radius:24px;padding:11px 13px;font-size:14px}
+#ig14 .igr-comment-form button{color:#93c2ff!important;font-size:13px;font-weight:750}
+#ig14 .igr-sheet-options{display:flex;flex-direction:column;padding:8px 15px}
+#ig14 .igr-sheet-options button{color:#fff!important;min-height:49px;text-align:left;border-bottom:1px solid #ffffff18}
+@media(max-height:640px){#ig14 .igr-side{gap:4px;bottom:85px}#ig14 .igr-action{min-height:44px}#ig14 .igr-action svg{width:28px;height:28px}#ig14 .igr-info{bottom:81px;gap:4px}#ig14 .igr-socialproof{display:none}#ig14 .igr-bottom{min-height:61px;padding:8px 12px}#ig14 .igr-progress{bottom:61px}}
