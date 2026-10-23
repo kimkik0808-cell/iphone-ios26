@@ -110,6 +110,12 @@
     if(loading||(!force&&loaded&&Date.now()-loadTime<300000))return;
     loading=true;error='';if(isMusic())refresh();
     const found=[],seen=new Set(), metadata={};
+    // Upload format: Artist - Song.mp3 (also supports Artist - Song.m4a).
+    const filenameInfo=name=>{
+      const stem=basename(name);
+      const match=stem.match(/^(.+?)\s+-\s+(.+)$/);
+      return match?{artist:match[1].trim(),title:match[2].trim()}:{artist:'아티스트 정보 없음',title:stem};
+    };
     const addTrack=(name,extra={},src='',size=0)=>{
       if(typeof name!=='string'||!mediaType.test(name))return;
       const canonical=name.normalize('NFC');
@@ -117,7 +123,7 @@
       seen.add(canonical);
       found.push({
         id:'official:'+canonical,name,
-        title:extra.title||basename(name),artist:extra.artist||'아티스트 정보 없음',
+        title:extra.title||filenameInfo(name).title,artist:extra.artist||filenameInfo(name).artist,
         cover:typeof extra.cover==='string'?extra.cover:'',
         src:src||new URL('./music/'+encodeURIComponent(name),document.baseURI).href,size
       });
