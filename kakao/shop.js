@@ -205,7 +205,7 @@ function draw(){
  '<header class="ks-header">'+(main?'<b>'+t('쇼핑','购物')+'</b>':
  '<button data-kshop="back" class="ks-back">‹</button><b>'+
  safe(({detail:t('상품 정보','商品详情'),checkout:t('결제','付款'),recipients:t('친구 선택','选择好友'),success:t('구매 완료','购买完成'),wallet:'kakaoPay',orders:t('선물함','礼物盒'),order:t('주문 정보','订单详情')})[page]||'쇼핑')+'</b>')+
- '<span class="ks-headright">'+(main?button('orders','🎁','ks-plain')+button('wallet','₩','ks-plain'):'')+'</span></header>'+
+ '<span class="ks-headright">'+(main?button('orders','🎁 <span>'+t('선물함','礼物盒')+'</span>','ks-plain ks-giftbox-link')+button('wallet','₩','ks-plain'):'')+'</span></header>'+
  '<div class="ks-scroll">'+content+'<p class="ks-disclaimer">'+t('팬메이드 가상 화면 · 실제 결제 및 발송 없음','同人虚拟界面 · 不产生真实付款或发送')+'</p></div>'+
  bottom()+'</section></div>';
 }
@@ -267,7 +267,7 @@ function scheduleGiftReply(o,id,p,chat){
    chat.messages.push(['other',reply,now,'','', 'gift-reply:'+o.id]);
    chat.preview=reply;chat.time='방금';chat.unread=(chat.unread||0)+1;
   }
-  o.replyDone=true;o.replyText=reply;o.replySource=result.source;o.repliedAt=Date.now();save();
+  o.replyDone=true;o.replyText=reply;o.replySource=result.source;o.repliedAt=Date.now();chat.updatedAt=o.repliedAt;save();
   try{localStorage.setItem('jh_kkt15',JSON.stringify(window.__KKT15_TEST__?.data||[]))}catch{}
   giftReplyPending.delete(o.id);
   window.__KKT15_TEST__?.render?.();
@@ -283,7 +283,7 @@ function pushOrderNotice(o,p){
  const text=o.recipient?'[선물 주문 완료]\n'+p.ko+'\n받는 분 '+who+'\n결제금액 '+money(o.price)+'\n주문번호 '+o.id:
   '[나에게 선물 주문 완료]\n'+p.ko+'\n결제금액 '+money(o.price)+'\n교환권이 선물함 > 받은 선물에 도착했어요.\n주문번호 '+o.id;
  const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.at));
- chat.messages.push(['other',text,now,'','','order:'+o.id]);chat.preview=text.split('\n')[0];chat.time='방금';chat.unread=(chat.unread||0)+1;
+ chat.messages.push(['other',text,now,'','','order:'+o.id]);chat.preview=text.split('\n')[0];chat.time='방금';chat.unread=(chat.unread||0)+1;chat.updatedAt=o.at;
  try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
  window.__IOS26_NOTIFICATIONS__?.showKakao?.({sender:'카카오톡 선물하기',message:o.recipient?'선물 주문이 완료되었습니다.':'나에게 선물한 교환권이 도착했습니다.',chatId:'kakao-gift'});
 }
@@ -303,7 +303,7 @@ function assignGift(o,id){
   if(!chat.messages.some(m=>m[5]==='gift:'+o.id)){
    const text='🎁 [선물하기] '+p.ko+' · '+money(p.price)+'\n'+t('선물을 보냈어요!','礼物已送出！');
    chat.messages.push(['mine',text,new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date()),'','read','gift:'+o.id]);
-   chat.preview=text;chat.time='방금';
+   chat.preview=text;chat.time='방금';chat.updatedAt=o.giftedAt||Date.now();
    try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
   }
   scheduleGiftReply(o,id,p,chat);
@@ -329,13 +329,13 @@ function restoreGiftChats(){
   if(c.messages.some(m=>m[5]==='gift:'+o.id)){
    if(o.replyDone&&o.replyText&&!c.messages.some(m=>m[5]==='gift-reply:'+o.id)){
     const replyTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.repliedAt||o.giftedAt||o.at));
-    c.messages.push(['other',o.replyText,replyTime,'','', 'gift-reply:'+o.id]);c.preview=o.replyText;
+    c.messages.push(['other',o.replyText,replyTime,'','', 'gift-reply:'+o.id]);c.preview=o.replyText;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;
    }
    continue;
   }
   const msg='🎁 [선물하기] '+p.ko+' · '+money(o.price)+'\n선물을 보냈어요!';
   const restoredTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.giftedAt||o.at));
-  c.messages.push(['mine',msg,restoredTime,'','read','gift:'+o.id]);c.preview=msg;c.time='방금';
+  c.messages.push(['mine',msg,restoredTime,'','read','gift:'+o.id]);c.preview=msg;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;
  }
  try{localStorage.setItem('jh_kkt15',JSON.stringify(list))}catch{}
 }

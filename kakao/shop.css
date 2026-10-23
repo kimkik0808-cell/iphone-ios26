@@ -5,7 +5,8 @@
 #kshop-root .ks-header{position:absolute;inset:0 0 auto;height:54px;padding:0 17px;background:#fff;display:flex;gap:12px;align-items:center;border-bottom:1px solid #efeff0;z-index:3}
 #kshop-root .ks-header>b{font-weight:750;font-size:20px;white-space:nowrap}
 #kshop-root .ks-headright{margin-left:auto;display:flex;align-items:center;gap:4px}
-#kshop-root .ks-headright .ks-btn{padding:6px 10px;background:transparent;color:#1f2021;font-size:20px}
+#kshop-root .ks-headright .ks-btn{padding:6px 8px;background:transparent;color:#1f2021;font-size:18px}
+#kshop-root .ks-headright .ks-giftbox-link{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:720;white-space:nowrap}
 #kshop-root .ks-back{font-size:31px;background:transparent;color:#202124;width:32px;text-align:left}
 #kshop-root .ks-scroll{position:absolute;top:54px;bottom:65px;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 0 24px;background:#fff}
 #kshop-root .ks-scroll::-webkit-scrollbar{display:none}

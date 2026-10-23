@@ -1,6 +1,7 @@
 (function(){
 'use strict';
 if(window.KKT_REQUEST_CONVERSATIONS)return;
+const cleanHarassmentText=text=>String(text).replace(/[,.，。]/g,'');
 const make=(id,language,name,latestTime,avatarTone,messages)=>({
   id,language,name,latestTime,avatarTone,
   messages:messages.map((text,index)=>{
@@ -8,7 +9,7 @@ const make=(id,language,name,latestTime,avatarTone,messages)=>({
     const hour24=Math.floor(absoluteMinute/60);
     const displayHour=hour24>12?hour24-12:hour24;
     const minute=String(absoluteMinute%60).padStart(2,'0');
-    return {text,time:(language==='ko'?'오후 ':'晚上')+displayHour+':'+minute};
+    return {text:cleanHarassmentText(text),time:(language==='ko'?'오후 ':'晚上')+displayHour+':'+minute};
   })
 });
 const conversations=[
