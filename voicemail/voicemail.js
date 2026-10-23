@@ -328,11 +328,11 @@
   }
 
   const originalPhonePage = phonePage;
-  const oldPlaceholder = '<div class="phone-empty"><i>◉</i><b>음성 메시지 없음</b><span>새로운 음성 메시지가 없습니다.</span></div>';
+  const oldPlaceholder = /<div class="phone-empty"><i>◉<\/i><b>[^<]*<\/b><span>[^<]*<\/span><\/div>/;
   phonePage = function (...args) {
     const html = originalPhonePage.apply(this, args);
     if (!currentView()) return html;
-    if (!html.includes(oldPlaceholder)) {
+    if (!oldPlaceholder.test(html)) {
       console.warn('[Voicemail] Phone placeholder changed; voicemail add-on needs a small update.');
       return html;
     }
