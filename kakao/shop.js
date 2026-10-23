@@ -1,10 +1,11 @@
-/* KakaoTalk gift shop: local-only fictional wallet, gift coupons, and iPhone SMS receipts. */
+/* KakaoTalk gift shop: fictional wallet, gift coupons, AI search, and iPhone SMS receipts. */
 (function(){
 'use strict';
 if(window.__KKT_SHOP__)return;
 const STORAGE='jh_kkt_shop_v1';
+const AI_STORAGE='jh_kkt_shop_ai_products_v1';
 const START=1680000;
-const PRODUCTS=[
+const STATIC_PRODUCTS=[
  {id:'coffee',ko:'아메리카노 T',zh:'美式咖啡（中杯）',kind:'카페',emoji:'☕',price:4500,bg:'#f6e0cc',desc:'따뜻한 커피 한 잔을 선물해요.'},
  {id:'cake',ko:'딸기 케이크 세트',zh:'草莓蛋糕套餐',kind:'디저트',emoji:'🍰',price:12800,bg:'#f9e0e9',desc:'달콤한 디저트 선물.'},
  {id:'chicken',ko:'치킨 한 마리 교환권',zh:'整只炸鸡兑换券',kind:'푸드',emoji:'🍗',price:25900,bg:'#faeac6',desc:'퇴근 후 맛있게 먹어요.'},
@@ -12,16 +13,48 @@ const PRODUCTS=[
  {id:'flowers',ko:'오늘의 꽃다발',zh:'今日鲜花花束',kind:'라이프',emoji:'💐',price:35900,bg:'#e0f0da',desc:'작은 마음을 담아 전해요.'},
  {id:'perfume',ko:'미니 향수 기프트 세트',zh:'迷你香水礼盒',kind:'뷰티',emoji:'🧴',price:59500,bg:'#dceafa',desc:'은은한 향기의 선물.'},
  {id:'snack',ko:'편의점 모바일 금액권',zh:'便利店电子礼券',kind:'쿠폰',emoji:'🍫',price:10000,bg:'#f4e5c8',desc:'언제든 필요한 간식.'},
- {id:'tea',ko:'티 & 쿠키 세트',zh:'茶饮与曲奇礼盒',kind:'카페',emoji:'🍵',price:16900,bg:'#dfefe4',desc:'쉬는 날의 여유.'}
+ {id:'tea',ko:'티 & 쿠키 세트',zh:'茶饮与曲奇礼盒',kind:'카페',emoji:'🍵',price:16900,bg:'#dfefe4',desc:'쉬는 날의 여유.'},
+ {id:'latte',ko:'카페라떼 & 마카롱',zh:'拿铁与马卡龙套餐',kind:'카페',emoji:'🥤',price:8900,bg:'#efe1d3',desc:'달콤한 휴식 시간을 선물해요.'},
+ {id:'donut',ko:'도넛 6개 골라담기',zh:'自选甜甜圈 6 个装',kind:'디저트',emoji:'🍩',price:14900,bg:'#f7ddd5',desc:'다 같이 나눠 먹기 좋은 디저트.'},
+ {id:'icecream',ko:'프리미엄 아이스크림 파인트',zh:'精品冰淇淋家庭装',kind:'디저트',emoji:'🍨',price:11900,bg:'#e8e2fa',desc:'기분 좋아지는 달콤한 선물.'},
+ {id:'pizza',ko:'치즈 피자 한 판',zh:'芝士披萨兑换券',kind:'푸드',emoji:'🍕',price:28900,bg:'#fae1c1',desc:'따뜻할 때 함께 즐겨요.'},
+ {id:'burger',ko:'수제버거 세트',zh:'手作汉堡套餐',kind:'푸드',emoji:'🍔',price:13800,bg:'#f1dfc1',desc:'든든한 한 끼를 선물해요.'},
+ {id:'concert',ko:'온라인 공연 관람권',zh:'线上演出观看券',kind:'문화',emoji:'🎫',price:22000,bg:'#dfe4fa',desc:'좋아하는 공연을 편하게 즐겨요.'},
+ {id:'book',ko:'전자책 금액권',zh:'电子书礼券',kind:'문화',emoji:'📚',price:20000,bg:'#e5eadc',desc:'읽고 싶은 책을 직접 골라요.'},
+ {id:'candle',ko:'포근한 향초 세트',zh:'香薰蜡烛礼盒',kind:'라이프',emoji:'🕯️',price:32900,bg:'#f2e7cf',desc:'공간을 채우는 편안한 향기.'},
+ {id:'mug',ko:'데일리 머그컵',zh:'日常马克杯',kind:'라이프',emoji:'☕',price:18900,bg:'#dceaf0',desc:'매일 편하게 쓰는 작은 선물.'},
+ {id:'handcream',ko:'핸드크림 듀오 세트',zh:'护手霜双支礼盒',kind:'뷰티',emoji:'🧴',price:27500,bg:'#eee2f4',desc:'부드러운 향과 보습을 선물해요.'},
+ {id:'lipbalm',ko:'컬러 립밤 기프트',zh:'润色唇膏礼盒',kind:'뷰티',emoji:'💄',price:24000,bg:'#f7dfe5',desc:'가볍게 매일 쓰기 좋은 선물.'},
+ {id:'department',ko:'백화점 모바일 상품권',zh:'百货商场电子礼券',kind:'쿠폰',emoji:'🎁',price:50000,bg:'#eee4cf',desc:'원하는 선물을 직접 고를 수 있어요.'},
+ {id:'delivery',ko:'배달 모바일 금액권',zh:'外卖电子礼券',kind:'쿠폰',emoji:'🛵',price:30000,bg:'#dff0e7',desc:'오늘 먹고 싶은 메뉴로 골라요.'},
+ {id:'cap',ko:'베이직 볼캡',zh:'基础款棒球帽',kind:'패션',emoji:'🧢',price:39000,bg:'#dde5ef',desc:'어디에나 편하게 어울리는 아이템.'},
+ {id:'earbuds',ko:'무선 이어버드 케이스',zh:'无线耳机保护壳',kind:'디지털',emoji:'🎧',price:24900,bg:'#e2e5ef',desc:'매일 사용하는 기기에 작은 포인트.'}
 ];
+const AI_KINDS=new Set(['카페','디저트','푸드','문화','라이프','뷰티','쿠폰','패션','디지털']);
+const AI_EMOJIS=new Set(['☕','🥤','🍵','🍰','🍩','🍪','🍫','🍨','🍗','🍕','🍔','🍱','🎟️','🎫','🎬','📚','💐','🕯️','🪴','🧸','🧴','💄','🎁','🛍️','🧢','👕','🎧','📱','⌚']);
+const AI_BACKGROUNDS=['#f6e0cc','#f9e0e9','#faeac6','#e3ddfa','#e0f0da','#dceafa','#f4e5c8','#dfefe4'];
+const cleanProduct=(p,index=0)=>{
+ const price=Math.round(Number(p?.price)/100)*100;
+ const kind=AI_KINDS.has(p?.kind)?p.kind:'라이프';
+ const ko=String(p?.ko||'').trim().slice(0,32),zh=String(p?.zh||'').trim().slice(0,32);
+ if(!ko||!zh||!Number.isFinite(price)||price<1000||price>300000)return null;
+ return {id:String(p?.id||'').replace(/[^a-z0-9-]/gi,'').slice(0,48),ko,zh,kind,
+  emoji:AI_EMOJIS.has(p?.emoji)?p.emoji:'🎁',price,bg:AI_BACKGROUNDS[index%AI_BACKGROUNDS.length],
+  desc:String(p?.desc||'마음을 담아 선물해요.').trim().slice(0,80),descZh:String(p?.descZh||'').trim().slice(0,80)};
+};
+function loadAiProducts(){
+ try{return JSON.parse(localStorage.getItem(AI_STORAGE)||'[]').map(cleanProduct).filter(p=>p&&p.id).slice(-60)}catch{return []}
+}
+let aiProducts=loadAiProducts();
+const allProducts=()=>STATIC_PRODUCTS.concat(aiProducts);
 const t=(ko,zh)=>window.IphoneLocale?.language==='zh'?zh:ko;
 const categoryName=name=>t(name,({
   '카페':'咖啡','디저트':'甜点','푸드':'美食','문화':'娱乐',
-  '라이프':'生活','뷰티':'美妆','쿠폰':'礼券'
+  '라이프':'生活','뷰티':'美妆','쿠폰':'礼券','패션':'时尚','디지털':'数码'
 })[name]||name);
 const money=n=>Math.max(0,Math.floor(Number(n)||0)).toLocaleString('ko-KR')+'원';
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const getItem=id=>PRODUCTS.find(p=>p.id===id);
+const getItem=id=>allProducts().find(p=>p.id===id);
 function load(){
  try{
   const s=JSON.parse(localStorage.getItem(STORAGE)||'null');
@@ -48,6 +81,7 @@ const contacts=()=>{
  return result;
 };
 let page='home', selected='coffee', orderId='', intent='self', recipient='', active=false, category='전체';
+let searchQuery='',searchResults=[],searching=false,searchError='';
 const currentOrder=()=>state.orders.find(o=>o.id===orderId)||null;
 const iconTab=(emoji,label,key)=>'<button type="button" data-k15="tab" data-v="'+key+'"><span style="font-size:21px">'+emoji+'</span><span>'+label+'</span></button>';
 function bottom(){
@@ -77,20 +111,26 @@ function transferRow(x){
  return '<div class="ks-order"><span class="ks-order-art" style="background:#fee500">₩</span><span><strong>'+safe(x.recipient||'계좌이체')+'</strong><small>'+new Date(x.at).toLocaleString('ko-KR')+' · '+safe(x.bank||'은행 이체')+'</small></span><b>'+money(x.amount)+'</b></div>';
 }
 function catalog(){
- const visible=PRODUCTS.filter(p=>category==='전체'||p.kind===category);
- const chips=['전체','카페','디저트','푸드','문화','라이프','뷰티','쿠폰'];
+ const source=searchQuery?searchResults:allProducts();
+ const visible=source.filter(p=>category==='전체'||p.kind===category);
+ const chips=['전체','카페','디저트','푸드','문화','라이프','뷰티','쿠폰','패션','디지털'];
  return '<section class="ks-hero"><small>kakao<span>pay</span> · '+t('모의 잔액','模拟余额')+'</small>'+
  '<strong>'+money(balance())+'</strong>'+button('wallet',t('잔액 · 결제 내역 보기 ›','查看余额与交易 ›'),'ks-light')+'</section>'+
  '<div class="ks-section"><h2>'+t('마음을 전하는 선물','把心意送给朋友')+'</h2><p>'+t('친구에게 보내거나 직접 구매해 보세요.','可自行购买，也可以赠送好友。')+'</p></div>'+
+ '<form class="ks-search" data-kshop-form="search"><input name="query" maxlength="40" autocomplete="off" value="'+safe(searchQuery)+'" placeholder="'+safe(t('향수, 케이크, 생일 선물 검색','搜索香水、蛋糕、生日礼物'))+'" aria-label="'+safe(t('AI 선물 검색','AI 礼物搜索'))+'"><button type="submit" '+(searching?'disabled':'')+'>'+(searching?'<span class="ks-spinner"></span>':t('AI 검색','AI 搜索'))+'</button>'+(searchQuery?'<button type="button" class="ks-search-clear" data-kshop="clear-search" aria-label="'+safe(t('검색 지우기','清除搜索'))+'">×</button>':'')+'</form>'+
+ (searching?'<p class="ks-search-note">'+t('어울리는 선물을 찾고 있어요…','正在生成合适的礼物…')+'</p>':'')+
+ (searchError?'<p class="ks-search-error">'+safe(searchError)+'</p>':'')+
+ (searchQuery&&!searching?'<div class="ks-result-title"><strong>'+safe(t('“'+searchQuery+'” AI 추천','“'+searchQuery+'” AI 推荐'))+'</strong><small>'+visible.length+t('개',' 件')+'</small></div>':'')+
  '<div class="ks-categories">'+chips.map(c=>'<button class="'+(c===category?'chosen':'')+'" data-kshop="category" data-id="'+c+'">'+
  safe(c==='전체'?t('전체','全部'):categoryName(c))+'</button>').join('')+'</div>'+
  '<div class="ks-grid">'+visible.map(productCard).join('')+'</div>'+
+ (!searching&&!visible.length?'<p class="ks-empty ks-search-empty">'+t('검색 결과가 없어요. 다른 단어로 검색해 보세요.','没有找到结果，请换个关键词试试。')+'</p>':'')+
  button('orders',t('선물함 · 구매 내역','礼物盒 · 购买记录'),'ks-outline');
 }
 function detail(){
  const p=getItem(selected);if(!p)return catalog();
  return '<div class="ks-detail-art" style="background:'+p.bg+'">'+p.emoji+'</div>'+
- '<div class="ks-section"><small>'+safe(categoryName(p.kind))+'</small><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(p.price)+'</strong><p>'+safe(t(p.desc,'虚拟电子礼券。购买后可赠送 KakaoTalk 联系人。'))+'</p></div>'+
+ '<div class="ks-section"><small>'+safe(categoryName(p.kind))+'</small><h2>'+safe(t(p.ko,p.zh))+'</h2><strong class="ks-huge">'+money(p.price)+'</strong><p>'+safe(t(p.desc,p.descZh||'虚拟电子礼券。购买后可赠送 KakaoTalk 联系人。'))+'</p></div>'+
  '<div class="ks-infocard">'+t('모바일 교환권 · 구매 후 선물 가능','电子礼券 · 购买后可赠送')+'</div>'+
  button('checkout',t('구매하기','立即购买'),'ks-primary')+
  button('choose-before',t('친구에게 선물하기','购买并送给好友'),'ks-outline');
@@ -282,6 +322,39 @@ function purchase(){
  if(intent==='gift'&&recipient)assignGift(o,recipient);
  page='success';draw();
 }
+const giftEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-search':'https://nuyheaj.pages.dev/api/kkt-gift-search';
+const hashId=value=>{
+ let h=2166136261;
+ for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}
+ return (h>>>0).toString(36);
+};
+function localSearch(query){
+ const q=query.toLowerCase();
+ const aliases={향수:['뷰티','perfume'],香水:['뷰티','perfume'],케이크:['디저트','cake'],蛋糕:['디저트','cake'],생일:['디저트','라이프','쿠폰'],生日:['디저트','라이프','쿠폰'],꽃:['라이프','flowers'],花:['라이프','flowers'],커피:['카페'],咖啡:['카페'],음식:['푸드'],美食:['푸드'],패션:['패션'],时尚:['패션'],이어폰:['디지털'],耳机:['디지털']};
+ const hints=Object.entries(aliases).filter(([key])=>q.includes(key.toLowerCase())).flatMap(([,v])=>v);
+ const found=allProducts().filter(p=>[p.ko,p.zh,p.kind,p.id].some(v=>String(v).toLowerCase().includes(q))||hints.includes(p.kind)||hints.includes(p.id));
+ return (found.length?found:STATIC_PRODUCTS.slice(0,6)).slice(0,8);
+}
+async function searchGifts(query){
+ const q=String(query||'').trim().slice(0,40);
+ if(!q||searching)return;
+ searchQuery=q;searchResults=[];searchError='';searching=true;category='전체';draw();
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+ try{
+  const response=await fetch(giftEndpoint(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:q,language:window.IphoneLocale?.language==='zh'?'zh':'ko'}),signal:controller.signal});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!Array.isArray(result.items))throw new Error(result.error||'request_failed');
+  const fresh=result.items.map((item,index)=>cleanProduct({...item,id:'ai-'+hashId(q+'|'+item.ko+'|'+item.price)},index)).filter(Boolean).slice(0,8);
+  if(!fresh.length)throw new Error('empty_results');
+  for(const item of fresh){const at=aiProducts.findIndex(p=>p.id===item.id);if(at>=0)aiProducts[at]=item;else aiProducts.push(item)}
+  aiProducts=aiProducts.slice(-60);
+  try{localStorage.setItem(AI_STORAGE,JSON.stringify(aiProducts))}catch{}
+  searchResults=fresh;
+ }catch(error){
+  searchResults=localSearch(q);
+  searchError=t('AI 연결이 잠시 불안정해 기본 추천을 보여드려요.','AI 暂时连接不稳定，已显示本地推荐。');
+ }finally{clearTimeout(timer);searching=false;draw()}
+}
 function back(){
  if(page==='detail')page='home';
  else if(page==='checkout')page=intent==='gift'?'recipients':'detail';
@@ -302,6 +375,7 @@ document.addEventListener('click',function(e){
  if(action==='home'){page='home';category='전체';}
  else if(action==='product'){selected=id;page='detail';}
  else if(action==='category'){category=id;page='home';}
+ else if(action==='clear-search'){searchQuery='';searchResults=[];searchError='';category='전체';page='home';}
  else if(action==='wallet'||action==='balance'||action==='pay'){page='wallet';}
  else if(action==='orders'){page='orders';}
  else if(action==='order'){orderId=id;page='order';}
@@ -323,13 +397,19 @@ document.addEventListener('click',function(e){
  else return;
  draw();
 },true);
+document.addEventListener('submit',function(e){
+ const form=e.target.closest('[data-kshop-form="search"]');
+ if(!form||typeof mode==='undefined'||mode!=='kakao')return;
+ e.preventDefault();e.stopPropagation();
+ searchGifts(new FormData(form).get('query'));
+},true);
 window.addEventListener('iphone26:languagechange',function(){if(active&&typeof mode!=='undefined'&&mode==='kakao'&&document.querySelector('#kshop-root'))draw()});
 window.__KKT_SHOP__={
  get balance(){return balance()},
  balanceText:()=>money(balance()),
  get orders(){return state.orders.map(o=>({...o}))},
  get transfers(){return state.transfers.map(x=>({...x}))},
- open, getProducts:()=>PRODUCTS.map(p=>({...p})),
+ open, getProducts:()=>allProducts().map(p=>({...p})),
  sync:syncSMS,recordEpisodeTransfer
 };
 restoreGiftChats();

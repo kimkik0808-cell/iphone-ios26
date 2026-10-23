@@ -19,6 +19,20 @@
 #kshop-root .ks-section p{font-size:12.5px;line-height:1.6;color:#777;margin:4px 0}
 #kshop-root .ks-section small{font-size:12px;color:#969696}
 #kshop-root .ks-huge{display:block;font-size:24px;font-weight:800;margin-top:11px}
+#kshop-root .ks-search{position:relative;display:flex;align-items:center;gap:8px;margin:3px 15px 8px;padding:5px 5px 5px 13px;border-radius:14px;background:#f3f3f5;border:1px solid transparent}
+#kshop-root .ks-search:focus-within{background:#fff;border-color:#e0c900;box-shadow:0 0 0 3px #fee50035}
+#kshop-root .ks-search input{min-width:0;flex:1;height:34px;border:0;outline:0;background:transparent;color:#222;font:inherit;font-size:14px}
+#kshop-root .ks-search input::placeholder{color:#999}
+#kshop-root .ks-search button{height:34px;min-width:65px;border-radius:10px;background:#fee500;color:#222;padding:0 11px;font-size:12px;font-weight:750;white-space:nowrap}
+#kshop-root .ks-search button:disabled{opacity:.7}
+#kshop-root .ks-search .ks-search-clear{min-width:28px;width:28px;padding:0;background:#dedee1;color:#666;border-radius:50%;font-size:18px;line-height:1}
+#kshop-root .ks-search-note,#kshop-root .ks-search-error{margin:4px 18px 9px;font-size:11.5px;line-height:1.45;color:#8b8b8b}
+#kshop-root .ks-search-error{color:#a06f00}
+#kshop-root .ks-result-title{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 2px;gap:10px}
+#kshop-root .ks-result-title strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#kshop-root .ks-result-title small{font-size:11px;color:#999;white-space:nowrap}
+#kshop-root .ks-spinner{display:inline-block;width:14px;height:14px;border:2px solid #423c1266;border-top-color:#423c12;border-radius:50%;vertical-align:-3px;animation:ks-spin .7s linear infinite}
+@keyframes ks-spin{to{transform:rotate(360deg)}}
 #kshop-root .ks-categories{padding:6px 13px 12px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
 #kshop-root .ks-categories::-webkit-scrollbar{display:none}
 #kshop-root .ks-categories button{white-space:nowrap;border-radius:999px;background:#f4f4f5;color:#6c6c6d;padding:9px 13px;font-size:12.5px;font-weight:600}
@@ -65,6 +79,7 @@
 #kshop-root .ks-order b{font-size:13px}
 #kshop-root .ks-order i{font-style:normal;color:#bbb}
 #kshop-root .ks-empty{padding:25px 20px;text-align:center;color:#999}
+#kshop-root .ks-search-empty{grid-column:1/-1;margin:0}
 #kshop-root .ks-disclaimer{margin:20px 13px 10px;text-align:center;font-size:10px;line-height:1.5;color:#aaa}
 #kshop-sms-banner{position:fixed;z-index:10020;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(calc(100% - 26px),420px);border:0;border-radius:19px;background:rgba(250,250,250,.97);box-shadow:0 9px 35px #0004;color:#252525;padding:13px 15px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;font-size:13px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 #kshop-sms-banner strong{font-size:14px}
