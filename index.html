@@ -876,6 +876,141 @@ function reels(){
  '<div id="igr-pause-indicator" class="igr-pause-indicator" hidden>'+igrI('play',true)+'</div>'+
  upload+'</div>';
 }
+
+function igrCurrentVideo(){return document.querySelector('#ig14 .igr-video');}
+function igrToggleVideo(){
+ const video=igrCurrentVideo();if(!video)return;
+ const mark=document.querySelector('#igr-pause-indicator');
+ if(video.paused){
+  const started=video.play();
+  if(started?.catch)started.catch(()=>{if(mark)mark.hidden=false;});
+  if(mark)mark.hidden=true;
+ }else{video.pause();if(mark)mark.hidden=false;}
+}
+function igrCloseSheet(){
+ const el=document.querySelector('#ig14 .igr-sheet-overlay');
+ if(!el)return;
+ el.remove();igrSheet='';
+ if(igrTemporaryPause){
+  const video=igrCurrentVideo();
+  video?.play()?.catch(()=>{});
+ }
+ igrTemporaryPause=false;
+}
+function igrOpenSheet(kind){
+ igrCloseSheet();
+ const reel=igrCurrent();if(!reel)return;
+ const data=igrEntry(reel),outer=document.querySelector('#ig14');
+ if(!outer)return;
+ const video=igrCurrentVideo();
+ igrTemporaryPause=!!video&&!video.paused;
+ video?.pause();
+ igrSheet=kind;
+ let body='',heading='';
+ if(kind==='comments'){
+  heading='댓글';
+  body='<div class="igr-sheet-list">'+(data.comments.length?
+   data.comments.map(comment=>'<div class="igr-comment-row"><span class="igr-comment-avatar">☺</span><div><b>'+esc(id())+'</b><p>'+esc(comment)+'</p></div></div>').join(''):
+   '<p class="igr-empty">아직 추가된 댓글이 없습니다.</p>')+'</div>'+
+   '<form class="igr-comment-form" data-igr-comment="1"><input type="text" maxlength="300" autocomplete="off" placeholder="댓글 추가..." aria-label="댓글 추가"><button type="submit">게시</button></form>';
+ }else if(kind==='share'){
+  heading='공유하기';
+  body='<div class="igr-sheet-options">'+b('reelshareopen','공유 메뉴 열기')+
+   b('reelcopy','페이지 링크 복사')+b('reelclose','취소')+'</div>';
+ }else{
+  heading='더 보기';
+  body='<div class="igr-sheet-options">'+
+   b('reelcopy','링크 복사')+b('reelclose','취소')+'</div>';
+ }
+ const panel=document.createElement('div');
+ panel.className='igr-sheet-overlay';
+ panel.innerHTML='<div class="igr-sheet"><div class="igr-sheet-handle"></div><div class="igr-sheet-head">'+
+ esc(heading)+b('reelclose','×','','aria-label="닫기"')+'</div>'+body+'</div>';
+ outer.appendChild(panel);
+ panel.addEventListener('click',e=>{if(e.target===panel)igrCloseSheet()});
+ if(kind==='comments')panel.querySelector('input')?.focus();
+}
+function igrUpdateUI(kind){
+ const reel=igrCurrent();if(!reel)return;
+ const data=igrEntry(reel);
+ const btn=document.querySelector('#ig14 [data-a="'+kind+'"]');
+ if(!btn)return;
+ const selected=(kind==='reellike'&&data.liked)||(kind==='reelsave'&&data.saved)||(kind==='reelrepost'&&data.reposted);
+ const className=kind==='reellike'?'igr-liked':kind==='reelsave'?'igr-saved':'igr-selected';
+ btn.classList.toggle(className,!!selected);
+ btn.setAttribute('aria-pressed',selected?'true':'false');
+ const counts={reellike:[reel.likes,!!data.liked?1:0],reelsave:[reel.saves,!!data.saved?1:0],reelrepost:[reel.reposts,!!data.reposted?1:0]};
+ if(counts[kind]){const label=btn.querySelector('.igr-count');if(label)label.textContent=igrCount(...counts[kind]);}
+}
+function igrHandleAction(kind,button){
+ const reel=igrCurrent();
+ if(kind==='reelback'){
+  igrCloseSheet();state.activeTab='home';view='';persist();render14();return;
+ }
+ if(kind==='reelclose'){igrCloseSheet();return;}
+ if(kind==='reeladd'){document.querySelector('#ig14-video')?.click();return;}
+ if(kind==='reelplay'){igrToggleVideo();return;}
+ if(kind==='reelsound'){
+  const video=igrCurrentVideo();if(!video)return;
+  igrMuted=!igrMuted;video.muted=igrMuted;
+  button.innerHTML=igrI(igrMuted?'mute':'volume');
+  button.setAttribute('aria-label',igrMuted?'소리 켜기':'음소거');
+  if(video.paused)video.play()?.catch(()=>{});
+  return;
+ }
+ if(!reel)return;
+ const data=igrEntry(reel);
+ if(kind==='reellike'||kind==='reelsave'||kind==='reelrepost'){
+  const key=kind==='reellike'?'liked':kind==='reelsave'?'saved':'reposted';
+  data[key]=!data[key];igrSave();igrUpdateUI(kind);return;
+ }
+ if(kind==='reelfollow'){
+  data.followed=!data.followed;igrSave();
+  button.textContent=data.followed?'팔로잉':'팔로우';
+  button.classList.toggle('igr-following',!!data.followed);
+  button.setAttribute('aria-pressed',data.followed?'true':'false');return;
+ }
+ if(kind==='reelcomments'){igrOpenSheet('comments');return;}
+ if(kind==='reelshare'){igrOpenSheet('share');return;}
+ if(kind==='reelmore'){igrOpenSheet('more');return;}
+ if(kind==='reelcopy'){
+  const url=location.href;
+  const copy=navigator.clipboard?.writeText?.(url);
+  if(copy?.then)copy.then(()=>toast14('링크가 복사됐습니다')).catch(()=>toast14('링크를 복사할 수 없습니다'));
+  else toast14('브라우저에서 링크를 복사해 주세요');
+  igrCloseSheet();return;
+ }
+ if(kind==='reelshareopen'){
+  if(navigator.share)navigator.share({title:'Instagram Reels',url:location.href}).catch(()=>{});
+  else toast14('공유 기능을 사용할 수 없습니다');
+  igrCloseSheet();
+ }
+}
+function igrSubmitComment(form){
+ const input=form.querySelector('input'),message=input?.value.trim();
+ if(!message)return;
+ const reel=igrCurrent();if(!reel)return;
+ igrEntry(reel).comments.push(message.slice(0,300));
+ igrSave();
+ igrCloseSheet();
+ const count=document.querySelector('#ig14 [data-a="reelcomments"] .igr-count');
+ if(count)count.textContent=igrCount(reel.comments,igrEntry(reel).comments.length);
+ toast14('댓글을 추가했습니다');
+}
+function igrAttachVideo(){
+ const video=igrCurrentVideo();if(!video)return;
+ const bar=document.querySelector('#igr-progress-bar');
+ video.addEventListener('timeupdate',()=>{
+  if(bar&&Number.isFinite(video.duration)&&video.duration>0)
+   bar.style.width=Math.min(100,Math.max(0,video.currentTime/video.duration*100))+'%';
+ },{passive:true});
+ video.addEventListener('error',()=>{
+  if(mode==='instagram'&&state.activeTab==='reels'&&!view)
+   toast14('동영상을 재생할 수 없습니다');
+ },{once:true});
+ // Mobile Safari autoplay is muted; manual tap can resume if autoplay is blocked.
+ video.play()?.catch(()=>{});
+}
 function search(){let users=acct()==='public'?Object.keys(teammate):privateFeed.map(x=>x.user);return `${head('검색')}<main class="scroll"><label class="ig14-search">${ico('search',20)}<input id="ig14-search" placeholder="검색"></label><div id="ig14-results">${users.map(u=>b('user',(acct()==='public'?av(teammate[u].avatar):def())+`<span class="ig14-rowtext"><b>${u}</b><small>${acct()==='public'?teammate[u].name:'추천 계정'}</small></span>`,'ig14-row',`data-id="${u}"`)).join('')}</div></main>${tabs()}`}
 function detail(pid){let p=getPost(pid);return `${head('게시물','',true)}<main class="scroll">${post(p)}</main>`}
 function comments(pid){let p=getPost(pid),arr=state.comments[acct()][pid]||[];return `${head('댓글','',true)}<div class="ig14-chat">${arr.map(x=>`<div class="ig14-bubble"><b>${id()}</b> ${esc(x)}</div>`).join('')||'<div class="ig14-empty">아직 댓글이 없습니다</div>'}</div><form class="ig14-chatinput" data-comment="${pid}"><input placeholder="댓글 달기..."><button>게시</button></form>`}
@@ -886,15 +1021,29 @@ function igTime(){return new Intl.DateTimeFormat(igLanguage()==='zh'?'zh-CN':'ko
 function aiFailure(error){let zh=igLanguage()==='zh',code=String(error?.message||'request_failed');let map={ai_not_configured:['Gemini尚未配置。','Gemini가 설정되지 않았습니다.'],quota_exceeded:['Gemini已达到额度限制，请稍后再试。','Gemini 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.'],upstream_timeout:['回复超时，请稍后再试。','답장 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.'],key_or_region_error:['Gemini密钥或地区设置有问题。','Gemini 키 또는 지역 설정을 확인해 주세요.']};return (map[code]||['暂时无法生成回复，请稍后再试。','답장을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'])[zh?0:1]}
 async function requestIgReply(cid,userText){let endpoint=location.hostname==='nuyheaj.pages.dev'?'/api/kkt-reply':'https://nuyheaj.pages.dev/api/kkt-reply',messages=state.messages[cid]||[],history=messages.slice(0,-1).filter(m=>!['reel','post','system'].includes(m.type)&&m.text).slice(-12).map(m=>({role:m.who==='mine'?'user':'model',text:m.text})),controller=new AbortController;aiController=controller;let timer=setTimeout(()=>controller.abort(),36000);try{let response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({chatId:cid,message:userText,history,language:igLanguage()}),signal:controller.signal}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error||'request_failed');if(!result.reply)throw Error('empty_reply');return String(result.reply).trim()}catch(error){if(controller.signal.aborted)throw Error('upstream_timeout');throw error}finally{clearTimeout(timer);if(aiController===controller)aiController=null}}
 async function runIgReply(cid,userText){if(aiSending)return;aiSending=true;aiTyping=true;aiError='';render14();try{let reply=await requestIgReply(cid,userText);(state.messages[cid]||(state.messages[cid]=[])).push({who:'other',text:reply,time:igTime()});aiError='';persist()}catch(error){aiError=aiFailure(error)}finally{aiSending=false;aiTyping=false;if(mode==='instagram'&&view==='conversation'&&selected===cid)render14()}}
-function render14(){if(typeof mode==='undefined'||mode!=='instagram')return;let f=document.querySelector('#appcontent');if(!f)return;document.querySelector('#app').classList.add('ig14-mode');let html;if(view==='accounts')html=accounts();else if(view==='requests')html=requests();else if(view==='conversation')html=conversation(selected,false);else if(view==='contact')html=contactProfile(selected);else if(view==='request')html=conversation(selected,true);else if(view==='detail')html=detail(selected);else if(view==='comments')html=comments(selected);else if(view==='create')html=create('post');else if(view==='storycreate')html=create('story');else if(view==='storyview')html=storyview(Number(selected));else if(view==='other')html=profile(selected);else html=({home,reels,inbox,search,profile}[state.activeTab]||home)();f.innerHTML=`<div id="ig14">${html}</div>`;if(view==='conversation'||view==='request')requestAnimationFrame(()=>{let chat=document.querySelector('#ig14-chat');if(chat)chat.scrollTop=chat.scrollHeight})}
+function render14(){if(typeof mode==='undefined'||mode!=='instagram')return;let f=document.querySelector('#appcontent');if(!f)return;document.querySelector('#app').classList.add('ig14-mode');let html;if(view==='accounts')html=accounts();else if(view==='requests')html=requests();else if(view==='conversation')html=conversation(selected,false);else if(view==='contact')html=contactProfile(selected);else if(view==='request')html=conversation(selected,true);else if(view==='detail')html=detail(selected);else if(view==='comments')html=comments(selected);else if(view==='create')html=create('post');else if(view==='storycreate')html=create('story');else if(view==='storyview')html=storyview(Number(selected));else if(view==='other')html=profile(selected);else html=({home,reels,inbox,search,profile}[state.activeTab]||home)();f.innerHTML=`<div id="ig14">${html}</div>`;
+ const immersive=!view&&state.activeTab==='reels'&&getReelVideos().length>0;
+ document.querySelector('#app').classList.toggle('igr-mode',immersive);
+ if(immersive)igrAttachVideo();
+ if(view==='conversation'||view==='request')requestAnimationFrame(()=>{let chat=document.querySelector('#ig14-chat');if(chat)chat.scrollTop=chat.scrollHeight})}
 function toast14(s){let r=document.querySelector('#ig14');if(!r)return;let t=document.createElement('div');t.className='ig14-toast';t.textContent=s;r.append(t);setTimeout(()=>t.remove(),1500)}
 function rerenderKeepScroll(){let old=document.querySelector('#ig14 .scroll'),top=old?.scrollTop||0;render14();requestAnimationFrame(()=>{let next=document.querySelector('#ig14 .scroll');if(next)next.scrollTop=top})}
 function toggle(key,pid,control){let a=list(key),i=a.indexOf(pid);i<0?a.push(pid):a.splice(i,1);persist();let active=a.includes(pid);if(key==='likes'&&control){control.innerHTML=ico('heart',27,active);control.classList.toggle('ig14-liked',active);let count=control.closest('.ig14-post')?.querySelector('.ig14-meta>b'),p=getPost(pid);if(count&&p)count.textContent=`좋아요 ${cnt((p.likes||0)+(active?1:0))}개`;return}rerenderKeepScroll()}
-function action(e){if(mode!=='instagram')return;let x=e.target.closest('[data-a]');if(!x)return;e.preventDefault();e.stopImmediatePropagation();let a=x.dataset.a,v=x.dataset.v,pid=x.dataset.id;if(a==='tab'){state.activeTab=v;view='';persist();render14();if(v==='reels')void loadGithubReels()}else if(a==='reelnext'){changeReel(1)}else if(a==='reelprev'){changeReel(-1)}else if(a==='reeladd'){document.querySelector('#ig14-video')?.click()}else if(a==='back'){if(view==='detail'&&sharedPostReturn){selected=sharedPostReturn;sharedPostReturn='';view='conversation'}else if(view==='contact'&&contactReturn==='conversation'){view='conversation';contactReturn=''}else view='';render14()}else if(a==='accounts'){view='accounts';render14()}else if(a==='switch'){state.account=v;state.activeTab='profile';view='';persist();render14()}else if(a==='like')toggle('likes',pid,x);else if(a==='save')toggle('saved',pid,x);else if(a==='prev'||a==='next'){let p=getPost(pid);slide[pid]=Math.max(0,Math.min(p.photos.length-1,(slide[pid]||0)+(a==='next'?1:-1)));rerenderKeepScroll()}else if(a==='user'){if(teammate[pid]){selected=pid;view='other';render14()}}else if(a==='contactprofile'){contactReturn=view==='conversation'?'conversation':'';selected=pid;view='contact';render14()}else if(a==='messagecontact'){selected=pid;view='conversation';contactReturn='';render14()}else if(a==='sharedpost'){sharedPostReturn=selected;selected=pid;view='detail';render14()}else if(a==='detail'){sharedPostReturn='';selected=pid;view='detail';render14()}else if(a==='comments'){selected=pid;view='comments';render14()}else if(a==='requests'){view='requests';render14()}else if(a==='request'){selected=pid;view='request';render14()}else if(a==='chat'){selected=pid;view='conversation';aiError='';render14()}else if(a==='opencreate'){view='create';render14()}else if(a==='storycreate'){view='storycreate';render14()}else if(a==='storyview'){selected=pid;view='storyview';render14()}else if(a==='publish'){if(!draftMedia)return toast14('사진을 먼저 선택하세요');if(draftKind==='story')state.stories[acct()].push({data:draftMedia,time:Date.now()});else{let cap=document.querySelector('#ig14-caption')?.value.trim()||'';state.userPosts[acct()].unshift({id:'u'+Date.now(),user:id(),avatar:acct()==='public'?'jh_avatar':null,photos:[draftMedia],caption:cap,likes:0,comments:0,time:'방금'});}draftMedia='';persist();view='';state.activeTab=draftKind==='story'?'home':'profile';render14()}}
+function action(e){if(mode!=='instagram')return;let x=e.target.closest('[data-a]');if(!x)return;e.preventDefault();e.stopImmediatePropagation();let a=x.dataset.a,v=x.dataset.v,pid=x.dataset.id;
+ if(['reelback','reelclose','reelplay','reelsound','reellike','reelsave','reelrepost','reelfollow','reelcomments','reelshare','reelmore','reelcopy','reelshareopen','reeladd'].includes(a)){
+  igrHandleAction(a,x);return;
+ }
+ if(a==='tab'){state.activeTab=v;view='';persist();render14();if(v==='reels')void loadGithubReels()}else if(a==='reelnext'){changeReel(1)}else if(a==='reelprev'){changeReel(-1)}else if(a==='reeladd'){document.querySelector('#ig14-video')?.click()}else if(a==='back'){if(view==='detail'&&sharedPostReturn){selected=sharedPostReturn;sharedPostReturn='';view='conversation'}else if(view==='contact'&&contactReturn==='conversation'){view='conversation';contactReturn=''}else view='';render14()}else if(a==='accounts'){view='accounts';render14()}else if(a==='switch'){state.account=v;state.activeTab='profile';view='';persist();render14()}else if(a==='like')toggle('likes',pid,x);else if(a==='save')toggle('saved',pid,x);else if(a==='prev'||a==='next'){let p=getPost(pid);slide[pid]=Math.max(0,Math.min(p.photos.length-1,(slide[pid]||0)+(a==='next'?1:-1)));rerenderKeepScroll()}else if(a==='user'){if(teammate[pid]){selected=pid;view='other';render14()}}else if(a==='contactprofile'){contactReturn=view==='conversation'?'conversation':'';selected=pid;view='contact';render14()}else if(a==='messagecontact'){selected=pid;view='conversation';contactReturn='';render14()}else if(a==='sharedpost'){sharedPostReturn=selected;selected=pid;view='detail';render14()}else if(a==='detail'){sharedPostReturn='';selected=pid;view='detail';render14()}else if(a==='comments'){selected=pid;view='comments';render14()}else if(a==='requests'){view='requests';render14()}else if(a==='request'){selected=pid;view='request';render14()}else if(a==='chat'){selected=pid;view='conversation';aiError='';render14()}else if(a==='opencreate'){view='create';render14()}else if(a==='storycreate'){view='storycreate';render14()}else if(a==='storyview'){selected=pid;view='storyview';render14()}else if(a==='publish'){if(!draftMedia)return toast14('사진을 먼저 선택하세요');if(draftKind==='story')state.stories[acct()].push({data:draftMedia,time:Date.now()});else{let cap=document.querySelector('#ig14-caption')?.value.trim()||'';state.userPosts[acct()].unshift({id:'u'+Date.now(),user:id(),avatar:acct()==='public'?'jh_avatar':null,photos:[draftMedia],caption:cap,likes:0,comments:0,time:'방금'});}draftMedia='';persist();view='';state.activeTab=draftKind==='story'?'home':'profile';render14()}}
 function compress(file,cb){let rd=new FileReader;rd.onload=()=>{let im=new Image;im.onload=()=>{let scale=Math.min(1,1080/im.width,1350/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.78))};im.src=rd.result};rd.readAsDataURL(file)}
-const content=document.querySelector('#appcontent');content.addEventListener('click',action,true);content.addEventListener('change',e=>{if(mode!=='instagram')return;if(e.target.id==='ig14-image'){let f=e.target.files?.[0];if(f)compress(f,d=>{draftMedia=d;let p=document.querySelector('#ig14-preview');if(p)p.innerHTML=img(d)})}if(e.target.id==='ig14-video'){let f=e.target.files?.[0];if(f){const list=videoUrls[acct()];list.unshift({url:URL.createObjectURL(f),caption:f.name});if(list.length>8){const old=list.pop();if(old?.url?.startsWith('blob:'))URL.revokeObjectURL(old.url)}reelIndex[acct()]=0;render14()}}},true);content.addEventListener('submit',e=>{if(mode!=='instagram')return;let form=e.target;if(!form.matches('[data-chat],[data-comment]'))return;e.preventDefault();e.stopImmediatePropagation();let inp=form.querySelector('input'),s=inp.value.trim();if(!s)return;if(form.dataset.chat){let cid=form.dataset.chat;if(aiSending)return;(state.messages[cid]||(state.messages[cid]=[])).push({who:'mine',text:s,time:igTime()});persist();inp.value='';render14();runIgReply(cid,s)}else{let p=form.dataset.comment;(state.comments[acct()][p]||(state.comments[acct()][p]=[])).push(s);persist();render14()}},true);
-content.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;touchY=e.touches[0].clientY},{passive:true});content.addEventListener('touchend',e=>{if(mode!=='instagram')return;let dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY,p=e.target.closest('.ig14-photo');if(!view&&state.activeTab==='reels'&&e.target.closest('.ig14-reels')&&Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)){changeReel(dy<0?1:-1);return}if(p&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){let po=getPost(p.dataset.post);slide[po.id]=Math.max(0,Math.min(po.photos.length-1,(slide[po.id]||0)+(dx<0?1:-1)));render14()}},{passive:true});
-const baseRender=render,baseBack=back;render=function(){baseRender();if(mode==='instagram'){view='';render14();if(state.activeTab==='reels')void loadGithubReels()}};back=function(){if(mode==='instagram'){if(view){view='';render14()}else if(state.activeTab!=='home'){state.activeTab='home';render14()}else baseBack()}else baseBack()};
+const content=document.querySelector('#appcontent');content.addEventListener('click',action,true);content.addEventListener('change',e=>{if(mode!=='instagram')return;if(e.target.id==='ig14-image'){let f=e.target.files?.[0];if(f)compress(f,d=>{draftMedia=d;let p=document.querySelector('#ig14-preview');if(p)p.innerHTML=img(d)})}if(e.target.id==='ig14-video'){let f=e.target.files?.[0];if(f){const list=videoUrls[acct()];list.unshift({url:URL.createObjectURL(f),caption:f.name});if(list.length>8){const old=list.pop();if(old?.url?.startsWith('blob:'))URL.revokeObjectURL(old.url)}reelIndex[acct()]=0;render14()}}},true);content.addEventListener('submit',e=>{
+ if(mode!=='instagram')return;
+ let form=e.target;
+ if(form.matches('[data-igr-comment]')){
+  e.preventDefault();e.stopImmediatePropagation();igrSubmitComment(form);return;
+ }
+ if(!form.matches('[data-chat],[data-comment]'))return;e.preventDefault();e.stopImmediatePropagation();let inp=form.querySelector('input'),s=inp.value.trim();if(!s)return;if(form.dataset.chat){let cid=form.dataset.chat;if(aiSending)return;(state.messages[cid]||(state.messages[cid]=[])).push({who:'mine',text:s,time:igTime()});persist();inp.value='';render14();runIgReply(cid,s)}else{let p=form.dataset.comment;(state.comments[acct()][p]||(state.comments[acct()][p]=[])).push(s);persist();render14()}},true);
+content.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;touchY=e.touches[0].clientY},{passive:true});content.addEventListener('touchend',e=>{if(mode!=='instagram')return;let dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY,p=e.target.closest('.ig14-photo');if(!view&&state.activeTab==='reels'&&e.target.closest('.igr-view')&&!igrSheet&&Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)){changeReel(dy<0?1:-1);return}if(p&&Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){let po=getPost(p.dataset.post);slide[po.id]=Math.max(0,Math.min(po.photos.length-1,(slide[po.id]||0)+(dx<0?1:-1)));render14()}},{passive:true});
+const baseRender=render,baseBack=back;render=function(){baseRender();if(mode==='instagram'){view='';render14();if(state.activeTab==='reels')void loadGithubReels()}else document.querySelector('#app')?.classList.remove('igr-mode')};back=function(){if(mode==='instagram'){if(view){view='';render14()}else if(state.activeTab!=='home'){state.activeTab='home';render14()}else baseBack()}else baseBack()};
 window.__IG14_TEST__={get state(){return state},ownPosts,teammate,privateFeed,fanRequests,privateChats,render:render14};
 if(mode==='instagram')render14();
 })();
