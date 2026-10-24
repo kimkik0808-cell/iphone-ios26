@@ -36,16 +36,16 @@ const products=[
  {id:'l13',cat:'digital',emoji:'📷',brand:'Sony',ko:'Alpha 7C II 풀프레임 카메라',cn:'Alpha 7C II 全画幅相机',price:2799000,old:3099000,a:'#e5e5e5',b:'#999',rating:'4.9',reviews:'518'},
  {id:'l14',cat:'beauty',emoji:'💨',brand:'Dyson',ko:'슈퍼소닉 뉴럴 헤어드라이어',cn:'Supersonic Nural 吹风机',price:599000,old:649000,a:'#efe5f4',b:'#b99ac9',rating:'4.8',reviews:'2,106'},
  {id:'l15',cat:'home',emoji:'💪',brand:'Therabody',ko:'테라건 프라임 플러스',cn:'Theragun Prime Plus 筋膜枪',price:689000,old:749000,a:'#e4eaed',b:'#94a4aa',rating:'4.8',reviews:'734'},
- {id:'l16',cat:'beauty',emoji:'🧴',brand:'Diptyque',ko:'오르페옹 오 드 퍼퓸 75ml',cn:'Orphéon 淡香精 75ml',price:279000,old:298000,a:'#f0eadf',b:'#c6b79f',rating:'4.9',reviews:'1,209'},
- {id:'l17',cat:'beauty',emoji:'🧴',brand:'Le Labo',ko:'어나더 13 오 드 퍼퓸 100ml',cn:'Another 13 淡香精 100ml',price:485000,old:520000,a:'#e8e4d7',b:'#b9af96',rating:'4.9',reviews:'887'},
- {id:'l18',cat:'beauty',emoji:'🧴',brand:'Tamburins',ko:'퍼퓸 핸드크림 트리오 세트',cn:'香氛护手霜三支套装',price:69000,old:76000,a:'#eee7dd',b:'#cdbdab',rating:'4.8',reviews:'3,542'},
+ {id:'l16',cat:'fashion',emoji:'🧥',brand:'ADERERROR',ko:'오버사이즈 울 블루종 재킷',cn:'宽松羊毛飞行夹克',price:890000,old:950000,a:'#e2e5e8',b:'#9aa2aa',rating:'4.8',reviews:'146'},
+ {id:'l17',cat:'fashion',emoji:'🧶',brand:'AMI',ko:'하트 로고 메리노 울 가디건',cn:'爱心标志美利奴羊毛开衫',price:690000,old:750000,a:'#e7e2dc',b:'#b7aaa0',rating:'4.8',reviews:'238'},
+ {id:'l18',cat:'digital',emoji:'🪒',brand:'Braun',ko:'Series 9 Pro+ 전기면도기',cn:'Series 9 Pro+ 电动剃须刀',price:499000,old:549000,a:'#e5e8eb',b:'#9ca5ad',rating:'4.9',reviews:'1,384'},
  {id:'l19',cat:'food',emoji:'💊',brand:'정관장',ko:'홍삼정 에브리타임 30포',cn:'正官庄红参精 Everytime 30条',price:119000,old:139000,a:'#f4dfd3',b:'#c58f74',rating:'4.9',reviews:'8,612'},
  {id:'l20',cat:'food',emoji:'🥩',brand:'설로인',ko:'한우 1++ 프리미엄 구이 세트',cn:'韩牛1++高级烤肉礼盒',price:169000,old:199000,a:'#f5dfd7',b:'#d39d8c',rating:'4.9',reviews:'1,536'}
 ];
 const DEFAULT_ORDERS=[
  {id:'CP2026102201',date:'2026. 10. 22.',items:[{id:'l10',qty:1}],total:2300000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026101801',date:'2026. 10. 18.',items:[{id:'l1',qty:1}],total:3550000,status:'배송 완료',statusCn:'配送完成'},
- {id:'CP2026101201',date:'2026. 10. 12.',items:[{id:'l16',qty:1}],total:279000,status:'배송 완료',statusCn:'配送完成'},
+ {id:'CP2026101201',date:'2026. 10. 12.',items:[{id:'l16',qty:1}],total:890000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026100501',date:'2026. 10. 05.',items:[{id:'l11',qty:1}],total:769000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026092701',date:'2026. 09. 27.',items:[{id:'l7',qty:1}],total:720000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026091901',date:'2026. 09. 19.',items:[{id:'l15',qty:1}],total:689000,status:'배송 완료',statusCn:'配送完成'},
@@ -58,10 +58,10 @@ const DEFAULT_ORDERS=[
  {id:'CP2026062401',date:'2026. 06. 24.',items:[{id:'l9',qty:1}],total:340000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026061101',date:'2026. 06. 11.',items:[{id:'l20',qty:1}],total:169000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026052901',date:'2026. 05. 29.',items:[{id:'l4',qty:1}],total:2190000,status:'배송 완료',statusCn:'配送完成'},
- {id:'CP2026051301',date:'2026. 05. 13.',items:[{id:'l17',qty:1}],total:485000,status:'배송 완료',statusCn:'配送完成'},
+ {id:'CP2026051301',date:'2026. 05. 13.',items:[{id:'l17',qty:1}],total:690000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026042501',date:'2026. 04. 25.',items:[{id:'l12',qty:1}],total:1104000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026040701',date:'2026. 04. 07.',items:[{id:'l6',qty:1}],total:1490000,status:'배송 완료',statusCn:'配送完成'},
- {id:'CP2026031601',date:'2026. 03. 16.',items:[{id:'l18',qty:1}],total:69000,status:'배송 완료',statusCn:'配送完成'},
+ {id:'CP2026031601',date:'2026. 03. 16.',items:[{id:'l18',qty:1}],total:499000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026022101',date:'2026. 02. 21.',items:[{id:'l3',qty:1}],total:7150000,status:'배송 완료',statusCn:'配送完成'}
 ];
 const cats=[['all','🛍️','전체','全部'],['food','🥬','식품','食品'],['daily','🧻','생활','生活'],['beauty','✨','뷰티','美妆'],['fashion','👕','패션','服饰'],['digital','📱','가전','数码'],['home','🏠','홈','家居'],['pet','🐶','반려','宠物'],['baby','🧸','유아','母婴'],['travel','✈️','여행','旅行']];
@@ -71,6 +71,7 @@ try{state=Object.assign(state,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch
 if(!Array.isArray(state.cart))state.cart=[];if(!Array.isArray(state.orders))state.orders=[];
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}};
 try{if(localStorage.getItem('iphone_coupang_order_seed_v1')!=='1'){const ids=new Set(state.orders.map(o=>o.id));state.orders=[...state.orders,...DEFAULT_ORDERS.filter(o=>!ids.has(o.id))];save();localStorage.setItem('iphone_coupang_order_seed_v1','1')}}catch{}
+try{if(localStorage.getItem('iphone_coupang_order_correction_v2')!=='1'){const corrected={l16:890000,l17:690000,l18:499000};state.orders=state.orders.map(o=>{const item=o.items?.find(i=>corrected[i.id]);return item?{...o,total:corrected[item.id]*Number(item.qty||1)}:o});save();localStorage.setItem('iphone_coupang_order_correction_v2','1')}}catch{}
 const money=n=>Number(n||0).toLocaleString(zh()?'zh-CN':'ko-KR')+t('원','韩元');
 const logo=()=>'<div class="cp-logo" aria-label="coupang">'+[...'coupang'].map(x=>'<i>'+x+'</i>').join('')+'</div>';
 const cartCount=()=>state.cart.reduce((n,x)=>n+x.qty,0);
