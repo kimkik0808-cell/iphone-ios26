@@ -48,10 +48,9 @@
     <button class="ios26-settings-account" data-s26="placeholder" data-section="Apple 계정">
       <div class="ios26-settings-avatar">재</div><span class="ios26-settings-account-text"><strong>이재현</strong><small>Apple 계정, iCloud 및 기타 서비스</small></span><span class="ios26-settings-chevron">›</span>
     </button>
-    ${group(row('에어플레인 모드','plane','#ff9e0b','끔')+row('Wi-Fi','wifi','#1685ee','연결됨')+row('Bluetooth','bluetooth','#1685ee','켬')+row('셀룰러','cellular','#34c759'))}
+    ${group(row('에어플레인 모드','plane','#ff9e0b','끔')+row('Wi-Fi','wifi','#1685ee','연결됨')+row('Bluetooth','bluetooth','#1685ee','켬')+row('셀룰러','cellular','#34c759')+row(locale('AI 설정','API 设置'),'spark','#5b67d7',window.__IPHONE_AI__?.configured?locale('사용자 API','自定义 API'):locale('공용 Gemini','公共 Gemini'),'ai'))}
     ${group(row('알림','bell','#ff3b30')+row('사운드 및 햅틱','volume','#ff315e',isSilent()?'무음':'','sound')+row('집중 모드','moon','#675bd5',isDnd()?'방해금지 켬':'끔','focus')+row('스크린 타임','display','#6f62e4'))}
     ${group(row('일반','gear','#858589','','general')+row('언어 및 지역','gear','#858589',currentLanguage()==='zh'?'简体中文':'한국어','language')+row('디스플레이 및 밝기','display','#2688ef')+row('개인정보 보호 및 보안','privacy','#367eeb'))}
-    ${group(row(locale('AI 설정','API 设置'),'spark','#5b67d7',window.__IPHONE_AI__?.configured?locale('사용자 API','自定义 API'):locale('공용 Gemini','公共 Gemini'),'ai'))}
     </main>`;
   }
   function focus(){
@@ -144,7 +143,7 @@
       <label class="ios26-ai-field"><span>${locale('모델','模型')} (Model)</span><div class="ios26-ai-model">${modelControl}<button type="button" data-s26="ai-models" ${aiBusy?'disabled':''}>↻</button></div></label>
       <label class="ios26-ai-field ios26-ai-range"><span>Temperature <b id="s26-ai-temp-value">${Number(aiDraft.temperature??.7).toFixed(1)}</b></span><input id="s26-ai-temperature" type="range" min="0" max="2" step="0.1" value="${safe(aiDraft.temperature??.7)}"></label>
       <label class="ios26-ai-field"><span>${locale('최대 출력 Tokens 선택 사항','最大输出 Tokens 可选')}</span><input id="s26-ai-tokens" type="number" inputmode="numeric" min="8" max="8192" placeholder="${locale('비워 두면 서비스 기본값 사용','留空则使用服务默认值')}" value="${safe(aiDraft.maxTokens)}"></label>
-      <p class="ios26-settings-caption ios26-ai-note">${locale('API 키는 이 브라우저에만 저장됩니다 사용자 API는 카카오톡 비剧情智能回复와 Instagram 비공개 계정 연락처 답장에만 적용됩니다','API Key 仅保存在当前浏览器 自定义 API 只用于 KakaoTalk 非剧情智能回复和 Instagram 小号联系人回复')}</p>
+      <p class="ios26-settings-caption ios26-ai-note">${locale('API 키는 현재 브라우저에만 저장됩니다','API Key 仅保存在当前浏览器')}</p>
       <div class="ios26-ai-actions"><button data-s26="ai-test" ${aiBusy?'disabled':''}>${aiBusy?locale('확인 중','正在测试'):locale('연결 테스트','测试连接')}</button><button class="primary" data-s26="ai-save">${locale('설정 저장','保存配置')}</button></div>
     </main>`;
   }
