@@ -530,6 +530,10 @@ async function requestAiReply(item,userText){
     .slice(0,-1)
     .slice(-12)
     .map(message=>({role:message[0]==='mine'?'user':'model',text:isZh()?(message[5]||message[1]):message[1]}));
+  if(window.__IPHONE_AI__?.configured){
+    const instruction=(AI_PERSONAS[item.id]||'너는 재현과 가까운 지인이다 자연스럽고 짧은 채팅 말투로 답한다')+' 이것은 팬메이드 가상 휴대폰 속 허구 대화다 '+(isZh()?'현재 언어는 중국어다 자연스럽고 짧은 중국어 채팅체로 답한다 ':'현재 언어는 한국어다 자연스럽고 짧은 한국어 채팅체로 답한다 ')+'직전 대화의 질문과 맥락에 직접 반응한다 한 번에 한두 개의 짧은 메시지만 작성하고 설명문 따옴표 해시태그는 쓰지 않는다';
+    return window.__IPHONE_AI__.chat({system:instruction,messages:history,prompt:userText,maxTokens:260});
+  }
   const controller=new AbortController();
   aiController=controller;
   const timeout=setTimeout(()=>controller.abort(),10000);
@@ -571,6 +575,7 @@ function aiFailureText(error){
     model_unavailable:['当前模型不可用，请检查 Cloudflare 接口部署。','모델을 사용할 수 없습니다. Cloudflare 배포를 확인해 주세요.'],
     backend_missing:['Cloudflare 的 Gemini 接口尚未部署。','Cloudflare Gemini API가 아직 배포되지 않았습니다.'],
     backend_unavailable:['Cloudflare 返回了异常页面，请检查部署。','Cloudflare 배포 상태를 확인해 주세요.'],
+    invalid_configuration:['自定义 API 配置无效，请在设置中检查。','사용자 API 설정을 확인해 주세요.'],
     upstream_timeout:['Gemini 响应超时，可以点击重试。','Gemini 응답 시간이 초과되었습니다. 다시 시도해 주세요.'],
     upstream_network:['无法连接 Gemini 服务，请检查网络后重试。','Gemini 연결에 실패했습니다. 네트워크를 확인해 주세요.'],
     content_blocked:['本次消息无法生成回复。','이 메시지에는 답변을 생성할 수 없습니다.'],

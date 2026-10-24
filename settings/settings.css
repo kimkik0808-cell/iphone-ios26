@@ -55,4 +55,13 @@
 .ios26-settings-focusinfo{margin:10px 8px;font-size:12px;line-height:1.75;color:#888791}
 .ios26-settings-toast{position:absolute;bottom:32px;left:17px;right:17px;border-radius:13px;background:#313039ec;color:white;
   text-align:center;font-size:13px;padding:12px;box-shadow:0 3px 12px #0003;z-index:20}
+.ios26-ai-scroll{padding-bottom:45px;background:linear-gradient(155deg,#f2f8fb,#f1f2fa 52%,#edf4f8)}
+.ios26-ai-presets{padding:16px 14px 13px;margin:5px 0 19px;border-radius:18px;background:#ffffffb8;box-shadow:0 5px 24px #65728a12;border:1px solid #fff}
+.ios26-ai-sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;color:#687087;font-size:13px}.ios26-ai-sectionhead span{display:flex;gap:8px}.ios26-ai-sectionhead button{width:34px;height:34px;border-radius:11px;background:#edf5f9!important;color:#5d7890;font-size:21px}.ios26-ai-sectionhead button.danger{background:#ffe8eb!important;color:#e23e4c}
+.ios26-ai-presets select,.ios26-ai-presets input,.ios26-ai-field>input,.ios26-ai-secret,.ios26-ai-model{width:100%;height:48px;border:1px solid #dde2e9;border-radius:13px;background:#fff;color:#232630;box-shadow:0 2px 7px #5360760b;padding:0 13px;outline:none;font-size:15px}
+.ios26-ai-presets select{margin-bottom:12px}.ios26-ai-presets label{display:block;color:#747b8c;font-size:12px}.ios26-ai-presets label input{display:block;margin-top:7px}
+.ios26-ai-state{margin:0 7px 17px;color:#71798c;font-size:12px;line-height:1.55}.ios26-ai-state b{color:#357a9d;font-weight:650}
+.ios26-ai-field{display:block;margin:0 0 17px;padding:0 1px;color:#626b80;font-size:12px}.ios26-ai-field>span{display:flex;justify-content:space-between;margin:0 7px 7px}.ios26-ai-field>input{font-size:14px}.ios26-ai-secret,.ios26-ai-model{display:flex;align-items:center;padding-right:7px}.ios26-ai-secret input,.ios26-ai-model input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;font-size:14px}.ios26-ai-secret button,.ios26-ai-model button{width:37px;height:37px;border-radius:11px;background:#edf2f6!important;color:#607287;font-size:18px}.ios26-ai-model button:disabled{opacity:.45}
+.ios26-ai-range input{width:100%;accent-color:#6c9fbd}.ios26-ai-range b{font-weight:650;color:#5d8098}
+.ios26-ai-note{margin:2px 7px 18px}.ios26-ai-actions{display:grid;grid-template-columns:1fr 1.45fr;gap:10px}.ios26-ai-actions button{height:48px;border-radius:14px;background:#fff!important;color:#35789e;font-weight:680;box-shadow:0 3px 13px #4c657a14}.ios26-ai-actions button.primary{background:#78aeca!important;color:#fff}.ios26-ai-actions button:disabled{opacity:.55}
 @media(prefers-reduced-motion:reduce){.ios26-settings-switch,.ios26-settings-switch i{transition:none}}
