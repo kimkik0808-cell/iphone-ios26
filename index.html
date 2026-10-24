@@ -1275,7 +1275,7 @@ if(mode==='instagram')render14();
 .k15-giftcard{width:218px;border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 1px 2px #0002;padding:0 13px 12px;display:flex;flex-direction:column}.k15-giftart{height:112px;margin:0 -13px 11px;background:linear-gradient(145deg,#eee8df,#c8b8a3);display:grid;place-items:center;color:#171717;font:700 42px Georgia,serif;letter-spacing:-4px}.k15-giftart span{font-size:19px;letter-spacing:0;margin-left:3px}.k15-giftcard small{font-size:10px;color:#8b8b8b}.k15-giftcard strong{font-size:14px;line-height:1.35;margin:3px 0 8px}.k15-giftcard b{font-size:15px}.k15-giftcard i{margin-top:10px;border-top:1px solid #eee;padding-top:9px;font-size:11px;font-style:normal;color:#816f56}
 .k15-moreprofile{margin:0;padding:14px 18px;background:#fff;border-radius:0;border-bottom:1px solid #eee}.k15-pay{margin:12px 16px;background:#f6f6f6;border-radius:12px;padding:15px}.k15-paytop{display:flex;align-items:center;gap:8px;font-size:14px}.k15-paytop b{font-size:17px}.k15-paytop button{margin-left:auto;background:none;font-size:12px;color:#777}.k15-payactions{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #e6e6e6;padding-top:12px}.k15-payactions button{background:none;border-right:1px solid #e2e2e2;font-size:12px}.k15-payactions button:last-child{border:0}.k15-servicegrid{display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 15px}.k15-servicegrid button{height:70px;background:none;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:8px}.k15-servicegrid i{font-style:normal;font-size:23px}.k15-ad{margin:4px 16px 14px;border-radius:11px;background:#fee500;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;font-size:12px}.k15-ad b{font-size:14px;display:block;margin-bottom:4px}.k15-opentabs{display:flex;gap:7px;padding:0 15px 12px;overflow:auto}.k15-opentabs button{border:1px solid #e2e2e2;background:#fff;border-radius:18px;padding:8px 13px;white-space:nowrap;font-size:12px}.k15-opentabs button.active{background:#222;color:#fff;border-color:#222}.k15-openhero{height:132px;margin:0 15px 14px;border-radius:13px;background:linear-gradient(130deg,#fee86a,#ffd342);padding:20px;position:relative;overflow:hidden}.k15-openhero b{font-size:18px;display:block;line-height:1.35}.k15-openhero p{font-size:12px;color:#665a18}.k15-openhero:after{content:'OPEN';position:absolute;right:-2px;bottom:-12px;font-size:46px;font-weight:900;color:#fff8}.k15-openheading{display:flex;align-items:center;padding:4px 18px 8px}.k15-openheading b{font-size:16px}.k15-openheading span{margin-left:auto;font-size:11px;color:#888}.k15-openrow{margin:0 15px 10px;border:1px solid #ededed;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}.k15-openpic{width:52px;height:52px;border-radius:10px;background:linear-gradient(145deg,#98c8d8,#6c92b2);display:grid;place-items:center;font-size:24px}.k15-openrow strong{font-size:14px}.k15-openrow p{font-size:11px;color:#888;margin:5px 0 0}
 </style>
-<script src="./kakao/episodes.js?build=ep002-v2"></script>
+<script src="./kakao/episodes.js?build=ep002-v3"></script>
 <script id="kkt15-script">
 (()=>{
 const S=document.querySelector('#appcontent');if(!S)return;
@@ -1326,10 +1326,19 @@ const epStep15=index=>window.IphoneLocale?.language==='zh'?(episode15?.zhSteps?.
 const localizedStep15=(episode,index)=>window.IphoneLocale?.language==='zh'?(episode?.zhSteps?.[index]||episode?.steps?.[index]):episode?.steps?.[index];
 const EPSTATUS15=Object.freeze({NOT_STARTED:'NOT_STARTED',RUNNING:'RUNNING',WAITING_TO_SEND:'WAITING_TO_SEND',UNSENT_DRAFT:'UNSENT_DRAFT',COMPLETED:'COMPLETED'});
 const freshEp15=episode=>({schema:episode?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],eventFlags:{},transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',unreadMineStep:null,unreadUntil:0,completed:false});
+function migrateEpState15(episode,state){
+ if(!state||state.schema===episode.version)return state;
+ const oldCount=episode.previousStepCounts?.[state.schema];
+ if(!Number.isInteger(oldCount))return null;
+ const migrated=Object.assign(freshEp15(episode),state,{schema:episode.version});
+ if(migrated.status===EPSTATUS15.COMPLETED&&migrated.cursor>=oldCount){migrated.status=EPSTATUS15.RUNNING;migrated.completed=false;migrated.cursor=oldCount;migrated.pendingStep=null;migrated.draft=''}
+ return migrated
+}
 const epStates15={};
 for(const episode of episodes15){
  let state;try{state=JSON.parse(localStorage.getItem(epKey15(episode.id))||'null')}catch(e){}
- if(!state||state.schema!==episode.version||!Object.values(EPSTATUS15).includes(state.status))state=freshEp15(episode);
+ state=migrateEpState15(episode,state);
+ if(!state||!Object.values(EPSTATUS15).includes(state.status))state=freshEp15(episode);
  state.sentSteps=Array.isArray(state.sentSteps)?[...new Set(state.sentSteps.filter(Number.isInteger))]:[];
  state.eventFlags=state.eventFlags&&typeof state.eventFlags==='object'?state.eventFlags:{};
  state.cursor=Number.isInteger(state.cursor)?Math.max(0,state.cursor):0;
@@ -1522,5 +1531,5 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <link rel="stylesheet" href="./coupang/coupang.css?v=2&amp;build=ep002-dynamic-v1">
 <script src="./coupang/coupang.js?v=4&amp;build=ep002-dynamic-v1"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V041';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V042';proof.removeAttribute('hidden')}}</script>
 </body></html>
