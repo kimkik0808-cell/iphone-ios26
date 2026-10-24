@@ -1376,14 +1376,14 @@ function scheduleEp002Trigger15(){
  clearTimeout(epTriggerTimer15);epTriggerTimer15=0;
  const first=epStates15.KKT_EP001,next=epStates15.KKT_EP002;
  if(!first||!next||first.status!==EPSTATUS15.COMPLETED||next.status!==EPSTATUS15.NOT_STARTED||next.eventFlags?.triggerPopup)return;
- const due=(first.completedAt||Date.now())+120000;
+ const due=(first.completedAt||Date.now())+60000;
  epTriggerTimer15=setTimeout(deliverEp002Trigger15,Math.max(0,due-Date.now()))
 }
 function deliverEp002Trigger15(){
  epTriggerTimer15=0;
  const episode=episodes15.find(ep=>ep.id==='KKT_EP002'),state=epStates15.KKT_EP002,first=epStates15.KKT_EP001;
  if(!episode||!state||state.status!==EPSTATUS15.NOT_STARTED||state.eventFlags?.triggerPopup||first?.status!==EPSTATUS15.COMPLETED)return;
- const due=(first.completedAt||Date.now())+120000;if(Date.now()<due){scheduleEp002Trigger15();return}
+ const due=(first.completedAt||Date.now())+60000;if(Date.now()<due){scheduleEp002Trigger15();return}
  const message=localizedStep15(episode,0),shown=window.__IOS26_NOTIFICATIONS__?.showKakao?.({story:true,sender:'xxx',message:message?.[1]||'너 향수 뭐 써',chatId:'xxx'});
  if(!shown){epTriggerTimer15=setTimeout(deliverEp002Trigger15,1200);return}
  state.status=EPSTATUS15.RUNNING;state.cursor=1;state.sentSteps=[...new Set([...(state.sentSteps||[]),0])];state.eventFlags={...(state.eventFlags||{}),triggerPopup:true};
@@ -1558,5 +1558,5 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <link rel="stylesheet" href="./coupang/coupang.css?v=2&amp;build=ep002-dynamic-v1">
 <script src="./coupang/coupang.js?v=4&amp;build=ep002-dynamic-v1"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V043';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V044';proof.removeAttribute('hidden')}}</script>
 </body></html>
