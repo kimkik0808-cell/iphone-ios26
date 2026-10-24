@@ -5,7 +5,7 @@
   if(window.__IPHONE_SOUND__)return;
   const KEY='iphone26_silent_mode';
   const candidates={
-    sms:['sms.m4a','sms.mp3','sms.wav'],
+    sms:['message.m4a','message.mp3','message.wav','sms.m4a','sms.mp3','sms.wav'],
     kakao:['kakao.mp3','kakao.m4a','kakao.wav'],
     ringtone:['ringtone.m4a','ringtone.mp3','ringtone.wav']
   };
