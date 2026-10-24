@@ -259,6 +259,26 @@ function playEpisodeGift(event,done){
  waitEpisodeGift(()=>{page='detail';storyGift.phase='choose-before';draw();waitEpisodeGift(()=>{page='recipients';storyGift.phase='recipient';draw();waitEpisodeGift(()=>{storyGift.phase='recipient-next';draw();waitEpisodeGift(()=>{page='checkout';storyGift.phase='purchase';draw();waitEpisodeGift(()=>{recordEpisodeGift(event);orderId=event.id;page='success';storyGift.phase='success';draw();waitEpisodeGift(()=>{storyGift.active=false;done?.(true)},1600)},800)},620)},620)},700)},720)
 }
 const giftReplyPending=new Set();
+const normalizeGiftMarker=value=>{
+ const marker=typeof value==='string'?value:'';
+ if(/^gift-reply[:-]/.test(marker))return 'gift-reply:'+marker.replace(/^gift-reply[:-]/,'');
+ if(/^gift[:-]/.test(marker))return 'gift:'+marker.replace(/^gift[:-]/,'');
+ return '';
+};
+const giftMarker=message=>{
+ const current=normalizeGiftMarker(message?.[6]);
+ return current||normalizeGiftMarker(message?.[5]);
+};
+const migrateGiftMarkers=messages=>{
+ let changed=false;
+ for(const message of Array.isArray(messages)?messages:[]){
+  if(!Array.isArray(message))continue;
+  const legacy=normalizeGiftMarker(message[5]);
+  if(!legacy)continue;
+  message[6]=legacy;message[5]='';changed=true;
+ }
+ return changed;
+};
 const giftReplyEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-reply':'https://nuyheaj.pages.dev/api/kkt-gift-reply';
 const giftFallback=(id,p)=>{
  const item=p.kind==='카페'?'커피':p.kind==='푸드'||p.kind==='디저트'?'맛있는 거':p.ko;
@@ -274,6 +294,15 @@ const giftFallback=(id,p)=>{
   sister:`갑자기 웬 ${item}이야ㅋㅋ 잘 받을게 고마워`
  };
  return fixed[id]||`${item} 고마워 잘 받을게`;
+};
+const giftFallbackZh=(id,p)=>{
+ const item=p.zh||p.ko;
+ const fixed={
+  xxx:`连${item}都送啊ㅋㅋ 不过我会好好收下的 谢谢`,
+  sw:`哥怎么突然送${item}ㅋㅋ 我会好好收下的`,
+  sister:`怎么突然送${item}啊ㅋㅋ 我会好好收下的 谢啦`
+ };
+ return fixed[id]||`谢谢你的${item} 我会好好收下的`;
 };
 async function requestGiftReply(id,p,chat){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
@@ -291,9 +320,11 @@ function scheduleGiftReply(o,id,p,chat){
  setTimeout(async()=>{
   const result=await requestGiftReply(id,p,chat),reply=result.text;
   const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());
-  if(!chat.messages.some(message=>message[5]==='gift-reply:'+o.id)){
-   chat.messages.push(['other',reply,now,'','', 'gift-reply:'+o.id]);
+  if(!chat.messages.some(message=>giftMarker(message)==='gift-reply:'+o.id)){
+   const replyZh=giftFallbackZh(id,p);
+   chat.messages.push(['other',reply,now,'','',replyZh,'gift-reply:'+o.id]);
    chat.preview=reply;chat.time='방금';chat.unread=(chat.unread||0)+1;
+   o.replyTextZh=replyZh;
   }
   o.replyDone=true;o.replyText=reply;o.replySource=result.source;o.repliedAt=Date.now();chat.updatedAt=o.repliedAt;save();
   try{localStorage.setItem('jh_kkt15',JSON.stringify(window.__KKT15_TEST__?.data||[]))}catch{}
@@ -330,9 +361,10 @@ function assignGift(o,id){
    data.push(chat);
   }
   if(!Array.isArray(chat.messages))chat.messages=[];
-  if(!chat.messages.some(m=>m[5]==='gift:'+o.id)){
+  if(!chat.messages.some(m=>giftMarker(m)==='gift:'+o.id)){
    const text='🎁 [선물하기] '+p.ko+' · '+money(p.price)+'\n'+t('선물을 보냈어요!','礼物已送出！');
-   chat.messages.push(['mine',text,new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date()),'','read','gift:'+o.id]);
+   const textZh='🎁 [送礼] '+(p.zh||p.ko)+' · '+money(p.price)+'\n礼物已送出！';
+   chat.messages.push(['mine',text,new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date()),'','read',textZh,'gift:'+o.id]);
    chat.preview=text;chat.time='방금';chat.updatedAt=o.giftedAt||Date.now();
    try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
   }
@@ -345,6 +377,8 @@ function assignGift(o,id){
 function restoreGiftChats(){
  const list=window.__KKT15_TEST__?.data;
  if(!Array.isArray(list))return;
+ let migrated=false;
+ for(const chat of list)migrated=migrateGiftMarkers(chat?.messages)||migrated;
  for(const o of state.orders){
   if(o.episode)continue;
   if(!o.recipient)continue;
@@ -357,18 +391,24 @@ function restoreGiftChats(){
    list.push(c);
   }
   if(!Array.isArray(c.messages))c.messages=[];
-  if(c.messages.some(m=>m[5]==='gift:'+o.id)){
-   if(o.replyDone&&o.replyText&&!c.messages.some(m=>m[5]==='gift-reply:'+o.id)){
+  const sent=c.messages.find(m=>giftMarker(m)==='gift:'+o.id);
+  if(sent){
+   if(!sent[5]){sent[5]='🎁 [送礼] '+(p.zh||p.ko)+' · '+money(o.price)+'\n礼物已送出！';migrated=true}
+   const existingReply=c.messages.find(m=>giftMarker(m)==='gift-reply:'+o.id);
+   if(existingReply&&!existingReply[5]){existingReply[5]=o.replyTextZh||giftFallbackZh(o.recipient,p);migrated=true}
+   if(o.replyDone&&o.replyText&&!existingReply){
     const replyTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.repliedAt||o.giftedAt||o.at));
-    c.messages.push(['other',o.replyText,replyTime,'','', 'gift-reply:'+o.id]);c.preview=o.replyText;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;
+    const replyZh=o.replyTextZh||giftFallbackZh(o.recipient,p);
+    c.messages.push(['other',o.replyText,replyTime,'','',replyZh,'gift-reply:'+o.id]);c.preview=o.replyText;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;migrated=true;
    }
    continue;
   }
   const msg='🎁 [선물하기] '+p.ko+' · '+money(o.price)+'\n선물을 보냈어요!';
+  const msgZh='🎁 [送礼] '+(p.zh||p.ko)+' · '+money(o.price)+'\n礼物已送出！';
   const restoredTime=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.giftedAt||o.at));
-  c.messages.push(['mine',msg,restoredTime,'','read','gift:'+o.id]);c.preview=msg;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;
+  c.messages.push(['mine',msg,restoredTime,'','read',msgZh,'gift:'+o.id]);c.preview=msg;c.time='방금';c.updatedAt=o.repliedAt||o.giftedAt||o.at;migrated=true;
  }
- try{localStorage.setItem('jh_kkt15',JSON.stringify(list))}catch{}
+ if(migrated)try{localStorage.setItem('jh_kkt15',JSON.stringify(list))}catch{}
 }
 function purchase(){
  const p=getItem(selected);
