@@ -54,7 +54,7 @@ function cleanSearchProduct(item,index=0){
  if(!ko||!cn)return null;
  return {id:String(item?.id||('ai-'+Date.now().toString(36)+'-'+index)),cat,emoji:String(item?.emoji||'🛍️').slice(0,4),brand:String(item?.brand||'Coupang').trim().slice(0,28),ko,cn,price,old:Math.max(price+1000,Math.round(price*1.12/100)*100),a:'#eef3f8',b:'#cbd8e6',rating:'4.8',reviews:String(120+((price+index*97)%4800)).replace(/\B(?=(\d{3})+(?!\d))/g,',')};
 }
-try{const saved=JSON.parse(localStorage.getItem(AI_KEY)||'[]');for(const item of saved){const p=cleanSearchProduct(item);if(p&&!products.some(x=>x.id===p.id))products.push(p)}}catch{}
+try{const saved=JSON.parse(localStorage.getItem(AI_KEY)||'[]').filter(item=>String(item?.id||'').startsWith('ai-'));localStorage.setItem(AI_KEY,JSON.stringify(saved));for(const item of saved){const p=cleanSearchProduct(item);if(p&&!products.some(x=>x.id===p.id))products.push(p)}}catch{}
 const DEFAULT_ORDERS=[
  {id:'CP2026102201',date:'2026. 10. 22.',items:[{id:'l10',qty:1}],total:2300000,status:'배송 완료',statusCn:'配送完成'},
  {id:'CP2026101801',date:'2026. 10. 18.',items:[{id:'l1',qty:1}],total:3550000,status:'배송 완료',statusCn:'配送完成'},
@@ -107,14 +107,6 @@ function page(){if(view==='detail')return detail();if(view==='cart')return cart(
 function renderCoupang(){if(typeof mode==='undefined'||mode!=='coupang')return;let app=$('#app'),frame=$('#appcontent');app.className='layer appscreen active coupang-mode';app.style.display='block';$('#status')?.classList.add('dark');$('#gesture')?.classList.add('ink');frame.style.bottom='calc(var(--safe-bottom) + 28px)';frame.style.overflow='hidden';frame.innerHTML='<div id="coupang-app">'+page()+'</div>'}
 function flash(message){clearTimeout(toastTimer);let root=$('#coupang-app');if(!root)return;root.querySelector('.cp-toast')?.remove();let n=document.createElement('div');n.className='cp-toast';n.textContent=message;root.appendChild(n);toastTimer=setTimeout(()=>n.remove(),1500)}
 const coupangSearchEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/coupang-search':'https://nuyheaj.pages.dev/api/coupang-search';
-function localSearchProducts(value){
- const q=String(value||'').trim(),seed=[...q].reduce((n,ch)=>n+ch.charCodeAt(0),0);
- const cat=/(옷|자켓|코트|니트|신발|服|衣|鞋)/i.test(q)?'fashion':/(폰|이어폰|카메라|电|耳机|相机)/i.test(q)?'digital':/(화장|스킨|뷰티|美妆|护肤)/i.test(q)?'beauty':'daily';
- const base=cat==='fashion'?180000+(seed%20)*25000:cat==='digital'?59000+(seed%18)*18000:19000+(seed%20)*2300;
- const namesKo=[q+' 프리미엄 에디션',q+' 베스트 셀렉션',q+' 데일리 세트',q+' 한정 패키지'];
- const namesCn=[q+' 高级款',q+' 人气精选',q+' 日常套装',q+' 限定组合'];
- return namesKo.map((ko,i)=>cleanSearchProduct({id:'local-'+encodeURIComponent(q).slice(0,20)+'-'+i,cat,emoji:cat==='fashion'?'👕':cat==='digital'?'🎧':cat==='beauty'?'✨':'🛍️',brand:'Coupang Select',ko,cn:namesCn[i],price:base+i*(cat==='fashion'?45000:9000)},i)).filter(Boolean);
-}
 async function searchProducts(value){
  const q=String(value||'').trim().slice(0,40);query=q;view='search';searchMessage='';
  if(!q){searching=false;renderCoupang();return}
@@ -126,11 +118,11 @@ async function searchProducts(value){
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!Array.isArray(result.items))throw new Error(result.error||'search_failed');
   fresh=result.items.map(cleanSearchProduct).filter(Boolean).slice(0,8);
- }catch(error){fresh=localSearchProducts(q)}
+ }catch(error){searchMessage=t('검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요','暂时无法加载搜索结果，请稍后重试')}
  finally{clearTimeout(timer)}
  for(const item of fresh){const at=products.findIndex(p=>p.id===item.id);if(at>=0)products[at]=item;else products.push(item)}
- try{localStorage.setItem(AI_KEY,JSON.stringify(products.filter(p=>String(p.id).startsWith('ai-')||String(p.id).startsWith('local-')).slice(-60)))}catch{}
- searching=false;searchMessage=fresh.length?t('추천 상품을 불러왔습니다','已加载推荐商品'):'';renderCoupang();
+ try{localStorage.setItem(AI_KEY,JSON.stringify(products.filter(p=>String(p.id).startsWith('ai-')).slice(-60)))}catch{}
+ searching=false;if(fresh.length)searchMessage=t('추천 상품을 불러왔습니다','已加载推荐商品');renderCoupang();
 }
 document.addEventListener('submit',e=>{if(mode!=='coupang'||e.target.closest('#coupang-app')===null)return;e.preventDefault()},true);
 document.addEventListener('keydown',e=>{if(mode==='coupang'&&e.target.id==='cp-search'&&e.key==='Enter'){e.preventDefault();void searchProducts(e.target.value)}},true);
