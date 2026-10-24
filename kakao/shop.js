@@ -242,25 +242,29 @@ function recordMerchantPayment(event){
  const payment={id:event.id,amount:event.amount,merchant:event.merchant||'쿠팡',item:event.item||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
  state.payments.push(payment);save();syncSMS();return true;
 }
-function recordEpisodeGift(event){
- if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
- if(state.orders.some(x=>x.id===event.id)){syncSMS();return false}
- const p=getItem(event.itemId),o={id:event.id,itemId:p.id,price:event.price,at:event.at||Date.now(),balanceAfter:balance()-event.price,recipient:event.recipient||'xxx',giftedAt:event.at||Date.now(),episode:true};
- state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();
+function notifyEpisodeGiftSMS(o,p){
+ if(!o||!p||o.smsNotified)return false;
  const zh=window.IphoneLocale?.language==='zh';
  const item=zh?(p.zh||p.ko):p.ko;
  window.__IPHONE_SMS__?.notify?.({
   type:'gift',story:true,sender:zh?'Kakao礼物':'카카오 선물하기',
   message:zh?'已向'+o.recipient+'发送 '+item:o.recipient+'님에게 '+item+' 선물 발송 완료'
  });
- return true;
+ o.smsNotified=true;save();return true;
+}
+function recordEpisodeGift(event){
+ if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
+ const existingOrder=state.orders.find(x=>x.id===event.id);
+ if(existingOrder){syncSMS();notifyEpisodeGiftSMS(existingOrder,getItem(existingOrder.itemId));return false}
+ const p=getItem(event.itemId),o={id:event.id,itemId:p.id,price:event.price,at:event.at||Date.now(),balanceAfter:balance()-event.price,recipient:event.recipient||'xxx',giftedAt:event.at||Date.now(),episode:true,smsNotified:false};
+ state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();notifyEpisodeGiftSMS(o,p);return true;
 }
 function stopEpisodeGift(){storyGift.timers.forEach(clearTimeout);storyGift={active:false,phase:'',timers:[]}}
 function waitEpisodeGift(fn,ms){const timer=setTimeout(()=>{storyGift.timers=storyGift.timers.filter(x=>x!==timer);if(storyGift.active&&typeof mode!=='undefined'&&mode==='kakao')fn()},ms);storyGift.timers.push(timer)}
 function playEpisodeGift(event,done){
  stopEpisodeGift();
  if(!event||!getItem(event.itemId)){done?.(false);return}
- if(state.orders.some(o=>o.id===event.id)){syncSMS();done?.(false);return}
+ if(state.orders.some(o=>o.id===event.id)){recordEpisodeGift(event);done?.(false);return}
  const p=getItem(event.itemId);
  storyGift.active=true;selected=p.id;recipient=event.recipient||'xxx';intent='gift';category=p.kind;searchQuery='';searchResults=[];page='home';storyGift.phase='product';draw();
  waitEpisodeGift(()=>{page='detail';storyGift.phase='choose-before';draw();waitEpisodeGift(()=>{page='recipients';storyGift.phase='recipient';draw();waitEpisodeGift(()=>{storyGift.phase='recipient-next';draw();waitEpisodeGift(()=>{page='checkout';storyGift.phase='purchase';draw();waitEpisodeGift(()=>{recordEpisodeGift(event);orderId=event.id;page='success';storyGift.phase='success';draw();waitEpisodeGift(()=>{storyGift.active=false;done?.(true)},1600)},800)},620)},620)},700)},720)
