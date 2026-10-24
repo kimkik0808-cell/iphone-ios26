@@ -10,6 +10,7 @@
 
   const API_URL = 'https://api.github.com/repos/kimkik0808-cell/iphone-ios26/contents/voicemail?ref=main';
   const AUDIO_EXT = /\.(mp3|m4a|wav|aac|mp4)$/i;
+  const transcriptName = (file) => file.replace(AUDIO_EXT, '') + '.zh.txt';
   const baseURL = new URL('./', document.baseURI);
   const dirURL = (name) => new URL('voicemail/' + encodeURIComponent(name), baseURL).href;
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -101,8 +102,21 @@
       name: koreanStamp(stamp),
       date: '',
       number: String(meta.number || meta.caller || '음성 메시지'),
-      note: String(meta.note || '')
+      note: String(meta.note || ''),
+      transcript: ''
     };
+  }
+
+  async function readTranscript(file, knownFiles = null) {
+    const name = transcriptName(file);
+    if (knownFiles && !knownFiles.has(name.normalize('NFC'))) return '';
+    try {
+      const response = await fetch(dirURL(name) + '?v=' + Date.now(), {cache:'no-store'});
+      if (!response.ok) return '';
+      return String(await response.text()).trim();
+    } catch (e) {
+      return '';
+    }
   }
 
   async function readMetadata() {
@@ -135,6 +149,7 @@
       let filenames = [...new Set(meta
         .map(x => x && x.file)
         .filter(x => typeof x === 'string' && AUDIO_EXT.test(x)))];
+      let knownFiles = null;
       // Also discover newly uploaded files so a numeric filename such as
       // 20261003.m4a appears without manually editing messages.json.
       try {
@@ -145,6 +160,9 @@
         if (!response.ok) throw new Error('GitHub API ' + response.status);
         const body = await response.json();
         if (!Array.isArray(body)) throw new Error('응답 형식 오류');
+        knownFiles = new Set(body
+          .filter(x => x && x.type === 'file' && typeof x.name === 'string')
+          .map(x => x.name.normalize('NFC')));
         // A successful directory scan is authoritative. Deleted audio must not
         // survive just because an older messages.json still mentions it.
         filenames = [...new Set(body
@@ -154,9 +172,12 @@
         if (!filenames.length) throw new Error('No bundled voicemail manifest and directory discovery failed: ' + err);
         console.warn('[Voicemail] Directory discovery skipped:', err);
       }
-      state.items = filenames
-        .map(file => normalize(file, metaMap.get(file.normalize('NFC')) || {}))
-        .sort((a, b) => b.timestamp - a.timestamp);
+      state.items = await Promise.all(filenames.map(async file => {
+        const item = normalize(file, metaMap.get(file.normalize('NFC')) || {});
+        item.transcript = await readTranscript(file, knownFiles);
+        return item;
+      }));
+      state.items.sort((a, b) => b.timestamp - a.timestamp);
       state.loaded = true;
       state.error = '';
     })().catch(err => {
@@ -189,6 +210,7 @@
             <div class="vm26-clock"><span class="vm26-position">0:00</span><span class="vm26-duration">0:00</span></div>
           </div>
         </div>
+        ${vmZh() && item.transcript ? `<section class="vm26-transcript"><strong>语音信箱内容</strong><p>${escape(item.transcript)}</p></section>` : ''}
       </div>` : ''}
     </article>`;
   }
@@ -315,6 +337,7 @@
   .vm26-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.vm26-main strong{font-size:16px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vm26-main small{font-size:13px;color:#8e8e93;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .vm26-right{display:flex;align-items:center;gap:8px;color:#8e8e93;font-size:12px;flex:0 0 auto;max-width:44%}.vm26-right time{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vm26-chevron{color:#a4a4ab;font-size:22px;font-weight:350}
   .vm26-detail{padding:0 20px 20px 39px;animation:vm26-in .18s ease}.vm26-note{font-size:13px;color:#74747a;line-height:1.5;margin:0 0 12px}.vm26-controls{display:flex;gap:15px;align-items:center}.vm26-play{width:43px;height:43px;display:grid;place-items:center;background:#f0f0f4;color:#007aff;border-radius:50%;border:0;flex:0 0 43px}.vm26-track{min-width:0;flex:1}.vm26-seek{appearance:none;-webkit-appearance:none;display:block;width:100%;height:5px;background:linear-gradient(to right,#007aff var(--vm26-progress,0%),#d5d5db var(--vm26-progress,0%));border-radius:10px;margin:0;touch-action:pan-y}.vm26-seek::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#007aff;border:0;box-shadow:0 1px 2px #0002}.vm26-clock{display:flex;justify-content:space-between;color:#8e8e93;font-size:11px;margin-top:9px;font-variant-numeric:tabular-nums}
+  .vm26-transcript{margin-top:16px;padding:13px 14px;background:#f5f5f7;border-radius:12px;color:#222}.vm26-transcript strong{display:block;font-size:12px;color:#77777d;margin-bottom:7px}.vm26-transcript p{margin:0;font-size:14px;line-height:1.65;white-space:pre-line;word-break:break-word}
   .vm26-footer{display:flex;align-items:center;justify-content:space-between;padding:15px 20px 20px;color:#8e8e93;font-size:12px}.vm26-footer button,.vm26-status button,.vm26-empty button{border:0;background:none;color:#007aff;font-size:13px;font-weight:550;padding:8px}
   .vm26-status{text-align:center;padding:74px 20px;color:#85858b;font-size:14px;line-height:1.5}.vm26-status p{margin:14px 0 8px}.vm26-spinner{height:24px;width:24px;border:3px solid #dadade;border-top-color:#007aff;border-radius:50%;margin:0 auto;animation:vm26-spin .8s linear infinite}.vm26-empty button{display:block;margin:19px auto 0}.vm26-audio-error{font-size:12px;color:#e14640;margin:11px 0 0}
   @keyframes vm26-spin{to{transform:rotate(360deg)}}@keyframes vm26-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
