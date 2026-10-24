@@ -531,7 +531,7 @@ async function requestAiReply(item,userText){
     .slice(-12)
     .map(message=>({role:message[0]==='mine'?'user':'model',text:isZh()?(message[5]||message[1]):message[1]}));
   if(window.__IPHONE_AI__?.configured){
-    const instruction=(AI_PERSONAS[item.id]||'너는 재현과 가까운 지인이다 자연스럽고 짧은 채팅 말투로 답한다')+' 이것은 팬메이드 가상 휴대폰 속 허구 대화다 '+(isZh()?'현재 언어는 중국어다 자연스럽고 짧은 중국어 채팅체로 답한다 ':'현재 언어는 한국어다 자연스럽고 짧은 한국어 채팅체로 답한다 ')+'직전 대화의 질문과 맥락에 직접 반응한다 한 번에 한두 개의 짧은 메시지만 작성하고 설명문 따옴표 해시태그는 쓰지 않는다';
+    const instruction=(AI_PERSONAS[item.id]||'너는 재현과 가까운 지인이다 자연스럽고 짧은 채팅 말투로 답한다')+' 이것은 팬메이드 가상 휴대폰 속 허구 대화다 '+(isZh()?'현재 언어는 중국어다 자연스럽고 짧은 중국어 채팅체로 답한다 ':'현재 언어는 한국어다 자연스럽고 짧은 한국어 채팅체로 답한다 ')+'직전 대화의 질문과 맥락에 직접 반응한다 한 번에 한두 개의 짧은 메시지만 작성한다 두 메시지를 보낼 때는 반드시 줄바꿈으로 구분하고 한 줄에 합치지 않는다 설명문 따옴표 해시태그는 쓰지 않는다';
     return window.__IPHONE_AI__.chat({system:instruction,messages:history,prompt:userText,maxTokens:260});
   }
   const controller=new AbortController();
@@ -586,6 +586,10 @@ function aiFailureText(error){
   return text[isZh()?0:1];
 }
 const aiWait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function splitAiReply(reply){
+  const parts=String(reply||'').split(/\n+/).map(text=>text.replace(/^\s*(?:[-•]|\d+[.)])\s*/,'').trim()).filter(Boolean);
+  return (parts.length?parts:[String(reply||'').trim()]).slice(0,2);
+}
 async function runAiReply(item,userText){
   if(aiSending||aiView!==item.id)return;
   aiSending=true;
@@ -609,13 +613,19 @@ async function runAiReply(item,userText){
     if(remaining)await aiWait(remaining);
     if(!active())return;
     aiTyping=false;
-    const reply=result.error?localContextReply(item,userText):result.reply;
-    item.messages.push(['other',reply,aiTime()]);
-    if(isZh())item.previewZh=reply;
-    else item.preview=reply;
-    item.time='방금';
-    aiError='';
-    saveKktData();
+    const replies=splitAiReply(result.error?localContextReply(item,userText):result.reply);
+    for(let index=0;index<replies.length;index++){
+      const reply=replies[index];
+      aiTyping=false;
+      item.messages.push(['other',reply,aiTime()]);
+      if(isZh())item.previewZh=reply;
+      else item.preview=reply;
+      item.time='방금';
+      aiError='';
+      saveKktData();
+      renderAiRoom(item.id);
+      if(index<replies.length-1){aiTyping=true;renderAiRoom(item.id);await aiWait(650);if(!active())return}
+    }
   }finally{
     if(active()){
       aiSending=false;
