@@ -58,6 +58,8 @@
   let tickTimer=0;
   let eraseTimer=0;
   let displayed=null;
+  let lastInstagramAt=0;
+  const IG_MIN_INTERVAL=60000;
 
   const clearNotice=()=>{
     clearTimeout(eraseTimer);
@@ -108,7 +110,7 @@
     const message=i%6===4?
       zh()?name+'及另外'+(12+(i*7)%68)+'人赞了你的帖子。':name+'님 외 '+(12+(i*7)%68)+'명이 회원님의 게시물을 좋아합니다.' :
       translate(igMessages[i%igMessages.length]);
-    return {kind,name:'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
+    return {kind,name:kind==='kakao'?kakaoName():'Instagram',sender:zh()?name:name+'님',message,icon:instagramIcon};
   }
   function displayInfo(info,onClick){
     clearNotice();
@@ -160,6 +162,11 @@
   function show(kind){
     const info=nextData();
     const requestedKind=kind==='instagram'||kind==='kakao'?kind:info.kind;
+    if(requestedKind==='instagram'&&kind!=='instagram'){
+      const now=Date.now();
+      if(now-lastInstagramAt<IG_MIN_INTERVAL)return false;
+      lastInstagramAt=now;
+    }
     if(requestedKind==='kakao'){
       // Delivery and banner creation happen in the same foreground tick:
       // no conversation or future message is exposed before the banner.
@@ -171,9 +178,7 @@
         info.message=String(delivery.text).replace(/[,.，。]/g,'');
         info.requestId=delivery.id;
         info.icon=kakaoIcon;
-      }else if(kind==='kakao'){
-        return false;
-      }
+      }else return false;
       // With all scripted messages delivered, normal ticks remain IG-only.
     }
     if(!canDisplay())return false;
