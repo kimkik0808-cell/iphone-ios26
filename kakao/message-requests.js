@@ -316,9 +316,10 @@ function injectAiStyles(){
 }
 function aiMessages(item){
   return item.messages.map(message=>{
-    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(message[1])+'</span></div>';
+    const text=isZh()?(message[5]||message[1]):message[1];
+    if(message[0]==='date')return '<div class="k15-date"><span>'+esc(text)+'</span></div>';
     const mine=message[0]==='mine';
-    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?aiAvatar(item):'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(message[1])+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(message[2]||'방금')+'</time></span></div></div></div>';
+    return '<div class="k15-message '+(mine?'mine':'')+'">'+(!mine?aiAvatar(item):'')+'<div class="k15-msgstack"><div class="k15-bubbleline"><div class="k15-bubble">'+esc(text)+'</div><span class="k15-msgmeta">'+(mine&&message[4]==='unread'?'<i class="k15-read">1</i>':'')+'<time>'+esc(message[2]||'방금')+'</time></span></div></div></div>';
   }).join('');
 }
 function renderAiRoom(id){
@@ -526,7 +527,7 @@ async function requestAiReply(item,userText){
     .filter(message=>message[0]==='mine'||message[0]==='other')
     .slice(0,-1)
     .slice(-12)
-    .map(message=>({role:message[0]==='mine'?'user':'model',text:message[1]}));
+    .map(message=>({role:message[0]==='mine'?'user':'model',text:isZh()?(message[5]||message[1]):message[1]}));
   const controller=new AbortController();
   aiController=controller;
   const timeout=setTimeout(()=>controller.abort(),36000);
@@ -536,7 +537,7 @@ async function requestAiReply(item,userText){
       response=await fetch(endpoint,{
         method:'POST',
         headers:{'content-type':'application/json'},
-        body:JSON.stringify({chatId:item.id,message:userText,history}),
+        body:JSON.stringify({chatId:item.id,message:userText,history,language:isZh()?'zh':'ko'}),
         signal:controller.signal
       });
     }catch(error){
@@ -604,7 +605,8 @@ async function runAiReply(item,userText){
     if(result.error)aiError=aiFailureText(result.error);
     else{
       item.messages.push(['other',result.reply,aiTime()]);
-      item.preview=result.reply;
+      if(isZh())item.previewZh=result.reply;
+      else item.preview=result.reply;
       item.time='방금';
       aiError='';
     }
@@ -636,7 +638,8 @@ function handleAiSubmit(event){
   const item=window.__KKT15_TEST__?.data?.find(chat=>chat.id===aiView);
   if(!item)return;
   item.messages.push(['mine',userText,aiTime(),'','unread']);
-  item.preview=userText;
+  if(isZh())item.previewZh=userText;
+  else item.preview=userText;
   item.time='방금';
   saveKktData();
   void runAiReply(item,userText);
@@ -736,7 +739,8 @@ if(app){
   }).observe(app,{childList:true,subtree:true});
 }
 window.addEventListener('iphone26:languagechange',()=>{
-  if(requestView==='list')renderList();
+  if(aiView)renderAiRoom(aiView);
+  else if(requestView==='list')renderList();
   else if(requestView==='room')renderRoom(currentId);
   else{
     document.querySelector('.krq-entry')?.remove();
