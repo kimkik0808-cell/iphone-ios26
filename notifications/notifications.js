@@ -146,7 +146,7 @@
   }
   function showKakao(payload={}){
     if(!canDisplay(payload.story===true))return false;
-    if(!isDnd())window.__IPHONE_SOUND__?.playKakao();
+    if(payload.story===true)window.__IPHONE_SOUND__?.playKakao();
     return displayInfo({
       kind:'kakao',name:kakaoName(),sender:payload.sender||'카카오톡 선물하기',
       message:payload.message||'선물 주문이 완료되었습니다.',icon:kakaoIcon
@@ -177,7 +177,6 @@
       // With all scripted messages delivered, normal ticks remain IG-only.
     }
     if(!canDisplay())return false;
-    if(requestedKind==='kakao')window.__IPHONE_SOUND__?.playKakao();
     return displayInfo(info);
   }
   function stop(){
