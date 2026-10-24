@@ -83,6 +83,7 @@ const contacts=()=>{
 };
 let page='home', selected='coffee', orderId='', intent='self', recipient='', active=false, category='전체',ordersView='received';
 let searchQuery='',searchResults=[],searching=false,searchError='';
+let storyGift={active:false,phase:'',timers:[]};
 const currentOrder=()=>state.orders.find(o=>o.id===orderId)||null;
 const iconTab=(emoji,label,key)=>'<button type="button" data-k15="tab" data-v="'+key+'"><span style="font-size:21px">'+emoji+'</span><span>'+label+'</span></button>';
 function bottom(){
@@ -92,10 +93,11 @@ function bottom(){
  iconTab('•••',t('더보기','更多'),'more')+'</nav>';
 }
 function button(action,text,cls=''){
- return '<button type="button" data-kshop="'+action+'" class="ks-btn '+cls+'">'+text+'</button>';
+ const tap=storyGift.active&&storyGift.phase===action?' ks-story-tap':'';
+ return '<button type="button" data-kshop="'+action+'" class="ks-btn '+cls+tap+'">'+text+'</button>';
 }
 function productCard(p){
- return '<button type="button" class="ks-product" data-kshop="product" data-id="'+p.id+'">'+
+ return '<button type="button" class="ks-product'+(storyGift.active&&storyGift.phase==='product'&&selected===p.id?' ks-story-tap':'')+'" data-kshop="product" data-id="'+p.id+'">'+
  '<span class="ks-art" style="background:'+p.bg+'">'+p.emoji+'</span>'+
  '<span class="ks-product-name">'+safe(t(p.ko,p.zh))+'</span>'+
  '<span class="ks-price">'+money(p.price)+'</span></button>';
@@ -164,7 +166,7 @@ function recipients(){
  const options=contacts();
  return '<div class="ks-section"><h2>'+t('받는 친구 선택','选择赠送联系人')+'</h2><p>'+
  t('선물을 받을 친구를 선택해 주세요.','请选择接收礼物的 KakaoTalk 联系人。')+'</p></div>'+
- '<div class="ks-recipients">'+options.map(c=>'<button data-kshop="recipient" data-id="'+safe(c.id)+'" class="'+(recipient===c.id?'picked':'')+'">'+
+ '<div class="ks-recipients">'+options.map(c=>'<button data-kshop="recipient" data-id="'+safe(c.id)+'" class="'+(recipient===c.id?'picked':'')+(storyGift.active&&storyGift.phase==='recipient'&&recipient===c.id?' ks-story-tap':'')+'">'+
  '<span class="ks-avatar">'+(c.id==='xxx'?'<img src="./assets/xxx-kkt-avatar.jpg" alt="" style="width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit">':safe(c.name.slice(0,1)))+'</span><strong>'+safe(c.name)+'</strong><span>'+(recipient===c.id?'✓':'○')+'</span></button>').join('')+'</div>'+
  button('recipient-next',t('확인','确定'),'ks-primary')+button('back',t('뒤로','返回'),'ks-outline');
 }
@@ -236,6 +238,16 @@ function recordEpisodeGift(event){
  if(state.orders.some(x=>x.id===event.id)){syncSMS();return false}
  const p=getItem(event.itemId),o={id:event.id,itemId:p.id,price:event.price,at:event.at||Date.now(),balanceAfter:balance()-event.price,recipient:event.recipient||'xxx',giftedAt:event.at||Date.now(),episode:true};
  state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();return true;
+}
+function stopEpisodeGift(){storyGift.timers.forEach(clearTimeout);storyGift={active:false,phase:'',timers:[]}}
+function waitEpisodeGift(fn,ms){const timer=setTimeout(()=>{storyGift.timers=storyGift.timers.filter(x=>x!==timer);if(storyGift.active&&typeof mode!=='undefined'&&mode==='kakao')fn()},ms);storyGift.timers.push(timer)}
+function playEpisodeGift(event,done){
+ stopEpisodeGift();
+ if(!event||!getItem(event.itemId)){done?.(false);return}
+ if(state.orders.some(o=>o.id===event.id)){syncSMS();done?.(false);return}
+ const p=getItem(event.itemId);
+ storyGift.active=true;selected=p.id;recipient=event.recipient||'xxx';intent='gift';category=p.kind;searchQuery='';searchResults=[];page='home';storyGift.phase='product';draw();
+ waitEpisodeGift(()=>{page='detail';storyGift.phase='choose-before';draw();waitEpisodeGift(()=>{page='recipients';storyGift.phase='recipient';draw();waitEpisodeGift(()=>{storyGift.phase='recipient-next';draw();waitEpisodeGift(()=>{page='checkout';storyGift.phase='purchase';draw();waitEpisodeGift(()=>{recordEpisodeGift(event);orderId=event.id;page='success';storyGift.phase='success';draw();waitEpisodeGift(()=>{storyGift.active=false;done?.(true)},1600)},800)},620)},620)},700)},720)
 }
 const giftReplyPending=new Set();
 const giftReplyEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-reply':'https://nuyheaj.pages.dev/api/kkt-gift-reply';
@@ -409,6 +421,7 @@ document.addEventListener('click',function(e){
  const btn=e.target.closest('[data-kshop]');
  if(!btn||typeof mode==='undefined'||mode!=='kakao')return;
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+ if(storyGift.active)return;
  const action=btn.dataset.kshop,id=btn.dataset.id;
  if(action==='home'){page='home';category='전체';}
  else if(action==='product'){selected=id;page='detail';}
@@ -449,7 +462,7 @@ window.__KKT_SHOP__={
  get orders(){return state.orders.map(o=>({...o}))},
  get transfers(){return state.transfers.map(x=>({...x}))},
  open, getProducts:()=>allProducts().map(p=>({...p})),
- sync:syncSMS,recordEpisodeTransfer,recordEpisodeGift
+ sync:syncSMS,recordEpisodeTransfer,recordEpisodeGift,playEpisodeGift,stopEpisodeGift
 };
 restoreGiftChats();
 syncSMS();

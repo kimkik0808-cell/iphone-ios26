@@ -1275,7 +1275,7 @@ if(mode==='instagram')render14();
 .k15-giftcard{width:218px;border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 1px 2px #0002;padding:0 13px 12px;display:flex;flex-direction:column}.k15-giftart{height:112px;margin:0 -13px 11px;background:linear-gradient(145deg,#eee8df,#c8b8a3);display:grid;place-items:center;color:#171717;font:700 42px Georgia,serif;letter-spacing:-4px}.k15-giftart span{font-size:19px;letter-spacing:0;margin-left:3px}.k15-giftcard small{font-size:10px;color:#8b8b8b}.k15-giftcard strong{font-size:14px;line-height:1.35;margin:3px 0 8px}.k15-giftcard b{font-size:15px}.k15-giftcard i{margin-top:10px;border-top:1px solid #eee;padding-top:9px;font-size:11px;font-style:normal;color:#816f56}
 .k15-moreprofile{margin:0;padding:14px 18px;background:#fff;border-radius:0;border-bottom:1px solid #eee}.k15-pay{margin:12px 16px;background:#f6f6f6;border-radius:12px;padding:15px}.k15-paytop{display:flex;align-items:center;gap:8px;font-size:14px}.k15-paytop b{font-size:17px}.k15-paytop button{margin-left:auto;background:none;font-size:12px;color:#777}.k15-payactions{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #e6e6e6;padding-top:12px}.k15-payactions button{background:none;border-right:1px solid #e2e2e2;font-size:12px}.k15-payactions button:last-child{border:0}.k15-servicegrid{display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 15px}.k15-servicegrid button{height:70px;background:none;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:8px}.k15-servicegrid i{font-style:normal;font-size:23px}.k15-ad{margin:4px 16px 14px;border-radius:11px;background:#fee500;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;font-size:12px}.k15-ad b{font-size:14px;display:block;margin-bottom:4px}.k15-opentabs{display:flex;gap:7px;padding:0 15px 12px;overflow:auto}.k15-opentabs button{border:1px solid #e2e2e2;background:#fff;border-radius:18px;padding:8px 13px;white-space:nowrap;font-size:12px}.k15-opentabs button.active{background:#222;color:#fff;border-color:#222}.k15-openhero{height:132px;margin:0 15px 14px;border-radius:13px;background:linear-gradient(130deg,#fee86a,#ffd342);padding:20px;position:relative;overflow:hidden}.k15-openhero b{font-size:18px;display:block;line-height:1.35}.k15-openhero p{font-size:12px;color:#665a18}.k15-openhero:after{content:'OPEN';position:absolute;right:-2px;bottom:-12px;font-size:46px;font-weight:900;color:#fff8}.k15-openheading{display:flex;align-items:center;padding:4px 18px 8px}.k15-openheading b{font-size:16px}.k15-openheading span{margin-left:auto;font-size:11px;color:#888}.k15-openrow{margin:0 15px 10px;border:1px solid #ededed;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}.k15-openpic{width:52px;height:52px;border-radius:10px;background:linear-gradient(145deg,#98c8d8,#6c92b2);display:grid;place-items:center;font-size:24px}.k15-openrow strong{font-size:14px}.k15-openrow p{font-size:11px;color:#888;margin:5px 0 0}
 </style>
-<script src="./kakao/episodes.js?build=ep002-v1"></script>
+<script src="./kakao/episodes.js?build=ep002-v2"></script>
 <script id="kkt15-script">
 (()=>{
 const S=document.querySelector('#appcontent');if(!S)return;
@@ -1447,9 +1447,11 @@ function runEp15(delay=500,activateComposer=false){
   }
   if(step.type==='gift'){
    const flag='gift:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
+   const event={id:step.id,itemId:step.itemId,brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price,recipient:step.recipient,at:Date.now(),simulated:true};
+   const finishGift=()=>{epState15.eventFlags[flag]=true;epState15.cursor=index+1;syncEpChat15();saveEp15();view15='room';chat15='xxx';keyboard15=false;draft15='';epRender15();wait(next,900)};
+   if(window.__KKT_SHOP__?.playEpisodeGift){pauseEp15();window.__KKT_SHOP__.playEpisodeGift(event,finishGift);return}
    if(!window.__KKT_SHOP__?.recordEpisodeGift){wait(next,150);return}
-   window.__KKT_SHOP__.recordEpisodeGift({id:step.id,itemId:step.itemId,brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price,recipient:step.recipient,at:Date.now(),simulated:true});
-   epState15.eventFlags[flag]=true;epState15.cursor=index+1;syncEpChat15();saveEp15();epRender15();wait(next,900);return
+   window.__KKT_SHOP__.recordEpisodeGift(event);finishGift();return
   }
   epState15.cursor=index+1;saveEp15();wait(next,300)
  }
@@ -1515,10 +1517,10 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./notifications/notifications.js?v=12&amp;build=ep002-v1"></script>
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v18"></script>
 <link rel="stylesheet" href="./music/music.css?v=5&amp;build=music-v27">
-<link rel="stylesheet" href="./kakao/shop.css?v=4&amp;build=gift-v23">
-<script src="./kakao/shop.js?v=8&amp;build=ep002-v1"></script>
+<link rel="stylesheet" href="./kakao/shop.css?v=5&amp;build=ep002-gift-v2">
+<script src="./kakao/shop.js?v=9&amp;build=ep002-gift-v2"></script>
 <link rel="stylesheet" href="./coupang/coupang.css?v=2&amp;build=ep002-dynamic-v1">
 <script src="./coupang/coupang.js?v=4&amp;build=ep002-dynamic-v1"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V039';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V041';proof.removeAttribute('hidden')}}</script>
 </body></html>

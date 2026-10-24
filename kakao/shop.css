@@ -95,3 +95,4 @@
 #kshop-sms-banner strong{font-size:14px}
 #kshop-sms-banner .ks-sms-app{font-size:10px;font-weight:720;color:#888}
 @media(max-width:360px){#kshop-root .ks-grid{gap:13px 9px}#kshop-root .ks-art{font-size:50px}#kshop-root .ks-hero strong{font-size:25px}}
+.ks-story-tap{animation:ksStoryTap .62s ease both!important;position:relative;z-index:4}@keyframes ksStoryTap{0%,100%{transform:scale(1)}45%{transform:scale(.91);filter:brightness(.88);box-shadow:0 0 0 8px #fee50055}}

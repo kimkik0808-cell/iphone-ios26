@@ -61,7 +61,7 @@ window.__KKT_EPISODES__={
    ['other','내가 할 말 없어서 이러는 줄 알아?','오전 10:41'],
    ['other','어이없네...','오전 10:41'],
    {type:'unsentDraft',text:'?',time:'오전 10:42',holdMs:900},
-   {type:'appSearch',app:'coupang',query:'메종21G 향수',queryZh:'Maison 21G 香水',time:'오전 10:46',holdMs:3200},
+   {type:'appSearch',app:'coupang',query:'향수',queryZh:'香水',time:'오전 10:46',holdMs:3200},
    ['mine','샴푸 냄새인가 봐','오전 10:47'],
    ['other','아','오전 10:47'],
    {type:'gift',id:'KKT_EP002_MAISON21G',itemId:'maison21g',brand:'Maison 21G',item:'퍼퓸 크리에이션 30ml',itemZh:'定制香水 30ml',price:89000,recipient:'xxx',time:'오전 10:48',timeZh:'上午 10:48'},
