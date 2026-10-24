@@ -62,14 +62,15 @@ function load(){
    if(s&&Array.isArray(s.orders))return {
     orders:s.orders.filter(o=>o&&typeof o.id==='string'&&getItem(o.itemId)&&Number(o.price)===getItem(o.itemId).price).slice(-200),
     topups:Array.isArray(s.topups)?s.topups.filter(v=>Number.isFinite(v)&&v===100000).slice(-50):[],
-    transfers:Array.isArray(s.transfers)?s.transfers.filter(x=>x&&typeof x.id==='string'&&Number.isFinite(x.amount)&&x.amount>0).slice(-50):[]
+    transfers:Array.isArray(s.transfers)?s.transfers.filter(x=>x&&typeof x.id==='string'&&Number.isFinite(x.amount)&&x.amount>0).slice(-50):[],
+    payments:Array.isArray(s.payments)?s.payments.filter(x=>x&&typeof x.id==='string'&&Number.isFinite(x.amount)&&x.amount>0).slice(-100):[]
   };
  }catch{}
- return {orders:[],topups:[],transfers:[]};
+ return {orders:[],topups:[],transfers:[],payments:[]};
 }
 let state=load();
 const save=()=>{try{localStorage.setItem(STORAGE,JSON.stringify(state))}catch{}};
-const totalSpent=()=>state.orders.reduce((sum,o)=>sum+o.price,0)+state.transfers.reduce((sum,x)=>sum+x.amount,0);
+const totalSpent=()=>state.orders.reduce((sum,o)=>sum+o.price,0)+state.transfers.reduce((sum,x)=>sum+x.amount,0)+state.payments.reduce((sum,x)=>sum+x.amount,0);
 const balance=()=>Math.max(0,START+state.topups.reduce((sum,v)=>sum+v,0)-totalSpent());
 const contacts=()=>{
  const from=window.__KKT15_TEST__?.contacts||[];
@@ -224,7 +225,8 @@ function smsEvents(){
   return [purchase,{id:o.id+'-gift',sender:'카카오 선물하기',type:'gift',item:t(p.ko,p.zh),
    recipient:contacts().find(c=>c.id===o.recipient)?.name||o.recipient,at:o.giftedAt||o.at}];
  });
- return purchases.concat(state.transfers.map(x=>({...x,type:'bank',balance:x.balanceAfter})));
+ return purchases.concat(state.transfers.map(x=>({...x,type:'bank',balance:x.balanceAfter})),state.payments.map(x=>({...x,type:'merchant',price:x.amount,balance:x.balanceAfter})));
+
 }
 function syncSMS(){window.__IPHONE_SMS__?.sync?.(smsEvents());}
 function recordEpisodeTransfer(event){
@@ -232,6 +234,13 @@ function recordEpisodeTransfer(event){
  if(state.transfers.some(x=>x.id===event.id)){syncSMS();return false}
  const transfer={id:event.id,amount:event.amount,bank:event.bank||'카카오뱅크',recipient:event.recipient||'',account:event.account||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
  state.transfers.push(transfer);save();syncSMS();return true;
+}
+function recordMerchantPayment(event){
+ if(!event||typeof event.id!=='string'||!Number.isFinite(event.amount)||event.amount<=0)return false;
+ if(state.payments.some(x=>x.id===event.id)){syncSMS();return false}
+ if(balance()<event.amount)return false;
+ const payment={id:event.id,amount:event.amount,merchant:event.merchant||'쿠팡',item:event.item||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
+ state.payments.push(payment);save();syncSMS();return true;
 }
 function recordEpisodeGift(event){
  if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
@@ -462,7 +471,7 @@ window.__KKT_SHOP__={
  get orders(){return state.orders.map(o=>({...o}))},
  get transfers(){return state.transfers.map(x=>({...x}))},
  open, getProducts:()=>allProducts().map(p=>({...p})),
- sync:syncSMS,recordEpisodeTransfer,recordEpisodeGift,playEpisodeGift,stopEpisodeGift
+ sync:syncSMS,recordEpisodeTransfer,recordMerchantPayment,recordEpisodeGift,playEpisodeGift,stopEpisodeGift
 };
 restoreGiftChats();
 syncSMS();

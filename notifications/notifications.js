@@ -185,38 +185,38 @@
     tickTimer=0;
     clearNotice();
   }
-  function schedule(initialDelay=1500){
+  function schedule(initialDelay=3000){
     stop();
     if(!canRun())return;
     const token=generation;
     function tick(){
       if(token!==generation||!canRun())return;
       show();
-      tickTimer=setTimeout(tick,5000);
+      tickTimer=setTimeout(tick,9000+Math.floor(Math.random()*5000));
     }
     tickTimer=setTimeout(tick,initialDelay);
   }
   window.addEventListener('ios26:dndchange',e=>{
     clearNotice();
-    if(typeof e.detail?.enabled==='boolean')schedule(900);
+    if(typeof e.detail?.enabled==='boolean')schedule(2400);
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)stop();
-    else if(canRun())schedule(1100);
+    else if(canRun())schedule(2600);
   });
   if(typeof lockOff==='function'){
     const oldLockOff=lockOff;
     lockOff=function(...args){
       const result=oldLockOff.apply(this,args);
-      if(canRun())schedule(1200);
+      if(canRun())schedule(2800);
       else stop();
       return result;
     };
   }
-  if(canRun())schedule(1200);
+  if(canRun())schedule(2800);
   window.addEventListener('iphone26:languagechange',()=>clearNotice());
   window.__IOS26_NOTIFICATIONS__={
-    show,showSMS,showKakao,stop,replay:()=>{if(canRun())schedule(100);},
+    show,showSMS,showKakao,stop,replay:()=>{if(canRun())schedule(800);},
     get enabled(){return !isDnd()},
     get shown(){return displayed?[displayed.dataset.notification]:[]},
     get count(){return counter}

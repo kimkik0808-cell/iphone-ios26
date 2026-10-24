@@ -18,15 +18,16 @@ const conversations=templates.map(item=>({
   ...item,
   messages:item.messages.slice(0,deliveryCounts[item.id]).map(message=>({...message}))
 }));
-const deliveredTotal=()=>conversations.reduce((n,item)=>n+item.messages.length,0);
+const deliveredTotal=()=>visibleConversations().reduce((n,item)=>n+item.messages.length,0);
 const saveDeliveries=()=>{try{localStorage.setItem(DELIVERY_KEY,JSON.stringify(deliveryCounts))}catch{}};
 function peekNextDelivery(){
   // Deliver one message at a time from a small group of six senders.
   // For each group, sender messages interleave round-robin (1, 2, 3...),
   // before progressively introducing the next group. Never expose future text.
   const batchSize=6;
-  for(let start=0;start<templates.length;start+=batchSize){
-    const active=templates.slice(start,start+batchSize)
+  const languageTemplates=templates.filter(item=>item.language===(isZh()?'zh':'ko'));
+  for(let start=0;start<languageTemplates.length;start+=batchSize){
+    const active=languageTemplates.slice(start,start+batchSize)
       .map(source=>({source,index:deliveryCounts[source.id]||0}))
       .filter(({source,index})=>index<source.messages.length);
     if(!active.length)continue;
@@ -71,8 +72,8 @@ const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const seenCount=item=>typeof readState[item.id]==='number'?readState[item.id]:0;
 const newMessages=item=>Math.max(0,item.messages.length-seenCount(item));
-const unreadCount=()=>conversations.reduce((n,item)=>n+(newMessages(item)>0?1:0),0);
-const visibleConversations=()=>conversations.filter(item=>item.messages.length>0);
+const visibleConversations=()=>conversations.filter(item=>item.language===(isZh()?'zh':'ko')&&item.messages.length>0);
+const unreadCount=()=>visibleConversations().reduce((n,item)=>n+(newMessages(item)>0?1:0),0);
 function refreshEntryCount(){
   const entry=document.querySelector('.krq-entry');
   if(!entry)return;
@@ -142,7 +143,7 @@ function injectStyles(){
 }
 function entryHTML(){
   const count=unreadCount();
-  return '<button class="krq-entry" type="button" data-krq="open-list"><span class="krq-entry-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.3c5.45 0 9.65 3.38 9.65 7.85 0 4.48-4.2 7.86-9.65 7.86-.72 0-1.43-.06-2.1-.18L5.36 21.1c-.52.37-1.19-.12-.99-.73l1.21-3.65c-2.04-1.43-3.23-3.78-3.23-6.57C2.35 5.68 6.55 2.3 12 2.3z"/></svg></span><span class="krq-entry-text"><strong>'+esc(unknownTitle())+'</strong><span>친구로 등록되지 않은 사용자의 메시지 요청</span></span>'+(count?'<i class="krq-entry-count">'+count+'</i>':'')+'</button>';
+  return '<button class="krq-entry" type="button" data-krq="open-list"><span class="krq-entry-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.3c5.45 0 9.65 3.38 9.65 7.85 0 4.48-4.2 7.86-9.65 7.86-.72 0-1.43-.06-2.1-.18L5.36 21.1c-.52.37-1.19-.12-.99-.73l1.21-3.65c-2.04-1.43-3.23-3.78-3.23-6.57C2.35 5.68 6.55 2.3 12 2.3z"/></svg></span><span class="krq-entry-text"><strong>'+esc(unknownTitle())+'</strong><span>'+(isZh()?'未添加为好友的用户发来的消息请求':'친구로 등록되지 않은 사용자의 메시지 요청')+'</span></span>'+(count?'<i class="krq-entry-count">'+count+'</i>':'')+'</button>';
 }
 function injectEntry(){
   if(requestView||typeof mode==='undefined'||mode!=='kakao')return;
@@ -176,12 +177,14 @@ function actionButtons(item){
   const addIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3.3"></circle><path d="M3.3 19c.3-4 2.2-6 5.7-6s5.4 2 5.7 6M18 7v6M15 10h6"></path></svg>';
   const unblockIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"></circle><path d="M6.2 17.8 17.8 6.2"></path></svg>';
   const reportIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10M8.5 15.5v-4a3.5 3.5 0 0 1 7 0v4M6.5 18v-2.5h11V18M12 3v2M4.8 6.1l1.5 1.5M19.2 6.1l-1.5 1.5M3 12h2M19 12h2"></path></svg>';
-  return '<div class="krq-actions"><button type="button" data-krq="add" class="'+(a.added?'done':'')+'">'+addIcon+'<span>'+(a.added?'추가됨':'추가')+'</span></button><button type="button" data-krq="unblock" class="'+(a.unblocked?'done':'')+'">'+unblockIcon+'<span>'+(a.unblocked?'차단':'차단해제')+'</span></button><button type="button" data-krq="report" class="'+(a.reported?'done':'danger')+'">'+reportIcon+'<span>'+(a.reported?'신고됨':'신고')+'</span></button></div>';
+  return '<div class="krq-actions"><button type="button" data-krq="add" class="'+(a.added?'done':'')+'">'+addIcon+'<span>'+(isZh()?(a.added?'已添加':'添加'):(a.added?'추가됨':'추가'))+'</span></button><button type="button" data-krq="unblock" class="'+(a.unblocked?'done':'')+'">'+unblockIcon+'<span>'+(isZh()?(a.unblocked?'已解除':'解除屏蔽'):(a.unblocked?'차단':'차단해제'))+'</span></button><button type="button" data-krq="report" class="'+(a.reported?'done':'danger')+'">'+reportIcon+'<span>'+(isZh()?(a.reported?'已举报':'举报'):(a.reported?'신고됨':'신고'))+'</span></button></div>';
 }
 function modalHTML(item){
   if(!modalAction)return '';
   const isReport=modalAction==='report';
-  return '<div class="krq-modal" data-krq="dismiss"><section class="krq-sheet" role="dialog" aria-modal="true"><div class="krq-sheet-copy"><strong>'+(isReport?'이 대화를 신고할까요?':'차단을 해제할까요?')+'</strong><p>'+(isReport?'신고 처리 후 이 대화는 신고 상태로 표시됩니다':'차단을 해제하면 이 사용자의 메시지를 다시 받을 수 있습니다')+'</p></div><div class="krq-sheet-actions"><button type="button" data-krq="cancel">취소</button><button type="button" class="'+(isReport?'danger':'')+'" data-krq="confirm">'+(isReport?'신고':'차단해제')+'</button></div></section></div>';
+  const title=isZh()?(isReport?'要举报这段对话吗':'要解除屏蔽吗'):(isReport?'이 대화를 신고할까요?':'차단을 해제할까요?');
+  const copy=isZh()?(isReport?'举报后该对话会显示为已举报':'解除后可再次收到该用户的消息'):(isReport?'신고 처리 후 이 대화는 신고 상태로 표시됩니다':'차단을 해제하면 이 사용자의 메시지를 다시 받을 수 있습니다');
+  return '<div class="krq-modal" data-krq="dismiss"><section class="krq-sheet" role="dialog" aria-modal="true"><div class="krq-sheet-copy"><strong>'+title+'</strong><p>'+copy+'</p></div><div class="krq-sheet-actions"><button type="button" data-krq="cancel">'+(isZh()?'取消':'취소')+'</button><button type="button" class="'+(isReport?'danger':'')+'" data-krq="confirm">'+(isZh()?(isReport?'举报':'解除屏蔽'):(isReport?'신고':'차단해제'))+'</button></div></section></div>';
 }
 function renderRoom(id){
   const item=conversations.find(x=>x.id===id);
@@ -198,7 +201,7 @@ function renderRoom(id){
     const first=index===0;
     return '<div class="krq-message-row '+(first?'':'follow')+'">'+(first?avatar(item,true):'')+'<div class="krq-message-block">'+(first?'<div class="krq-sender">'+esc(item.name)+'</div>':'')+'<div class="krq-bubble-line"><div class="krq-bubble">'+esc(message.text)+'</div><time>'+esc(isZh()?String(message.time).replace(/^오전 /,'上午 ').replace(/^오후 /,'下午 '):message.time)+'</time></div></div></div>';
   }).join('');
-  app.innerHTML='<section id="krq-root"><header class="krq-room-head"><div class="krq-room-top"><button type="button" aria-label="뒤로" data-krq="back-list">‹</button><div class="krq-room-name">'+esc(item.name)+'</div></div>'+actionButtons(item)+'</header><main class="krq-chat" id="krq-chat"><div class="krq-date"><span>오늘</span></div>'+messages+'</main><div class="krq-empty-input"><span>메시지를 입력하세요</span></div>'+modalHTML(item)+'</section>';
+  app.innerHTML='<section id="krq-root"><header class="krq-room-head"><div class="krq-room-top"><button type="button" aria-label="뒤로" data-krq="back-list">‹</button><div class="krq-room-name">'+esc(item.name)+'</div></div>'+actionButtons(item)+'</header><main class="krq-chat" id="krq-chat"><div class="krq-date"><span>'+(isZh()?'今天':'오늘')+'</span></div>'+messages+'</main><div class="krq-empty-input"><span>'+(isZh()?'输入消息':'메시지를 입력하세요')+'</span></div>'+modalHTML(item)+'</section>';
   requestAnimationFrame(()=>{const chat=document.querySelector('#krq-chat');if(chat)chat.scrollTop=chat.scrollHeight});
 }
 function updateActions(patch){
@@ -530,7 +533,7 @@ async function requestAiReply(item,userText){
     .map(message=>({role:message[0]==='mine'?'user':'model',text:isZh()?(message[5]||message[1]):message[1]}));
   const controller=new AbortController();
   aiController=controller;
-  const timeout=setTimeout(()=>controller.abort(),36000);
+  const timeout=setTimeout(()=>controller.abort(),10000);
   try{
     let response;
     try{
@@ -602,14 +605,12 @@ async function runAiReply(item,userText){
     if(remaining)await aiWait(remaining);
     if(!active())return;
     aiTyping=false;
-    if(result.error)aiError=aiFailureText(result.error);
-    else{
-      item.messages.push(['other',result.reply,aiTime()]);
-      if(isZh())item.previewZh=result.reply;
-      else item.preview=result.reply;
-      item.time='방금';
-      aiError='';
-    }
+    const reply=result.error?localContextReply(item,userText):result.reply;
+    item.messages.push(['other',reply,aiTime()]);
+    if(isZh())item.previewZh=reply;
+    else item.preview=reply;
+    item.time='방금';
+    aiError='';
     saveKktData();
   }finally{
     if(active()){
