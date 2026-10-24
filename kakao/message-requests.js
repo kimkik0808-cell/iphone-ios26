@@ -3,7 +3,7 @@
 'use strict';
 if(window.__KKT_REQUESTS_LOADED__)return;
 window.__KKT_REQUESTS_LOADED__=true;
-// Keep all 50 scripted senders visible; banners append later messages over time.
+// Keep the 50 scripted sender accounts; the entry badge counts delivered messages, not accounts.
 const templates=Array.isArray(window.KKT_REQUEST_CONVERSATIONS)?window.KKT_REQUEST_CONVERSATIONS:[];
 if(!templates.length)return;
 const DELIVERY_KEY='jh_kkt_request_delivered_v1';
@@ -72,11 +72,11 @@ const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(action
 const seenCount=item=>typeof readState[item.id]==='number'?readState[item.id]:0;
 const newMessages=item=>Math.max(0,item.messages.length-seenCount(item));
 const visibleConversations=()=>conversations.filter(item=>item.messages.length>0);
-const unreadCount=()=>visibleConversations().reduce((n,item)=>n+(newMessages(item)>0?1:0),0);
+const unreadCount=()=>visibleConversations().reduce((n,item)=>n+newMessages(item),0);
 function refreshEntryCount(){
   const entry=document.querySelector('.krq-entry');
   if(!entry)return;
-  const count=unreadCount();
+  const count=deliveredTotal();
   const bubble=entry.querySelector('.krq-entry-count');
   if(count){
     if(bubble){
@@ -115,6 +115,7 @@ function injectStyles(){
   .krq-entry:active{opacity:.55}.krq-entry-icon{width:48px;height:48px;border-radius:18px;background:#f1f1f3;display:grid;place-items:center;position:relative;flex:0 0 auto}
   .krq-entry-icon svg{width:25px;height:25px;fill:#606166}.krq-entry-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}.krq-entry-text strong{font-size:16px;font-weight:700;letter-spacing:-.2px}.krq-entry-text span{font-size:13px;color:#85858a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .krq-entry-count,.krq-unread{min-width:20px;height:20px;padding:0 6px;border-radius:11px;background:#ef3d46;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;font-style:normal}
+  #app.kkt15-mode #appcontent.krq-screen{bottom:calc(var(--safe-bottom) + 9px)!important;overflow:hidden!important}
   #krq-root{position:absolute;inset:0;background:#fff;color:#111;display:flex;flex-direction:column;overflow:hidden;z-index:4;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif}
   .krq-head{height:54px;flex:0 0 54px;display:flex;align-items:center;padding:0 12px;border-bottom:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.97)}
   .krq-head>button{width:38px;height:42px;background:transparent;color:#111;font-size:34px;line-height:1;padding:0;text-align:left}
@@ -132,7 +133,7 @@ function injectStyles(){
   .krq-chat{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#b8cad8;padding:13px 13px max(30px,env(safe-area-inset-bottom))}
   .krq-date{text-align:center;margin:2px 0 17px}.krq-date span{display:inline-block;background:rgba(74,90,102,.35);color:#fff;font-size:10.5px;padding:5px 10px;border-radius:12px}
   .krq-message-row{display:flex;align-items:flex-start;gap:8px;margin:0 0 7px}.krq-message-row.follow{padding-left:42px;margin-top:-2px}.krq-message-block{max-width:76%;display:flex;flex-direction:column;gap:3px}.krq-sender{font-size:11.5px;color:#3e464c;margin:0 0 1px 2px}.krq-bubble-line{display:flex;align-items:flex-end;gap:5px}.krq-bubble{background:#fff;color:#17191b;border-radius:4px 11px 11px 11px;padding:8px 10px;font-size:14px;line-height:1.38;word-break:break-word;box-shadow:0 .5px 0 rgba(0,0,0,.06)}.krq-message-row.follow .krq-bubble{border-radius:11px}.krq-bubble-line time{font-size:9.5px;color:#5d6870;white-space:nowrap;margin-bottom:1px}
-  .krq-empty-input{height:49px;flex:0 0 49px;background:#fff;display:flex;align-items:center;padding:7px 11px calc(7px + env(safe-area-inset-bottom));color:#aaa;font-size:13px;border-top:1px solid rgba(0,0,0,.06)}
+  .krq-empty-input{height:52px;flex:0 0 52px;background:#fff;display:flex;align-items:center;padding:7px 11px;color:#aaa;font-size:13px;border-top:1px solid rgba(0,0,0,.06)}
   .krq-empty-input span{height:34px;flex:1;border:1px solid #e3e3e6;border-radius:17px;display:flex;align-items:center;padding:0 13px}
   .krq-modal{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;z-index:9;padding:0 10px calc(9px + env(safe-area-inset-bottom))}
   .krq-sheet{width:100%;background:#f8f8fa;border-radius:15px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,.2)}.krq-sheet-copy{padding:20px 18px;text-align:center}.krq-sheet-copy strong{display:block;font-size:16px;margin-bottom:7px}.krq-sheet-copy p{margin:0;color:#707078;font-size:13px;line-height:1.45}.krq-sheet-actions{display:flex;border-top:1px solid #dddde0}.krq-sheet-actions button{height:49px;flex:1;background:#fff;color:#1677df;font-size:15px}.krq-sheet-actions button+button{border-left:1px solid #dddde0}.krq-sheet-actions .danger{color:#e13942}
@@ -141,7 +142,7 @@ function injectStyles(){
   document.head.appendChild(style);
 }
 function entryHTML(){
-  const count=unreadCount();
+  const count=deliveredTotal();
   return '<button class="krq-entry" type="button" data-krq="open-list"><span class="krq-entry-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.3c5.45 0 9.65 3.38 9.65 7.85 0 4.48-4.2 7.86-9.65 7.86-.72 0-1.43-.06-2.1-.18L5.36 21.1c-.52.37-1.19-.12-.99-.73l1.21-3.65c-2.04-1.43-3.23-3.78-3.23-6.57C2.35 5.68 6.55 2.3 12 2.3z"/></svg></span><span class="krq-entry-text"><strong>'+esc(unknownTitle())+'</strong><span>'+(isZh()?'未添加为好友的用户发来的消息请求':'친구로 등록되지 않은 사용자의 메시지 요청')+'</span></span>'+(count?'<i class="krq-entry-count">'+count+'</i>':'')+'</button>';
 }
 function injectEntry(){
@@ -162,12 +163,13 @@ function renderList(){
   modalAction='';
   const app=document.querySelector('#appcontent');
   if(!app)return;
+  app.classList.add('krq-screen');
   const rows=visibleConversations().slice().reverse().map(item=>{
     const latest=item.messages[item.messages.length-1];
     const unread=newMessages(item);
     return '<button class="krq-row" type="button" data-krq="open-room" data-id="'+esc(item.id)+'">'+avatar(item)+'<span class="krq-row-main"><strong>'+esc(item.name)+'</strong><p>'+esc(latest.text)+'</p></span><span class="krq-row-meta"><time>'+esc(item.latestTime)+'</time>'+(unread?'<i class="krq-unread">'+unread+'</i>':'')+'</span></button>';
   }).join('');
-  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>'+esc(unknownTitle())+'</strong><small>'+unreadCount()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">'+(isZh()?'消息请求 ':'메시지 요청 ')+visibleConversations().length+(isZh()?' 个':'개')+'</div>'+(rows||'<div class="krq-summary">'+(isZh()?'还没有收到陌生消息':'아직 도착한 메시지 요청이 없습니다')+'</div>')+'</main></section>';
+  app.innerHTML='<section id="krq-root"><header class="krq-head"><button type="button" aria-label="뒤로" data-krq="back-main">‹</button><div class="krq-title"><strong>'+esc(unknownTitle())+'</strong><small>'+deliveredTotal()+'</small></div></header><main class="krq-list" id="krq-list"><div class="krq-summary">'+(isZh()?'消息请求 ':'메시지 요청 ')+visibleConversations().length+(isZh()?' 个':'개')+'</div>'+(rows||'<div class="krq-summary">'+(isZh()?'还没有收到陌生消息':'아직 도착한 메시지 요청이 없습니다')+'</div>')+'</main></section>';
   requestAnimationFrame(()=>{const list=document.querySelector('#krq-list');if(list)list.scrollTop=listScroll});
 }
 function getAction(id){return actionState[id]||{added:false,unblocked:false,reported:false}}
@@ -196,6 +198,7 @@ function renderRoom(id){
   saveRead();
   const app=document.querySelector('#appcontent');
   if(!app)return;
+  app.classList.add('krq-screen');
   const messages=item.messages.map((message,index)=>{
     const first=index===0;
     return '<div class="krq-message-row '+(first?'':'follow')+'">'+(first?avatar(item,true):'')+'<div class="krq-message-block">'+(first?'<div class="krq-sender">'+esc(item.name)+'</div>':'')+'<div class="krq-bubble-line"><div class="krq-bubble">'+esc(message.text)+'</div><time>'+esc(isZh()?String(message.time).replace(/^오전 /,'上午 ').replace(/^오후 /,'下午 '):message.time)+'</time></div></div></div>';
@@ -217,6 +220,7 @@ function backToMain(){
   requestView='';
   currentId='';
   modalAction='';
+  document.querySelector('#appcontent')?.classList.remove('krq-screen');
   if(typeof render==='function')render();
   else window.__KKT15_TEST__?.render?.();
   requestAnimationFrame(injectEntry);
@@ -733,6 +737,7 @@ const app=document.querySelector('#appcontent');
 if(app){
   new MutationObserver(()=>{
     if(typeof mode!=='undefined'&&mode!=='kakao'){
+      app.classList.remove('krq-screen');
       // Never let an old Gemini response overwrite another app after leaving KKT.
       if(aiView){
         aiRequestSequence++;
@@ -770,6 +775,7 @@ window.__KKT_REQUESTS__={
   deliverNext,
   get data(){return visibleConversations()},
   get unread(){return unreadCount()},
+  get totalMessages(){return deliveredTotal()},
   get readState(){return {...readState}},
   get view(){return requestView}
 };
