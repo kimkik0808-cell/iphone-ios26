@@ -34,6 +34,8 @@
 }
 .app-entry{gap:5px;overflow:visible;text-shadow:0 1px 4px rgba(0,0,0,.42)}
 .app-entry span{font-size:var(--home-caption);line-height:1.22;font-weight:430;max-width:100%;letter-spacing:-.2px;}
+.app-entry.story-auto-tap .app-icon{animation:homeStoryTap .52s ease both}
+@keyframes homeStoryTap{0%,100%{transform:scale(1);filter:none}45%{transform:scale(.82);filter:brightness(.78);box-shadow:0 0 0 9px #ffffff40}}
 .app-icon{
   width:var(--home-icon);height:var(--home-icon);
   border-radius:22.5%;
@@ -1435,8 +1437,13 @@ function runEp15(delay=500,activateComposer=false){
   }
   if(step.type==='appSearch'){
    const flag='appSearch:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
-   epState15.eventFlags[flag]=true;epState15.cursor=index+1;saveEp15();pauseEp15();mode='coupang';sub='root';appEl.className='layer appscreen active coupang-mode';appEl.style.display='block';window.__COUPANG__?.openStoryOrderSearch?.(window.IphoneLocale?.language==='zh'?(step.queryZh||step.query):step.query);
-   setTimeout(()=>{if(mode!=='coupang')return;mode='kakao';sub='root';view15='room';chat15='xxx';appEl.className='layer appscreen active kakao-bg kkt15-mode';render15();runEp15(500)},Number(step.holdMs)||3200);return
+   epState15.eventFlags[flag]=true;epState15.cursor=index+1;saveEp15();pauseEp15();
+   const query=window.IphoneLocale?.language==='zh'?(step.queryZh||step.query):step.query;
+   const tapHomeApp=(name,done)=>{const entry=document.querySelector('#home [data-open="'+name+'"]');entry?.classList.add('story-auto-tap');setTimeout(()=>{entry?.classList.remove('story-auto-tap');done?.()},520)};
+   const returnToChat=()=>{closeApp();setTimeout(()=>tapHomeApp('kakao',()=>{openApp('kakao');window.__KKT15_TEST__?.openChat?.('xxx')}),520)};
+   const openOrderSearch=()=>{openApp('coupang');setTimeout(()=>{const play=window.__COUPANG__?.playStoryOrderSearch;if(play)play(query,returnToChat);else returnToChat()},360)};
+   closeApp();
+   setTimeout(()=>tapHomeApp('coupang',openOrderSearch),650);return
   }
   if(step.type==='gift'){
    const flag='gift:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
@@ -1510,8 +1517,8 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <link rel="stylesheet" href="./music/music.css?v=5&amp;build=music-v27">
 <link rel="stylesheet" href="./kakao/shop.css?v=4&amp;build=gift-v23">
 <script src="./kakao/shop.js?v=8&amp;build=ep002-v1"></script>
-<link rel="stylesheet" href="./coupang/coupang.css?v=1&amp;build=v035">
-<script src="./coupang/coupang.js?v=3&amp;build=orders-v1"></script>
+<link rel="stylesheet" href="./coupang/coupang.css?v=2&amp;build=ep002-dynamic-v1">
+<script src="./coupang/coupang.js?v=4&amp;build=ep002-dynamic-v1"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V037';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V038';proof.removeAttribute('hidden')}}</script>
 </body></html>
