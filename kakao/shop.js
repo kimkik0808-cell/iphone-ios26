@@ -246,7 +246,14 @@ function recordEpisodeGift(event){
  if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
  if(state.orders.some(x=>x.id===event.id)){syncSMS();return false}
  const p=getItem(event.itemId),o={id:event.id,itemId:p.id,price:event.price,at:event.at||Date.now(),balanceAfter:balance()-event.price,recipient:event.recipient||'xxx',giftedAt:event.at||Date.now(),episode:true};
- state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();return true;
+ state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();
+ const zh=window.IphoneLocale?.language==='zh';
+ const item=zh?(p.zh||p.ko):p.ko;
+ window.__IPHONE_SMS__?.notify?.({
+  type:'gift',story:true,sender:zh?'Kakao礼物':'카카오 선물하기',
+  message:zh?'已向'+o.recipient+'发送 '+item:o.recipient+'님에게 '+item+' 선물 발송 완료'
+ });
+ return true;
 }
 function stopEpisodeGift(){storyGift.timers.forEach(clearTimeout);storyGift={active:false,phase:'',timers:[]}}
 function waitEpisodeGift(fn,ms){const timer=setTimeout(()=>{storyGift.timers=storyGift.timers.filter(x=>x!==timer);if(storyGift.active&&typeof mode!=='undefined'&&mode==='kakao')fn()},ms);storyGift.timers.push(timer)}
