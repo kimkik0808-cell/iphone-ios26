@@ -12,11 +12,13 @@
   const active=new Map();
   let smsUnlockedAudio=null;
   let smsUnlocking=false;
+  let kakaoUnlockedAudio=null;
+  let kakaoUnlocking=false;
   const silent=()=>{try{return localStorage.getItem(KEY)==='1'}catch{return false}};
   function stop(type){
     const audio=active.get(type);if(!audio)return;
     active.delete(type);audio.onerror=null;audio.onended=null;audio.pause();audio.loop=false;
-    if(audio===smsUnlockedAudio){
+    if(audio===smsUnlockedAudio||audio===kakaoUnlockedAudio){
       try{audio.currentTime=0}catch{}
       return;
     }
@@ -34,13 +36,26 @@
       restore();smsUnlocking=false;
     });
   }
-  document.addEventListener('pointerdown',unlockSMS,{capture:true,passive:true});
-  document.addEventListener('touchstart',unlockSMS,{capture:true,passive:true});
+  function unlockKakao(){
+    if(kakaoUnlockedAudio||kakaoUnlocking)return;
+    kakaoUnlocking=true;
+    const audio=new Audio(new URL('./sounds/kakao.mp3',document.baseURI).href);
+    audio.preload='auto';audio.playsInline=true;audio.muted=true;
+    const restore=()=>{audio.pause();try{audio.currentTime=0}catch{}audio.muted=false;audio.volume=1};
+    audio.play().then(()=>{
+      restore();kakaoUnlockedAudio=audio;kakaoUnlocking=false;
+    }).catch(()=>{
+      restore();kakaoUnlocking=false;
+    });
+  }
+  function unlockNotifications(){unlockSMS();unlockKakao()}
+  document.addEventListener('pointerdown',unlockNotifications,{capture:true,passive:true});
+  document.addEventListener('touchstart',unlockNotifications,{capture:true,passive:true});
   function stopAll(){for(const type of [...active.keys()])stop(type)}
   function play(type,loop=false){
     if(silent()||!candidates[type])return false;
     stop(type);
-    const primed=type==='sms'?smsUnlockedAudio:null;
+    const primed=type==='sms'?smsUnlockedAudio:type==='kakao'?kakaoUnlockedAudio:null;
     const audio=primed||new Audio();let index=primed?1:0,attempt=0,cancelled=false;
     audio.preload='auto';audio.loop=loop;audio.playsInline=true;audio.muted=false;audio.volume=1;active.set(type,audio);
     const next=()=>{
