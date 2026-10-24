@@ -3,7 +3,7 @@
 'use strict';
 if(window.__KKT_REQUESTS_LOADED__)return;
 window.__KKT_REQUESTS_LOADED__=true;
-// The 50 scripted senders are hidden templates; delivery is driven by banners.
+// Keep all 50 scripted senders visible; banners append later messages over time.
 const templates=Array.isArray(window.KKT_REQUEST_CONVERSATIONS)?window.KKT_REQUEST_CONVERSATIONS:[];
 if(!templates.length)return;
 const DELIVERY_KEY='jh_kkt_request_delivered_v1';
@@ -11,7 +11,7 @@ const deliveryCounts=(()=>{
   let saved={};
   try{saved=JSON.parse(localStorage.getItem(DELIVERY_KEY)||'null')||{}}catch{}
   return Object.fromEntries(templates.map(item=>[
-    item.id,Math.min(item.messages.length,Math.max(0,Math.floor(Number(saved[item.id])||0)))
+    item.id,Math.min(item.messages.length,Math.max(1,Math.floor(Number(saved[item.id])||0)))
   ]));
 })();
 const conversations=templates.map(item=>({
@@ -25,9 +25,8 @@ function peekNextDelivery(){
   // For each group, sender messages interleave round-robin (1, 2, 3...),
   // before progressively introducing the next group. Never expose future text.
   const batchSize=6;
-  const languageTemplates=templates.filter(item=>item.language===(isZh()?'zh':'ko'));
-  for(let start=0;start<languageTemplates.length;start+=batchSize){
-    const active=languageTemplates.slice(start,start+batchSize)
+  for(let start=0;start<templates.length;start+=batchSize){
+    const active=templates.slice(start,start+batchSize)
       .map(source=>({source,index:deliveryCounts[source.id]||0}))
       .filter(({source,index})=>index<source.messages.length);
     if(!active.length)continue;
@@ -72,7 +71,7 @@ const saveRead=()=>{try{localStorage.setItem(READ_KEY,JSON.stringify(readState))
 const saveActions=()=>{try{localStorage.setItem(ACTION_KEY,JSON.stringify(actionState))}catch(e){}};
 const seenCount=item=>typeof readState[item.id]==='number'?readState[item.id]:0;
 const newMessages=item=>Math.max(0,item.messages.length-seenCount(item));
-const visibleConversations=()=>conversations.filter(item=>item.language===(isZh()?'zh':'ko')&&item.messages.length>0);
+const visibleConversations=()=>conversations.filter(item=>item.messages.length>0);
 const unreadCount=()=>visibleConversations().reduce((n,item)=>n+(newMessages(item)>0?1:0),0);
 function refreshEntryCount(){
   const entry=document.querySelector('.krq-entry');
