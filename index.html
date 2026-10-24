@@ -1270,9 +1270,10 @@ if(mode==='instagram')render14();
 .k15-avatar:not(.group){background:var(--avbg)}
 .k15-message>.k15-avatar{width:36px;height:36px;border-radius:14px}
 .k15-input{z-index:5}.k15-input.keyboard{bottom:226px}.k15-chatbody.keyboard{bottom:285px}.k15-send{background:#ededed;color:#aaa}.k15-send.ready{background:#fee500;color:#171717}.k15-keyboard{position:absolute;left:0;right:0;bottom:0;height:226px;background:#d1d4da;padding:8px 5px 17px;z-index:4}.k15-keyrow{display:flex;justify-content:center;gap:5px;margin-bottom:8px}.k15-key{position:relative;height:39px;min-width:31px;padding:0 8px;border:0;border-radius:5px;background:#fff;box-shadow:0 1px 1px #7778;font-size:15px;transition:background .07s,color .07s,transform .07s}.k15-key.wide{min-width:58px;background:#aeb3bc}.k15-key.space{width:145px}.k15-key.pressed{background:#8f949c;color:#fff;transform:scale(.94);box-shadow:none}.k15-key.pressed:not(.wide)::after{content:attr(data-key);position:absolute;left:50%;bottom:31px;transform:translateX(-50%);min-width:36px;height:44px;display:grid;place-items:center;border-radius:7px 7px 10px 10px;background:#fff;color:#111;font-size:22px;box-shadow:0 1px 4px #0004;z-index:9}.k15-typing{display:inline-flex;align-items:center;gap:4px;background:#fff;border-radius:3px 11px 11px 11px;padding:12px 14px}.k15-typing i{width:5px;height:5px;border-radius:50%;background:#a9a9a9;animation:k15dot 1.15s infinite}.k15-typing i:nth-child(2){animation-delay:.2s}.k15-typing i:nth-child(3){animation-delay:.4s}@keyframes k15dot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}
+.k15-giftcard{width:218px;border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 1px 2px #0002;padding:0 13px 12px;display:flex;flex-direction:column}.k15-giftart{height:112px;margin:0 -13px 11px;background:linear-gradient(145deg,#eee8df,#c8b8a3);display:grid;place-items:center;color:#171717;font:700 42px Georgia,serif;letter-spacing:-4px}.k15-giftart span{font-size:19px;letter-spacing:0;margin-left:3px}.k15-giftcard small{font-size:10px;color:#8b8b8b}.k15-giftcard strong{font-size:14px;line-height:1.35;margin:3px 0 8px}.k15-giftcard b{font-size:15px}.k15-giftcard i{margin-top:10px;border-top:1px solid #eee;padding-top:9px;font-size:11px;font-style:normal;color:#816f56}
 .k15-moreprofile{margin:0;padding:14px 18px;background:#fff;border-radius:0;border-bottom:1px solid #eee}.k15-pay{margin:12px 16px;background:#f6f6f6;border-radius:12px;padding:15px}.k15-paytop{display:flex;align-items:center;gap:8px;font-size:14px}.k15-paytop b{font-size:17px}.k15-paytop button{margin-left:auto;background:none;font-size:12px;color:#777}.k15-payactions{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #e6e6e6;padding-top:12px}.k15-payactions button{background:none;border-right:1px solid #e2e2e2;font-size:12px}.k15-payactions button:last-child{border:0}.k15-servicegrid{display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 15px}.k15-servicegrid button{height:70px;background:none;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:8px}.k15-servicegrid i{font-style:normal;font-size:23px}.k15-ad{margin:4px 16px 14px;border-radius:11px;background:#fee500;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;font-size:12px}.k15-ad b{font-size:14px;display:block;margin-bottom:4px}.k15-opentabs{display:flex;gap:7px;padding:0 15px 12px;overflow:auto}.k15-opentabs button{border:1px solid #e2e2e2;background:#fff;border-radius:18px;padding:8px 13px;white-space:nowrap;font-size:12px}.k15-opentabs button.active{background:#222;color:#fff;border-color:#222}.k15-openhero{height:132px;margin:0 15px 14px;border-radius:13px;background:linear-gradient(130deg,#fee86a,#ffd342);padding:20px;position:relative;overflow:hidden}.k15-openhero b{font-size:18px;display:block;line-height:1.35}.k15-openhero p{font-size:12px;color:#665a18}.k15-openhero:after{content:'OPEN';position:absolute;right:-2px;bottom:-12px;font-size:46px;font-weight:900;color:#fff8}.k15-openheading{display:flex;align-items:center;padding:4px 18px 8px}.k15-openheading b{font-size:16px}.k15-openheading span{margin-left:auto;font-size:11px;color:#888}.k15-openrow{margin:0 15px 10px;border:1px solid #ededed;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}.k15-openpic{width:52px;height:52px;border-radius:10px;background:linear-gradient(145deg,#98c8d8,#6c92b2);display:grid;place-items:center;font-size:24px}.k15-openrow strong{font-size:14px}.k15-openrow p{font-size:11px;color:#888;margin:5px 0 0}
 </style>
-<script src="./kakao/episodes.js?build=ep001-v19"></script>
+<script src="./kakao/episodes.js?build=ep002-v1"></script>
 <script id="kkt15-script">
 (()=>{
 const S=document.querySelector('#appcontent');if(!S)return;
@@ -1316,28 +1317,43 @@ if(hydratedZh15){try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}cat
 if(refreshSeed15){try{localStorage.setItem('jh_kkt_seed_revision',KKTSEEDREV15)}catch(e){}}
 let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0;
 let episodeTimer15=0,episodeToken15=0;
-const EPKEY15='jh_kkt_episode_KKT_EP001',episode15=window.__KKT_EPISODES__?.KKT_EP001;
+const episodes15=['KKT_EP001','KKT_EP002'].map(id=>window.__KKT_EPISODES__?.[id]).filter(Boolean);
+const epKey15=id=>'jh_kkt_episode_'+id;
+let episode15=episodes15[0],epState15;
 const epStep15=index=>window.IphoneLocale?.language==='zh'?(episode15?.zhSteps?.[index]||episode15?.steps?.[index]):episode15?.steps?.[index];
-const epHistory15=()=>window.IphoneLocale?.language==='zh'?(episode15?.historyZh||episode15?.history||[]):(episode15?.history||[]);
-const epDate15=()=>episode15?.episodeDate?.[window.IphoneLocale?.language==='zh'?1:0]||'';
+const localizedStep15=(episode,index)=>window.IphoneLocale?.language==='zh'?(episode?.zhSteps?.[index]||episode?.steps?.[index]):episode?.steps?.[index];
 const EPSTATUS15=Object.freeze({NOT_STARTED:'NOT_STARTED',RUNNING:'RUNNING',WAITING_TO_SEND:'WAITING_TO_SEND',UNSENT_DRAFT:'UNSENT_DRAFT',COMPLETED:'COMPLETED'});
-const freshEp15=()=>({schema:episode15?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',unreadMineStep:null,unreadUntil:0,completed:false});
-let epState15;try{epState15=JSON.parse(localStorage.getItem(EPKEY15)||'null')}catch(e){}
-if(!episode15||!epState15||epState15.schema!==episode15.version||!Object.values(EPSTATUS15).includes(epState15.status))epState15=freshEp15();
-epState15.sentSteps=Array.isArray(epState15.sentSteps)?[...new Set(epState15.sentSteps.filter(Number.isInteger))]:[];
-epState15.cursor=Number.isInteger(epState15.cursor)?Math.max(0,epState15.cursor):0;
-epState15.draft=typeof epState15.draft==='string'?epState15.draft:'';
-epState15.unreadMineStep=Number.isInteger(epState15.unreadMineStep)?epState15.unreadMineStep:null;
-epState15.unreadUntil=Number(epState15.unreadUntil)||0;
-if(epState15.status===EPSTATUS15.WAITING_TO_SEND&&Number.isInteger(epState15.pendingStep))epState15.draft=epStep15(epState15.pendingStep)?.[1]||'';
-const saveEp15=()=>{try{localStorage.setItem(EPKEY15,JSON.stringify(epState15))}catch(e){}};
+const freshEp15=episode=>({schema:episode?.version||0,status:EPSTATUS15.NOT_STARTED,cursor:0,sentSteps:[],eventFlags:{},transferCompleted:false,smsNotified:false,pendingStep:null,draft:'',unreadMineStep:null,unreadUntil:0,completed:false});
+const epStates15={};
+for(const episode of episodes15){
+ let state;try{state=JSON.parse(localStorage.getItem(epKey15(episode.id))||'null')}catch(e){}
+ if(!state||state.schema!==episode.version||!Object.values(EPSTATUS15).includes(state.status))state=freshEp15(episode);
+ state.sentSteps=Array.isArray(state.sentSteps)?[...new Set(state.sentSteps.filter(Number.isInteger))]:[];
+ state.eventFlags=state.eventFlags&&typeof state.eventFlags==='object'?state.eventFlags:{};
+ state.cursor=Number.isInteger(state.cursor)?Math.max(0,state.cursor):0;
+ state.draft=typeof state.draft==='string'?state.draft:'';
+ state.unreadMineStep=Number.isInteger(state.unreadMineStep)?state.unreadMineStep:null;
+ state.unreadUntil=Number(state.unreadUntil)||0;
+ epStates15[episode.id]=state;
+}
+function selectEpisode15(){episode15=episodes15.find(ep=>epStates15[ep.id]?.status!==EPSTATUS15.COMPLETED)||episodes15.at(-1);epState15=episode15?epStates15[episode15.id]:null;if(epState15?.status===EPSTATUS15.WAITING_TO_SEND&&Number.isInteger(epState15.pendingStep))epState15.draft=epStep15(epState15.pendingStep)?.[1]||''}
+selectEpisode15();
+const saveEp15=()=>{if(!episode15||!epState15)return;try{localStorage.setItem(epKey15(episode15.id),JSON.stringify(epState15))}catch(e){}};
 const epChat15=()=>data15.find(c=>c.id==='xxx');
 function syncEpChat15(){
- const x=epChat15();if(!x||!episode15)return;
- const episodeMessages=epState15.sentSteps.sort((a,b)=>a-b).map(i=>{const m=epStep15(i);if(!Array.isArray(m))return null;const copy=[...m];if(i===epState15.unreadMineStep&&copy[0]==='mine')copy[4]='unread';return copy}).filter(Boolean);
- x.messages=[...epHistory15().map(m=>[...m]),...(epDate15()?[['date',epDate15()]]:[]),...episodeMessages];
+ const x=epChat15();if(!x||!episodes15.length)return;
+ const root=episodes15[0],messages=[...(window.IphoneLocale?.language==='zh'?(root.historyZh||root.history||[]):(root.history||[])).map(m=>[...m])];
+ for(const episode of episodes15){
+  const state=epStates15[episode.id];if(!state)continue;
+  if(state.status!==EPSTATUS15.NOT_STARTED||state.sentSteps.length||Object.keys(state.eventFlags).length){const date=episode.episodeDate?.[window.IphoneLocale?.language==='zh'?1:0]||'';if(date)messages.push(['date',date])}
+  for(let i=0;i<(episode.steps?.length||0);i++){
+   if(state.sentSteps.includes(i)){const m=localizedStep15(episode,i);if(!Array.isArray(m))continue;const copy=[...m];if(episode.id===episode15?.id&&i===state.unreadMineStep&&copy[0]==='mine')copy[4]='unread';messages.push(copy);continue}
+   const step=episode.steps[i];if(step?.type==='gift'&&state.eventFlags['gift:'+i])messages.push(['mine','🎁 '+step.brand+' '+step.item,window.IphoneLocale?.language==='zh'?(step.timeZh||step.time):step.time,'','read','🎁 '+step.brand+' '+(step.itemZh||step.item),{type:'gift',brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price}])
+  }
+ }
+ x.messages=messages;
  const last=[...x.messages].reverse().find(m=>m[0]!=='date');x.preview=last?.[1]||'';x.time=last?.[2]||'';x.unread=0;x.scriptReply='';x.scriptNext='';x.scriptDone=true;
- if(epState15.sentSteps.length&&!x.updatedAt)x.updatedAt=Date.parse('2026-10-22T12:12:00+09:00');
+ if(episodes15.some(ep=>epStates15[ep.id]?.sentSteps.length))x.updatedAt=Date.now();
  save15();
 }
 syncEpChat15();saveEp15();
@@ -1351,8 +1367,9 @@ function commitEpStep15(index){
  epState15.cursor=index+1;epState15.pendingStep=null;epState15.draft='';draft15='';syncEpChat15();saveEp15();
 }
 function runEp15(delay=500,activateComposer=false){
- if(!episode15||!epVisible15()||epState15.status===EPSTATUS15.COMPLETED)return;
- if(epState15.status===EPSTATUS15.NOT_STARTED){epState15=freshEp15();epState15.status=EPSTATUS15.RUNNING;syncEpChat15();saveEp15()}
+ if(!episode15||!epVisible15())return;
+ if(epState15.status===EPSTATUS15.COMPLETED){selectEpisode15();if(!epState15||epState15.status===EPSTATUS15.COMPLETED)return;syncEpChat15();draft15=epState15.draft||'';epRender15()}
+ if(epState15.status===EPSTATUS15.NOT_STARTED){epState15=freshEp15(episode15);epStates15[episode15.id]=epState15;epState15.status=EPSTATUS15.RUNNING;syncEpChat15();saveEp15()}
  draft15=epState15.draft;
  if(epState15.status===EPSTATUS15.WAITING_TO_SEND){keyboard15=true;typing15=false;epRender15();return}
  if(epState15.unreadMineStep!==null)delay=Math.max(delay,epState15.unreadUntil-Date.now());
@@ -1414,7 +1431,18 @@ function runEp15(delay=500,activateComposer=false){
    if(epState15.pendingStep!==index){epState15.status=EPSTATUS15.UNSENT_DRAFT;epState15.pendingStep=index;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();return}
    if(!activateComposer){keyboard15=false;typing15=false;draft15=epState15.draft||'';epRender15();return}
    epState15.status=EPSTATUS15.UNSENT_DRAFT;keyboard15=true;typing15=false;draft15=epState15.draft||'';epRender15();
-   typeText(step.text,()=>wait(()=>eraseText(()=>{epState15.cursor=index+1;epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;saveEp15();epRender15()}),step.holdMs));return
+   typeText(step.text,()=>wait(()=>eraseText(()=>{epState15.cursor=index+1;epState15.status=EPSTATUS15.RUNNING;epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;saveEp15();epRender15();wait(next,650)}),step.holdMs));return
+  }
+  if(step.type==='appSearch'){
+   const flag='appSearch:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
+   epState15.eventFlags[flag]=true;epState15.cursor=index+1;saveEp15();pauseEp15();mode='coupang';sub='root';appEl.className='layer appscreen active coupang-mode';appEl.style.display='block';window.__COUPANG__?.openStoryOrderSearch?.(window.IphoneLocale?.language==='zh'?(step.queryZh||step.query):step.query);
+   setTimeout(()=>{if(mode!=='coupang')return;mode='kakao';sub='root';view15='room';chat15='xxx';appEl.className='layer appscreen active kakao-bg kkt15-mode';render15();runEp15(500)},Number(step.holdMs)||3200);return
+  }
+  if(step.type==='gift'){
+   const flag='gift:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
+   if(!window.__KKT_SHOP__?.recordEpisodeGift){wait(next,150);return}
+   window.__KKT_SHOP__.recordEpisodeGift({id:step.id,itemId:step.itemId,brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price,recipient:step.recipient,at:Date.now(),simulated:true});
+   epState15.eventFlags[flag]=true;epState15.cursor=index+1;syncEpChat15();saveEp15();epRender15();wait(next,900);return
   }
   epState15.cursor=index+1;saveEp15();wait(next,300)
  }
@@ -1438,7 +1466,7 @@ function open15(){let rooms=[['📷','필름카메라와 사진 이야기','사�
 function shop15(){return `${head15('쇼핑')}<main class="k15-scroll"><div class="k15-banner" style="margin-top:10px"><b>선물하기</b>친구에게 마음을 전해 보세요.</div><div class="k15-cardgrid">${[['생일 선물','🎂'],['뷰티','✨'],['패션','🧥'],['푸드','☕️']].map(x=>`<button class="k15-card" data-k15="noop"><b>${x[0]}</b><p>추천 상품 보기</p>${x[1]}</button>`).join('')}</div></main>${bottom15()}`}
 function more15(){let services=[['🎁','선물하기'],['🛍','쇼핑하기'],['😊','이모티콘'],['🧑‍🤝‍🧑','프렌즈'],['📅','캘린더'],['📁','톡서랍'],['✉️','메일'],['🎵','멜론']];return `${head15('더보기')}<main class="k15-scroll"><section class="k15-moreprofile">${avatar15({id:'hyunjae',name:'이재현'})}<div class="k15-rowtext"><strong>이재현</strong><p>내 프로필 보기</p></div><button class="k15-ico" data-k15="noop">▣</button></section><section class="k15-pay"><div class="k15-paytop"><b>kakao<b style="font-weight:800">pay</b></b><span>${window.__KKT_SHOP__?.balanceText?.()||"680,000원"}</span><button data-kshop="wallet">자산 ›</button></div><div class="k15-payactions"><button data-kshop="wallet">송금</button><button data-kshop="home">결제</button><button data-kshop="wallet">자산</button></div></section><div class="k15-servicegrid">${services.map((x,i)=>`<button ${i===0?'data-kshop="gift"':i===1?'data-kshop="home"':'data-k15="noop"'}><i>${x[0]}</i><span>${x[1]}</span></button>`).join('')}</div><div class="k15-ad"><span><b>카카오톡 안에서 더 편리하게</b>새로운 서비스 둘러보기</span><span style="font-size:27px">💬</span></div><p class="k15-disclaimer">팬메이드 인터랙티브 픽션 · 실제 계정이나 실제 사적 대화가 아닙니다.</p></main>${bottom15()}`}
 function keyboardHTML15(){let rows=[['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],['⇧','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ','⌫']];return `<div class="k15-keyboard">${rows.map((r,i)=>`<div class="k15-keyrow">${r.map(k=>`<button type="button" class="k15-key ${i===2&&(k==='⇧'||k==='⌫')?'wide':''}" data-k15="key" data-key="${k}">${k}</button>`).join('')}</div>`).join('')}<div class="k15-keyrow"><button type="button" class="k15-key wide" data-key="123">123</button><button type="button" class="k15-key space" data-key="space">간격</button><button type="button" class="k15-key wide" data-key="입력">입력</button></div></div>`}
-function room15(){let x=data15.find(c=>c.id===chat15);if(!x){view15='';return chats15()}let group=x.members>1,epRoom=chat15==='xxx',ready=epRoom&&epState15.status===EPSTATUS15.WAITING_TO_SEND;return `<section class="k15-chatroom">${head15(x.name,true,group?x.members:'')}<main class="k15-chatbody ${keyboard15?'keyboard':''}" id="k15-chatbody">${x.type==='risk'?`<div class="k15-riskbox"><b>주의가 필요한 대화</b>상대가 숙소 위치 등 사적인 동선을 언급했습니다. 답장하지 말고 매니저에게 공유한 뒤 신고·차단하는 설정입니다.<div class="k15-riskbuttons"><button data-k15="report">매니저에게 공유</button><button data-k15="block">신고 및 차단</button></div></div>`:''}${x.messages.map(m=>{if(m[0]==='date')return `<div class="k15-date"><span>${esc15(text15(m[1],m[5]))}</span></div>`;let mine=m[0]==='mine',sender=m[3]||x.name;return `<div class="k15-message ${mine?'mine':''}">${!mine?avatar15({id:x.id,name:sender,type:x.type}):''}<div class="k15-msgstack">${!mine&&group?`<div class="k15-sender">${esc15(sender)}</div>`:''}<div class="k15-bubbleline"><div class="k15-bubble">${esc15(text15(m[1],m[5]))}</div><span class="k15-msgmeta">${mine&&m[4]==='unread'?'<i class="k15-read">1</i>':''}<time>${esc15(m[2]||'방금')}</time></span></div></div></div>`}).join('')}${typing15?`<div class="k15-message">${avatar15({id:x.id,name:x.name})}<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>`:''}${blocked15&&x.type==='risk'?'<div class="k15-notice">이 계정을 차단했습니다. 더 이상 메시지를 받을 수 없습니다.</div>':''}</main>${blocked15&&x.type==='risk'?'':`<form class="k15-input ${keyboard15?'keyboard':''}" id="k15-form"><button type="button" class="k15-plus" data-k15="attach">＋</button><label class="k15-inputbox"><input id="k15-input" data-k15="compose" value="${esc15(draft15)}" autocomplete="off" autocapitalize="none" enterkeyhint="send" aria-label="메시지 입력" placeholder="메시지를 입력하세요"><button class="k15-send ${ready?'ready':''}" ${ready?'':'disabled'} aria-label="전송">↑</button></label></form>${keyboard15?keyboardHTML15():''}`}</section>`}
+function room15(){let x=data15.find(c=>c.id===chat15);if(!x){view15='';return chats15()}let group=x.members>1,epRoom=chat15==='xxx',ready=epRoom&&epState15.status===EPSTATUS15.WAITING_TO_SEND;return `<section class="k15-chatroom">${head15(x.name,true,group?x.members:'')}<main class="k15-chatbody ${keyboard15?'keyboard':''}" id="k15-chatbody">${x.type==='risk'?`<div class="k15-riskbox"><b>주의가 필요한 대화</b>상대가 숙소 위치 등 사적인 동선을 언급했습니다. 답장하지 말고 매니저에게 공유한 뒤 신고·차단하는 설정입니다.<div class="k15-riskbuttons"><button data-k15="report">매니저에게 공유</button><button data-k15="block">신고 및 차단</button></div></div>`:''}${x.messages.map(m=>{if(m[0]==='date')return `<div class="k15-date"><span>${esc15(text15(m[1],m[5]))}</span></div>`;let mine=m[0]==='mine',sender=m[3]||x.name,gift=m[6],body=gift?.type==='gift'?`<div class="k15-giftcard"><div class="k15-giftart">M<span>21G</span></div><small>${esc15(gift.brand)}</small><strong>${esc15(text15(gift.item,gift.itemZh))}</strong><b>${Number(gift.price||0).toLocaleString('ko-KR')}원</b><i>${text15('선물을 보냈어요','已送出礼物')}</i></div>`:`<div class="k15-bubble">${esc15(text15(m[1],m[5]))}</div>`;return `<div class="k15-message ${mine?'mine':''}">${!mine?avatar15({id:x.id,name:sender,type:x.type}):''}<div class="k15-msgstack">${!mine&&group?`<div class="k15-sender">${esc15(sender)}</div>`:''}<div class="k15-bubbleline">${body}<span class="k15-msgmeta">${mine&&m[4]==='unread'?'<i class="k15-read">1</i>':''}<time>${esc15(m[2]||'방금')}</time></span></div></div></div>`}).join('')}${typing15?`<div class="k15-message">${avatar15({id:x.id,name:x.name})}<div class="k15-msgstack"><div class="k15-typing"><i></i><i></i><i></i></div></div></div>`:''}${blocked15&&x.type==='risk'?'<div class="k15-notice">이 계정을 차단했습니다. 더 이상 메시지를 받을 수 없습니다.</div>':''}</main>${blocked15&&x.type==='risk'?'':`<form class="k15-input ${keyboard15?'keyboard':''}" id="k15-form"><button type="button" class="k15-plus" data-k15="attach">＋</button><label class="k15-inputbox"><input id="k15-input" data-k15="compose" value="${esc15(draft15)}" autocomplete="off" autocapitalize="none" enterkeyhint="send" aria-label="메시지 입력" placeholder="메시지를 입력하세요"><button class="k15-send ${ready?'ready':''}" ${ready?'':'disabled'} aria-label="전송">↑</button></label></form>${keyboard15?keyboardHTML15():''}`}</section>`}
 function keyParts15(ch){if(!ch)return [];if(ch===' ')return ['space'];let n=ch.charCodeAt(0)-44032;if(!Number.isFinite(n)||n<0||n>11171)return [];let first=['ㄱ','ㄱ','ㄴ','ㄷ','ㄷ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅇ','ㅈ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'],vowel=[['ㅏ'],['ㅐ'],['ㅑ'],['ㅒ'],['ㅓ'],['ㅔ'],['ㅕ'],['ㅖ'],['ㅗ'],['ㅗ','ㅏ'],['ㅗ','ㅐ'],['ㅗ','ㅣ'],['ㅛ'],['ㅜ'],['ㅜ','ㅓ'],['ㅜ','ㅔ'],['ㅜ','ㅣ'],['ㅠ'],['ㅡ'],['ㅡ','ㅣ'],['ㅣ']],last=['','ㄱ','ㄱ','ㄱ','ㄴ','ㄴ','ㄴ','ㄷ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㄹ','ㅁ','ㅂ','ㅂ','ㅅ','ㅅ','ㅅ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];let f=Math.floor(n/588),v=Math.floor(n%588/28),l=n%28;return [first[f],...vowel[v],...(last[l]?[last[l]]:[])]}
 function typeFixed15(){let x=data15.find(c=>c.id===chat15);if(!x?.scriptReply||x.scriptDone)return;clearTimeout(typeTimer15);keyboard15=true;draft15='';render15();let chars=Array.from(x.scriptReply),ci=0,ki=0,parts=keyParts15(chars[0]||'');function next(){if(ci>=chars.length){document.querySelector('.k15-send')?.classList.add('ready');return}let ch=chars[ci],key=parts[ki],btn=key?document.querySelector(`.k15-key[data-key="${key}"]`):null;if(btn)btn.classList.add('pressed');typeTimer15=setTimeout(()=>{btn?.classList.remove('pressed');ki++;if(ki>=parts.length){draft15+=ch;let input=document.querySelector('#k15-input');if(input)input.value=draft15;ci++;ki=0;parts=keyParts15(chars[ci]||'');typeTimer15=setTimeout(next,parts.length?28:45)}else typeTimer15=setTimeout(next,18)},key?48:40)}next()}
 function render15(){if(typeof mode==='undefined'||mode!=='kakao')return;document.querySelector('#app').classList.add('kkt15-mode');let html=view15==='room'?room15():tab15==='friends'?friends15():tab15==='open'?open15():tab15==='shop'?shop15():tab15==='more'?more15():chats15();S.innerHTML=`<div id="kkt15">${html}</div>`;let b=document.querySelector('#k15-chatbody');if(b)b.scrollTop=b.scrollHeight}
@@ -1477,13 +1505,13 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./settings/settings.js?v=6&amp;build=v029"></script>
 <script src="./kakao/message-requests-data.js?v=4&amp;build=v023"></script>
 <script src="./kakao/message-requests.js?v=18&amp;build=kkt-zh-v33"></script>
-<script src="./notifications/notifications.js?v=11&amp;build=v029"></script>
+<script src="./notifications/notifications.js?v=12&amp;build=ep002-v1"></script>
 <script src="./kakao/shop-sms.js?v=2&amp;build=ep001-v18"></script>
 <link rel="stylesheet" href="./music/music.css?v=5&amp;build=music-v27">
 <link rel="stylesheet" href="./kakao/shop.css?v=4&amp;build=gift-v23">
-<script src="./kakao/shop.js?v=7&amp;build=xxx-avatar"></script>
+<script src="./kakao/shop.js?v=8&amp;build=ep002-v1"></script>
 <link rel="stylesheet" href="./coupang/coupang.css?v=1&amp;build=v035">
-<script src="./coupang/coupang.js?v=1&amp;build=v035"></script>
+<script src="./coupang/coupang.js?v=2&amp;build=ep002-v1"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
-<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP001 TEST V035';proof.removeAttribute('hidden')}}</script>
+<script>if(location.hostname==='kimkik0808-cell.github.io'){const proof=document.querySelector('#ep001-build-proof');if(proof){proof.textContent='EP002 TEST V036';proof.removeAttribute('hidden')}}</script>
 </body></html>

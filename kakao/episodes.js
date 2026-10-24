@@ -47,5 +47,43 @@ window.__KKT_EPISODES__={
    ['mine','我要去工作了','下午 12:11'],['other','下次再见帅哥','下午 12:11'],
    {type:'unsentDraft',text:'没有下次了',time:'下午 12:12',holdMs:2000}
   ]
+ },
+ KKT_EP002:{
+  id:'KKT_EP002',version:1,name:'향수',contact:'xxx',mode:'INTERACTIVE_AUTO',
+  episodeDate:['2026년 10월 23일 금요일','2026年10月23日 星期五'],
+  steps:[
+   ['other','너 향수 뭐 써','오전 10:38'],
+   ['other','냄새 좋던데','오전 10:38'],
+   ['other','나도 사게','오전 10:38'],
+   ['mine','나 향수 안 쓰는 것 같은데','오전 10:40'],
+   ['other','답장 진짜 느리네','오전 10:41'],
+   ['other','뭐 하는 거야 너','오전 10:41'],
+   ['other','내가 할 말 없어서 이러는 줄 알아?','오전 10:41'],
+   ['other','어이없네...','오전 10:41'],
+   {type:'unsentDraft',text:'?',time:'오전 10:42',holdMs:900},
+   {type:'appSearch',app:'coupang',query:'메종21G 향수',queryZh:'Maison 21G 香水',time:'오전 10:46',holdMs:3200},
+   ['mine','샴푸 냄새인가 봐','오전 10:47'],
+   ['other','아','오전 10:47'],
+   {type:'gift',id:'KKT_EP002_MAISON21G',itemId:'maison21g',brand:'Maison 21G',item:'퍼퓸 크리에이션 30ml',itemZh:'定制香水 30ml',price:89000,recipient:'xxx',time:'오전 10:48',timeZh:'上午 10:48'},
+   ['other','?','오전 10:48'],
+   ['mine','뭘','오전 10:48']
+  ],
+  zhSteps:[
+   ['other','你香水什么牌子','上午 10:38'],
+   ['other','好闻','上午 10:38'],
+   ['other','我也要买','上午 10:38'],
+   ['mine','我好像没用香水','上午 10:40'],
+   ['other','回复得这么慢','上午 10:41'],
+   ['other','你装什么','上午 10:41'],
+   ['other','你以为我在这跟你没话找话呢','上午 10:41'],
+   ['other','真无语…','上午 10:41'],
+   {type:'unsentDraft',text:'?','time':'上午 10:42',holdMs:900},
+   null,
+   ['mine','可能是洗发水的味道','上午 10:47'],
+   ['other','哦','上午 10:47'],
+   null,
+   ['other','?','上午 10:48'],
+   ['mine','不客气','上午 10:48']
+  ]
  }
 };

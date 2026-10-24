@@ -12,6 +12,7 @@ const STATIC_PRODUCTS=[
  {id:'movie',ko:'영화 관람권 1매',zh:'电影票兑换券（1张）',kind:'문화',emoji:'🎟️',price:15000,bg:'#e3ddfa',desc:'좋은 영화 한 편.'},
  {id:'flowers',ko:'오늘의 꽃다발',zh:'今日鲜花花束',kind:'라이프',emoji:'💐',price:35900,bg:'#e0f0da',desc:'작은 마음을 담아 전해요.'},
  {id:'perfume',ko:'미니 향수 기프트 세트',zh:'迷你香水礼盒',kind:'뷰티',emoji:'🧴',price:59500,bg:'#dceafa',desc:'은은한 향기의 선물.'},
+ {id:'maison21g',ko:'Maison 21G 퍼퓸 크리에이션 30ml',zh:'Maison 21G 定制香水 30ml',kind:'뷰티',emoji:'🧴',price:89000,bg:'#ded4c8',desc:'취향에 맞춰 완성하는 퍼스널 향수 선물.'},
  {id:'snack',ko:'편의점 모바일 금액권',zh:'便利店电子礼券',kind:'쿠폰',emoji:'🍫',price:10000,bg:'#f4e5c8',desc:'언제든 필요한 간식.'},
  {id:'tea',ko:'티 & 쿠키 세트',zh:'茶饮与曲奇礼盒',kind:'카페',emoji:'🍵',price:16900,bg:'#dfefe4',desc:'쉬는 날의 여유.'},
  {id:'latte',ko:'카페라떼 & 마카롱',zh:'拿铁与马卡龙套餐',kind:'카페',emoji:'🥤',price:8900,bg:'#efe1d3',desc:'달콤한 휴식 시간을 선물해요.'},
@@ -230,6 +231,12 @@ function recordEpisodeTransfer(event){
  const transfer={id:event.id,amount:event.amount,bank:event.bank||'카카오뱅크',recipient:event.recipient||'',account:event.account||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
  state.transfers.push(transfer);save();syncSMS();return true;
 }
+function recordEpisodeGift(event){
+ if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
+ if(state.orders.some(x=>x.id===event.id)){syncSMS();return false}
+ const p=getItem(event.itemId),o={id:event.id,itemId:p.id,price:event.price,at:event.at||Date.now(),balanceAfter:balance()-event.price,recipient:event.recipient||'xxx',giftedAt:event.at||Date.now(),episode:true};
+ state.orders.push(o);save();pushOrderNotice(o,p);syncSMS();return true;
+}
 const giftReplyPending=new Set();
 const giftReplyEndpoint=()=>location.hostname==='nuyheaj.pages.dev'?'/api/kkt-gift-reply':'https://nuyheaj.pages.dev/api/kkt-gift-reply';
 const giftFallback=(id,p)=>{
@@ -278,14 +285,16 @@ function pushOrderNotice(o,p){
  let chat=data.find(c=>c.id==='kakao-gift');
  if(!chat){chat={id:'kakao-gift',name:'카카오톡 선물하기',type:'service',tag:'공식',giftChat:true,preview:'',time:'방금',unread:0,members:1,messages:[]};data.unshift(chat)}
  if(!Array.isArray(chat.messages))chat.messages=[];
- if(chat.messages.some(m=>m[5]==='order:'+o.id))return;
+ if(chat.messages.some(m=>m[5]==='order:'+o.id||m[6]==='order:'+o.id))return;
  const who=contacts().find(c=>c.id===o.recipient)?.name||o.recipient;
  const text=o.recipient?'[선물 주문 완료]\n'+p.ko+'\n받는 분 '+who+'\n결제금액 '+money(o.price)+'\n주문번호 '+o.id:
   '[나에게 선물 주문 완료]\n'+p.ko+'\n결제금액 '+money(o.price)+'\n교환권이 선물함 > 받은 선물에 도착했어요.\n주문번호 '+o.id;
+ const textZh=o.recipient?'[礼物订单完成]\n'+(p.zh||p.ko)+'\n收礼人 '+who+'\n付款金额 '+money(o.price)+'\n订单号 '+o.id:
+  '[送给自己的礼物订单完成]\n'+(p.zh||p.ko)+'\n付款金额 '+money(o.price)+'\n兑换券已存入礼物盒 > 收到的礼物\n订单号 '+o.id;
  const now=new Intl.DateTimeFormat('ko-KR',{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(o.at));
- chat.messages.push(['other',text,now,'','','order:'+o.id]);chat.preview=text.split('\n')[0];chat.time='방금';chat.unread=(chat.unread||0)+1;chat.updatedAt=o.at;
+ chat.messages.push(['other',text,now,'','',textZh,'order:'+o.id]);chat.preview=text.split('\n')[0];chat.previewZh=textZh.split('\n')[0];chat.time='방금';chat.unread=(chat.unread||0)+1;chat.updatedAt=o.at;
  try{localStorage.setItem('jh_kkt15',JSON.stringify(data))}catch{}
- window.__IOS26_NOTIFICATIONS__?.showKakao?.({sender:'카카오톡 선물하기',message:o.recipient?'선물 주문이 완료되었습니다.':'나에게 선물한 교환권이 도착했습니다.',chatId:'kakao-gift'});
+ window.__IOS26_NOTIFICATIONS__?.showKakao?.({sender:t('카카오톡 선물하기','KakaoTalk 礼物'),message:t(o.recipient?'선물 주문이 완료되었습니다.':'나에게 선물한 교환권이 도착했습니다.',o.recipient?'礼物订单已完成':'送给自己的兑换券已到账'),chatId:'kakao-gift',story:o.episode===true});
 }
 function assignGift(o,id){
  if(!o||o.recipient||!contacts().some(c=>c.id===id))return false;
@@ -316,6 +325,7 @@ function restoreGiftChats(){
  const list=window.__KKT15_TEST__?.data;
  if(!Array.isArray(list))return;
  for(const o of state.orders){
+  if(o.episode)continue;
   if(!o.recipient)continue;
   const p=getItem(o.itemId),found=list.find(c=>c.id===o.recipient);
   if(!p)continue;
@@ -439,7 +449,7 @@ window.__KKT_SHOP__={
  get orders(){return state.orders.map(o=>({...o}))},
  get transfers(){return state.transfers.map(x=>({...x}))},
  open, getProducts:()=>allProducts().map(p=>({...p})),
- sync:syncSMS,recordEpisodeTransfer
+ sync:syncSMS,recordEpisodeTransfer,recordEpisodeGift
 };
 restoreGiftChats();
 syncSMS();
