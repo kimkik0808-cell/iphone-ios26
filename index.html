@@ -373,7 +373,7 @@ function advancePhoneCall(){
  if(mode!=='phone'||sub!=='call'||!activeCall||!callConnected||callEnding)return;
  const list=$('#calllines'),line=activeCall.lines[callLineIndex];if(!list||!line)return;
  const hint=$('#calltaphint'),wait=$('#callwait');if(hint)hint.remove();if(wait)wait.remove();
- const who=line[0]==='mine'?phoneT('나','我'):activeCall.name;
+ const who=line[0]==='mine'?phoneT('나','我'):phoneNameText(activeCall);
  const voice=callVoiceFile(callLineIndex);
  const replay=voice?`<button type="button" class="call-speaker-play" data-call-audio-index="${callLineIndex}" aria-label="${phoneT('음성 다시 듣기','重新播放语音')}">▶</button>`:'';
  list.insertAdjacentHTML('beforeend',`<div class="call-line ${line[0]==='mine'?'mine':''}"><b>${escapeHTML(who)}${replay}</b>${escapeHTML(phoneLineText(line[1]))}</div>`);
@@ -556,7 +556,12 @@ function phoneLineText(value){
  const parts=String(value||'').split('\n');
  return phoneIsZh()?(parts[1]||parts[0]):parts[0];
 }
-function phoneRecentRows(){return phoneCalls.map(x=>`<button class="phone-row ${x.dir==='missed'?'missed':''}" data-phone-call="${x.id}"><span class="call-kind">${x.dir==='out'?'↗':x.dir==='missed'?'↙':'↘'}</span><span class="call-main"><strong>${escapeHTML(x.name)}</strong><p>${escapeHTML(phoneDetailText(x.detail))}</p></span><time>${escapeHTML(phoneTimeText(x.time))}</time><span class="info">ⓘ</span></button>`).join('')}
+function phoneNameText(call){
+ const name=typeof call==='string'?call:call?.name;
+ if(!phoneIsZh())return name||'';
+ return call?.nameZh||({'영재':'英宰'}[name]||name||'');
+}
+function phoneRecentRows(){return phoneCalls.map(x=>`<button class="phone-row ${x.dir==='missed'?'missed':''}" data-phone-call="${x.id}"><span class="call-kind">${x.dir==='out'?'↗':x.dir==='missed'?'↙':'↘'}</span><span class="call-main"><strong>${escapeHTML(phoneNameText(x))}</strong><p>${escapeHTML(phoneDetailText(x.detail))}</p></span><time>${escapeHTML(phoneTimeText(x.time))}</time><span class="info">ⓘ</span></button>`).join('')}
 function phoneContactRows(q=''){
  const groups=['멤버','아티스트','회사','가족','친구'];
  const query=String(q||'').toLowerCase();
@@ -590,7 +595,7 @@ function incomingCallPage(){
  const c=activeCall||phoneContactCall(dial||phoneT('알 수 없음','未知号码'));
  const declineIcon='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4.5 16.8c6.8-4.5 16.2-4.5 23 0l-3.6 5.4c-.6.9-1.8 1.1-2.7.5l-3.2-2.1a3.6 3.6 0 0 0-4 0l-3.2 2.1c-.9.6-2.1.4-2.7-.5z"/></svg>';
  const acceptIcon='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.451l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.678.678 0 0 0-.58-.122l-2.19.547a1.745 1.745 0 0 1-1.657-.459L5.482 8.062a1.745 1.745 0 0 1-.46-1.657l.548-2.19a.678.678 0 0 0-.122-.58z"/></svg>';
- return `<div class="call-screen incoming-call-screen"><div class="call-person"><div class="call-label">${phoneT('휴대전화','手机')}</div><h1>${escapeHTML(c.name)}</h1><p>${phoneT('전화가 왔습니다','来电')}</p></div><div class="incoming-call-actions"><button type="button" class="incoming-call-button decline" data-call-decline aria-label="${phoneT('거절','拒绝')}"><i>${declineIcon}</i><span>${phoneT('거절','拒绝')}</span></button><button type="button" class="incoming-call-button accept" data-call-accept aria-label="${phoneT('응답','接听')}"><i>${acceptIcon}</i><span>${phoneT('응답','接听')}</span></button></div></div>`
+ return `<div class="call-screen incoming-call-screen"><div class="call-person"><div class="call-label">${phoneT('휴대전화','手机')}</div><h1>${escapeHTML(phoneNameText(c))}</h1><p>${phoneT('전화가 왔습니다','来电')}</p></div><div class="incoming-call-actions"><button type="button" class="incoming-call-button decline" data-call-decline aria-label="${phoneT('거절','拒绝')}"><i>${declineIcon}</i><span>${phoneT('거절','拒绝')}</span></button><button type="button" class="incoming-call-button accept" data-call-accept aria-label="${phoneT('응답','接听')}"><i>${acceptIcon}</i><span>${phoneT('응답','接听')}</span></button></div></div>`
 }
 function callPage(){
  const c=activeCall||phoneContactCall(dial||phoneT('알 수 없음','未知号码'));
@@ -610,7 +615,7 @@ function callPage(){
   ['hang',phoneT('통화 종료','结束')],
   ['keypad',phoneT('키패드','拨号键盘')]
  ];
- return `<div class="call-screen"><div class="call-person"><div class="call-label">${phoneT('휴대전화','手机')}</div><h1>${escapeHTML(c.name)}</h1><p id="callstatus">${phoneT('연결 중…','正在连接…')}</p></div><div class="call-transcript" id="calllines"><h2>${phoneT('통화 내용','通话内容')}</h2><div class="call-tap-hint" id="calltaphint"><span><i>☝︎</i>${phoneT('화면을 누르면 다음 대화가 표시됩니다','点击屏幕显示下一句对话')}</span></div></div><div class="call-actions">${actions.map(([key,label])=>`<button type="button" class="call-control ${key==='hang'?'hang':''}" ${key==='hang'?'data-hang':''} aria-label="${label}"><i>${icons[key]}</i><span>${label}</span></button>`).join('')}</div></div>`
+ return `<div class="call-screen"><div class="call-person"><div class="call-label">${phoneT('휴대전화','手机')}</div><h1>${escapeHTML(phoneNameText(c))}</h1><p id="callstatus">${phoneT('연결 중…','正在连接…')}</p></div><div class="call-transcript" id="calllines"><h2>${phoneT('통화 내용','通话内容')}</h2><div class="call-tap-hint" id="calltaphint"><span><i>☝︎</i>${phoneT('화면을 누르면 다음 대화가 표시됩니다','点击屏幕显示下一句对话')}</span></div></div><div class="call-actions">${actions.map(([key,label])=>`<button type="button" class="call-control ${key==='hang'?'hang':''}" ${key==='hang'?'data-hang':''} aria-label="${label}"><i>${icons[key]}</i><span>${label}</span></button>`).join('')}</div></div>`
 }
 function messagesPage(kakao){if(sub==='chat')return chatPage(kakao);return nav(kakao?'채팅':'메시지','',kakao?'✎':'↻')+`<div class="large-title">${kakao?'채팅':'메시지'}${kakao?'':`<span class="sms-count">${texts.length}</span>`}</div><div class="ios-search">⌕ <input id="threadquery" placeholder="검색"></div>${kakao?'':'<div class="sms-filter"><span>모든 메시지</span><span>알 수 없는 발신자</span><span>읽지 않음</span></div>'}<div class="ios-list ${kakao?'':'sms-list'}" id="threadlist">${listMessages(kakao?kakaoChats:texts)}</div>${kakao?tabs([['friends','♟','친구'],['chats','▤','채팅'],['open','◉','오픈채팅'],['more','•••','더보기']],'chats'):''}`}
 function safariPage(){return `<div class="safari-page"><div class="large-title">시작 페이지</div><div class="safari-section-head"><b>즐겨찾기</b></div><div class="safari-favorites">${[['NAVER','N'],['Google','G'],['YouTube','▶'],['Apple','●']].map(([n,icon])=>`<button class="safari-fav" data-fav="${n}"><i>${icon}</i>${n}</button>`).join('')}</div><div class="safari-section-head"><b>최근 검색</b><span>${safariHistory.length}개</span></div><div class="safari-history">${safariHistory.map(x=>`<button class="safari-history-row" data-safari-query="${escapeHTML(x.q)}" ${x.url?`data-safari-url="${escapeHTML(x.url)}"`:''}><i>${x.url?'▤':'⌕'}</i><span>${escapeHTML(x.q)}</span><small>${escapeHTML(x.time)}</small></button>`).join('')}</div><div class="safari-section-head"><b>개인정보 보호 보고서</b></div><div class="safari-privacy"><i>🛡</i><div><b>개인정보 보호가 켜져 있습니다.</b><p>Safari가 사용자의 브라우징 활동을 보호하고 있습니다.</p></div></div></div><div class="urlbar"><span style="font-size:22px;color:#007aff">‹</span><form id="safariform"><span style="color:#777">ᴀᴀ&nbsp;</span><input id="safariaddress" placeholder="검색어 또는 웹 사이트 이름 입력" autocomplete="off"><button>↗</button></form><span style="font-size:22px;color:#007aff">▢</span></div>`}
