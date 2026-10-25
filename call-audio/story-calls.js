@@ -9,7 +9,8 @@ window.__IPHONE_STORY_CALL_DATA__={
   dir:'in',
   detail:'수신 통화',
   audioPrefix:'ep003-youngjae',
-  audioExt:'m4a',
+  audioExt:'mp3',
+  audioIndices:[2,4,6,8],
   lines:[
    ['other','형\n哥'],
    ['mine','왜\n咋了'],
