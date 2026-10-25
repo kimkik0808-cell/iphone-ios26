@@ -1529,7 +1529,7 @@ function runEp15(delay=500,activateComposer=false){
   }
   if(step.type==='gift'){
    const flag='gift:'+index;if(epState15.eventFlags[flag]){epState15.cursor=index+1;saveEp15();wait(next,300);return}
-   const event={id:step.id,itemId:step.itemId,brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price,recipient:step.recipient,at:Date.now(),simulated:true};
+   const event={id:step.id,itemId:step.itemId,brand:step.brand,item:step.item,itemZh:step.itemZh,price:step.price,recipient:step.recipient,at:Date.now(),simulated:true,replay:!!epState15.manualStart};
    const finishGift=()=>{epState15.eventFlags[flag]=true;epState15.cursor=index+1;syncEpChat15();saveEp15();view15='room';chat15='xxx';keyboard15=false;draft15='';epRender15();runEp15(900)};
    if(window.__KKT_SHOP__?.playEpisodeGift){pauseEp15();window.__KKT_SHOP__.playEpisodeGift(event,finishGift);return}
    if(!window.__KKT_SHOP__?.recordEpisodeGift){wait(next,150);return}
@@ -1606,7 +1606,7 @@ const prevRender15=render,prevBack15=back;render=function(){if(mode==='kakao')re
 <script src="./kakao/shop-sms.js?v=3&amp;build=merchant-pay-v1"></script>
 <link rel="stylesheet" href="./music/music.css?v=5&amp;build=music-v27">
 <link rel="stylesheet" href="./kakao/shop.css?v=5&amp;build=ep002-gift-v2">
-<script src="./kakao/shop.js?v=13&amp;build=ep002-gift-notification-backfill-v1"></script>
+<script src="./kakao/shop.js?v=14&amp;build=episode-replay-v1"></script>
 <link rel="stylesheet" href="./coupang/coupang.css?v=2&amp;build=ep002-dynamic-v1">
 <script src="./coupang/coupang.js?v=6&amp;build=ai-only-v2"></script>
 <script src="./site-notice.js?v=10&amp;build=v032"></script>
