@@ -8,9 +8,16 @@ window.__IPHONE_STORY_CALL_DATA__={
   time:'방금',
   dir:'in',
   detail:'수신 통화',
-  audioPrefix:'ep003-youngjae',
-  audioExt:'mp3',
-  audioIndices:[2,4,6,8],
+  audioFiles:[
+   'ep003-youngjae-01.m4a',
+   'ep003-youngjae-02.mp3',
+   'ep003-youngjae-03.m4a',
+   'ep003-youngjae-04.mp3',
+   'ep003-youngjae-05.m4a',
+   'ep003-youngjae-06.mp3',
+   'ep003-youngjae-07.m4a',
+   'ep003-youngjae-08.mp3'
+  ],
   lines:[
    ['other','형\n哥'],
    ['mine','왜\n咋了'],
