@@ -1282,7 +1282,7 @@ if(mode==='instagram')render14();
 .k15-giftcard{width:218px;border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 1px 2px #0002;padding:0 13px 12px;display:flex;flex-direction:column}.k15-giftart{height:112px;margin:0 -13px 11px;background:linear-gradient(145deg,#eee8df,#c8b8a3);display:grid;place-items:center;color:#171717;font:700 42px Georgia,serif;letter-spacing:-4px}.k15-giftart span{font-size:19px;letter-spacing:0;margin-left:3px}.k15-giftcard small{font-size:10px;color:#8b8b8b}.k15-giftcard strong{font-size:14px;line-height:1.35;margin:3px 0 8px}.k15-giftcard b{font-size:15px}.k15-giftcard i{margin-top:10px;border-top:1px solid #eee;padding-top:9px;font-size:11px;font-style:normal;color:#816f56}
 .k15-moreprofile{margin:0;padding:14px 18px;background:#fff;border-radius:0;border-bottom:1px solid #eee}.k15-pay{margin:12px 16px;background:#f6f6f6;border-radius:12px;padding:15px}.k15-paytop{display:flex;align-items:center;gap:8px;font-size:14px}.k15-paytop b{font-size:17px}.k15-paytop button{margin-left:auto;background:none;font-size:12px;color:#777}.k15-payactions{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;border-top:1px solid #e6e6e6;padding-top:12px}.k15-payactions button{background:none;border-right:1px solid #e2e2e2;font-size:12px}.k15-payactions button:last-child{border:0}.k15-servicegrid{display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px 15px}.k15-servicegrid button{height:70px;background:none;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:8px}.k15-servicegrid i{font-style:normal;font-size:23px}.k15-ad{margin:4px 16px 14px;border-radius:11px;background:#fee500;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;font-size:12px}.k15-ad b{font-size:14px;display:block;margin-bottom:4px}.k15-opentabs{display:flex;gap:7px;padding:0 15px 12px;overflow:auto}.k15-opentabs button{border:1px solid #e2e2e2;background:#fff;border-radius:18px;padding:8px 13px;white-space:nowrap;font-size:12px}.k15-opentabs button.active{background:#222;color:#fff;border-color:#222}.k15-openhero{height:132px;margin:0 15px 14px;border-radius:13px;background:linear-gradient(130deg,#fee86a,#ffd342);padding:20px;position:relative;overflow:hidden}.k15-openhero b{font-size:18px;display:block;line-height:1.35}.k15-openhero p{font-size:12px;color:#665a18}.k15-openhero:after{content:'OPEN';position:absolute;right:-2px;bottom:-12px;font-size:46px;font-weight:900;color:#fff8}.k15-openheading{display:flex;align-items:center;padding:4px 18px 8px}.k15-openheading b{font-size:16px}.k15-openheading span{margin-left:auto;font-size:11px;color:#888}.k15-openrow{margin:0 15px 10px;border:1px solid #ededed;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}.k15-openpic{width:52px;height:52px;border-radius:10px;background:linear-gradient(145deg,#98c8d8,#6c92b2);display:grid;place-items:center;font-size:24px}.k15-openrow strong{font-size:14px}.k15-openrow p{font-size:11px;color:#888;margin:5px 0 0}
 </style>
-<script src="./kakao/episodes.js?build=ep002-v3"></script>
+<script src="./kakao/episodes.js?build=ep003-v1"></script>
 <style id="kkt-episode-picker-v1">
 .k15-episode-overlay{position:absolute;inset:0;z-index:40;display:flex;align-items:flex-end}
 .k15-episode-backdrop{position:absolute;inset:0;border:0;background:#0008;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
@@ -1341,7 +1341,7 @@ if(hydratedZh15){try{localStorage.setItem('jh_kkt15',JSON.stringify(data15))}cat
 if(refreshSeed15){try{localStorage.setItem('jh_kkt_seed_revision',KKTSEEDREV15)}catch(e){}}
 let tab15='chats',view15='',chat15='',query15='',blocked15=false,keyboard15=false,typing15=false,draft15='',typeTimer15=0,replyTimer15=0,episodePickerOpen15=false;
 let episodeTimer15=0,episodeToken15=0;
-const episodes15=['KKT_EP001','KKT_EP002'].map(id=>window.__KKT_EPISODES__?.[id]).filter(Boolean);
+const episodes15=['KKT_EP001','KKT_EP002','KKT_EP003'].map(id=>window.__KKT_EPISODES__?.[id]).filter(Boolean);
 const epKey15=id=>'jh_kkt_episode_'+id;
 let episode15=episodes15[0],epState15;
 const epStep15=index=>window.IphoneLocale?.language==='zh'?(episode15?.zhSteps?.[index]||episode15?.steps?.[index]):episode15?.steps?.[index];
@@ -1394,7 +1394,7 @@ function startEpisode15(id){
   let state=index<selectedIndex?historyEpisodeState15(episode):freshEp15(episode);
   if(index===selectedIndex){
    state.status=EPSTATUS15.RUNNING;state.manualStart=true;
-   if(episode.id==='KKT_EP002')state.eventFlags.triggerPopup=true;
+   if(episode.id!=='KKT_EP001')state.eventFlags.triggerPopup=true;
   }
   epStates15[episode.id]=state;persistEpisodeState15(episode,state);
  });
@@ -1421,28 +1421,34 @@ function syncEpChat15(){
 }
 syncEpChat15();saveEp15();
 let epTriggerTimer15=0;
-function ep2Locked15(){return episode15?.id==='KKT_EP002'&&epState15?.status===EPSTATUS15.NOT_STARTED&&!epState15.eventFlags?.triggerPopup}
-function scheduleEp002Trigger15(){
- clearTimeout(epTriggerTimer15);epTriggerTimer15=0;
- const first=epStates15.KKT_EP001,next=epStates15.KKT_EP002;
- if(!first||!next||first.status!==EPSTATUS15.COMPLETED||next.status!==EPSTATUS15.NOT_STARTED||next.eventFlags?.triggerPopup)return;
- const due=(first.completedAt||Date.now())+60000;
- epTriggerTimer15=setTimeout(deliverEp002Trigger15,Math.max(0,due-Date.now()))
+function pendingAutoEpisode15(){
+ for(let i=1;i<episodes15.length;i++){
+  const previous=episodes15[i-1],episode=episodes15[i],previousState=epStates15[previous.id],state=epStates15[episode.id];
+  if(previousState?.status===EPSTATUS15.COMPLETED&&state?.status===EPSTATUS15.NOT_STARTED&&!state.eventFlags?.triggerPopup)return{previous,episode,previousState,state}
+ }
+ return null
 }
-function deliverEp002Trigger15(){
+function episodeLocked15(){return episode15?.id!=='KKT_EP001'&&epState15?.status===EPSTATUS15.NOT_STARTED&&!epState15.eventFlags?.triggerPopup}
+function scheduleNextEpisodeTrigger15(){
+ clearTimeout(epTriggerTimer15);epTriggerTimer15=0;
+ const pending=pendingAutoEpisode15();if(!pending)return;
+ const due=(pending.previousState.completedAt||Date.now())+60000;
+ epTriggerTimer15=setTimeout(deliverNextEpisodeTrigger15,Math.max(0,due-Date.now()))
+}
+function deliverNextEpisodeTrigger15(){
  epTriggerTimer15=0;
- const episode=episodes15.find(ep=>ep.id==='KKT_EP002'),state=epStates15.KKT_EP002,first=epStates15.KKT_EP001;
- if(!episode||!state||state.status!==EPSTATUS15.NOT_STARTED||state.eventFlags?.triggerPopup||first?.status!==EPSTATUS15.COMPLETED)return;
- const due=(first.completedAt||Date.now())+60000;if(Date.now()<due){scheduleEp002Trigger15();return}
- const message=localizedStep15(episode,0),shown=window.__IOS26_NOTIFICATIONS__?.showKakao?.({story:true,sender:'xxx',message:message?.[1]||'너 향수 뭐 써',chatId:'xxx'});
- if(!shown){epTriggerTimer15=setTimeout(deliverEp002Trigger15,1200);return}
+ const pending=pendingAutoEpisode15();if(!pending)return;
+ const{episode,state,previousState}=pending;
+ const due=(previousState.completedAt||Date.now())+60000;if(Date.now()<due){scheduleNextEpisodeTrigger15();return}
+ const message=localizedStep15(episode,0),shown=window.__IOS26_NOTIFICATIONS__?.showKakao?.({story:true,sender:'xxx',message:message?.[1]||'',chatId:'xxx'});
+ if(!shown){epTriggerTimer15=setTimeout(deliverNextEpisodeTrigger15,1200);return}
  state.status=EPSTATUS15.RUNNING;state.cursor=1;state.sentSteps=[...new Set([...(state.sentSteps||[]),0])];state.eventFlags={...(state.eventFlags||{}),triggerPopup:true};
  try{localStorage.setItem(epKey15(episode.id),JSON.stringify(state))}catch(e){}
  selectEpisode15();syncEpChat15();const chat=epChat15();if(chat){chat.unread=1;chat.updatedAt=Date.now();save15()}
  if(epVisible15()){epRender15();runEp15(900)}
 }
-setTimeout(scheduleEp002Trigger15,0);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleEp002Trigger15()});
+setTimeout(scheduleNextEpisodeTrigger15,0);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)scheduleNextEpisodeTrigger15()});
 function pauseEp15(){episodeToken15++;clearTimeout(episodeTimer15);episodeTimer15=0;typing15=false;keyboard15=false;}
 function epVisible15(){return mode==='kakao'&&view15==='room'&&chat15==='xxx'}
 function epRender15(){if(epVisible15())render15()}
@@ -1455,7 +1461,7 @@ function commitEpStep15(index){
 function runEp15(delay=500,activateComposer=false){
  if(!episode15||!epVisible15())return;
  if(epState15.status===EPSTATUS15.COMPLETED){selectEpisode15();if(!epState15||epState15.status===EPSTATUS15.COMPLETED)return;syncEpChat15();draft15=epState15.draft||'';epRender15()}
- if(ep2Locked15()){scheduleEp002Trigger15();return}
+ if(episodeLocked15()){scheduleNextEpisodeTrigger15();return}
  if(epState15.status===EPSTATUS15.NOT_STARTED){epState15.status=EPSTATUS15.RUNNING;syncEpChat15();saveEp15()}
  draft15=epState15.draft;
  if(epState15.status===EPSTATUS15.WAITING_TO_SEND){keyboard15=true;typing15=false;epRender15();return}
@@ -1493,7 +1499,7 @@ function runEp15(delay=500,activateComposer=false){
  function next(){
   if(epState15.unreadMineStep!==null){epState15.unreadMineStep=null;epState15.unreadUntil=0;syncEpChat15();saveEp15()}
   const index=epState15.cursor,step=epStep15(index);
-  if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.completedAt=epState15.completedAt||Date.now();epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();if(episode15.id==='KKT_EP001')scheduleEp002Trigger15();return}
+  if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.completedAt=epState15.completedAt||Date.now();epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();scheduleNextEpisodeTrigger15();return
   if(Array.isArray(step)){
    if(step[0]==='other'){
     typing15=true;keyboard15=false;epRender15();wait(()=>{typing15=false;commitEpStep15(index);epRender15();wait(next,episode15.steps[index+1]?.type==='transfer'?0:650)},850);return
