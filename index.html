@@ -255,8 +255,10 @@ const xxxCallVoiceIndices=new Set([0,2,4,6]);
 function callVoiceFile(index){
  if(!activeCall||!activeCall.lines?.[index])return '';
  if(activeCall.audioPrefix){
+  const lineNumber=index+1;
+  if(Array.isArray(activeCall.audioIndices)&&!activeCall.audioIndices.includes(lineNumber))return '';
   const ext=activeCall.audioExt||'m4a';
-  return activeCall.audioPrefix+'-'+String(index+1).padStart(2,'0')+'.'+ext;
+  return activeCall.audioPrefix+'-'+String(lineNumber).padStart(2,'0')+'.'+ext;
  }
  // Sunwoo conversation has recordings for BOTH speakers, in transcript order.
  if(activeCall.id==='sunwoo')
