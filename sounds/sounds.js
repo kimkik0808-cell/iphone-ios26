@@ -7,7 +7,7 @@
   const candidates={
     sms:['message.m4a','message.mp3','message.wav','sms.m4a','sms.mp3','sms.wav'],
     kakao:['kakao.mp3','kakao.m4a','kakao.wav'],
-    ringtone:['ringtone.m4a','ringtone.mp3','ringtone.wav']
+    ringtone:['call.m4a','ringtone.m4a','ringtone.mp3','ringtone.wav']
   };
   const active=new Map();
   const buffers=new Map();
@@ -70,6 +70,7 @@
     }catch{}
     loadBuffer('sms');
     loadBuffer('kakao');
+    loadBuffer('ringtone');
   }
   document.addEventListener('pointerdown',unlockNotifications,{capture:true,passive:true});
   document.addEventListener('touchstart',unlockNotifications,{capture:true,passive:true});
@@ -103,7 +104,7 @@
   function play(type,loop=false){
     if(silent()||!candidates[type])return false;
     stop(type);
-    if(type==='sms'||type==='kakao'){
+    if(type==='sms'||type==='kakao'||type==='ringtone'){
       if(playBuffer(type,loop))return true;
       if(audioContext){
         loadBuffer(type).then(buffer=>{
