@@ -147,6 +147,7 @@
     },()=>navigate('messages'));
   }
   function showKakao(payload={}){
+    if(payload.story===true&&window.__IPHONE_SOUND__?.shouldDefer?.('kakao'))return false;
     if(!canDisplay(payload.story===true))return false;
     if(payload.story===true)window.__IPHONE_SOUND__?.playKakao();
     return displayInfo({
