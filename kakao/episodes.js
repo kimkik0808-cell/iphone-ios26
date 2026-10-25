@@ -121,7 +121,7 @@ window.__KKT_EPISODES__={
   ]
  },
  KKT_EP003:{
-  id:'KKT_EP003',version:1,name:'거리',contact:'xxx',mode:'INTERACTIVE_AUTO',
+  id:'KKT_EP003',version:1,name:'거리',contact:'xxx',mode:'INTERACTIVE_AUTO',afterCall:'KKT_EP003',
   episodeDate:['2026년 10월 24일 토요일','2026年10月24日 星期六'],
   steps:[
    ['other','향수 잘 받았어 오빠','오후 12:22'],
