@@ -12,6 +12,7 @@
   const active=new Map();
   const buffers=new Map();
   const loading=new Map();
+  const failed=new Set();
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
   let audioContext=null;
   const silent=()=>{try{return localStorage.getItem(KEY)==='1'}catch{return false}};
@@ -34,6 +35,7 @@
   async function loadBuffer(type){
     if(!audioContext||!candidates[type])return null;
     if(buffers.has(type))return buffers.get(type);
+    if(failed.has(type))return null;
     if(loading.has(type))return loading.get(type);
     const task=(async()=>{
       for(const file of candidates[type]){
@@ -42,11 +44,11 @@
           if(!response.ok)continue;
           const data=await response.arrayBuffer();
           const buffer=await audioContext.decodeAudioData(data.slice(0));
-          buffers.set(type,buffer);
+          buffers.set(type,buffer);failed.delete(type);
           return buffer;
         }catch{}
       }
-      return null;
+      failed.add(type);return null;
     })();
     loading.set(type,task);
     try{return await task}finally{loading.delete(type)}
@@ -121,6 +123,8 @@
   }
   window.__IPHONE_SOUND__={
     get silent(){return silent()},setSilent,
+    readyFor:type=>buffers.has(type),
+    shouldDefer:type=>!!AudioContextClass&&!buffers.has(type)&&!failed.has(type),
     playSMS:()=>play('sms'),playKakao:()=>play('kakao'),
     startRingtone:()=>play('ringtone',true),stopRingtone:()=>stop('ringtone'),stopAll
   };
