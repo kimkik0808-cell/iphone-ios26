@@ -4,6 +4,7 @@ window.__IPHONE_STORY_CALL_DATA__={
   id:'story-ep003-youngjae',
   episodeId:'KKT_EP003',
   name:'영재',
+  nameZh:'英宰',
   number:'010-33••-3333',
   time:'방금',
   dir:'in',
