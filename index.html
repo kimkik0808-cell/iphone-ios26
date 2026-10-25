@@ -1499,7 +1499,7 @@ function runEp15(delay=500,activateComposer=false){
  function next(){
   if(epState15.unreadMineStep!==null){epState15.unreadMineStep=null;epState15.unreadUntil=0;syncEpChat15();saveEp15()}
   const index=epState15.cursor,step=epStep15(index);
-  if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.completedAt=epState15.completedAt||Date.now();epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();scheduleNextEpisodeTrigger15();return
+  if(!step){epState15.status=EPSTATUS15.COMPLETED;epState15.completed=true;epState15.completedAt=epState15.completedAt||Date.now();epState15.pendingStep=null;epState15.draft='';draft15='';keyboard15=false;typing15=false;saveEp15();epRender15();scheduleNextEpisodeTrigger15();return}
   if(Array.isArray(step)){
    if(step[0]==='other'){
     typing15=true;keyboard15=false;epRender15();wait(()=>{typing15=false;commitEpStep15(index);epRender15();wait(next,episode15.steps[index+1]?.type==='transfer'?0:650)},850);return
