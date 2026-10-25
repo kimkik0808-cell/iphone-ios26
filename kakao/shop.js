@@ -242,15 +242,15 @@ function recordMerchantPayment(event){
  const payment={id:event.id,amount:event.amount,merchant:event.merchant||'쿠팡',item:event.item||'',at:event.at||Date.now(),balanceAfter:balance()-event.amount};
  state.payments.push(payment);save();syncSMS();return true;
 }
-function notifyEpisodeGiftSMS(o,p){
- if(!o||!p||o.smsNotified)return false;
+function notifyEpisodeGiftSMS(o,p,force=false){
+ if(!o||!p||(!force&&o.smsNotified))return false;
  const zh=window.IphoneLocale?.language==='zh';
  const item=zh?(p.zh||p.ko):p.ko;
  window.__IPHONE_SMS__?.notify?.({
   type:'gift',story:true,sender:zh?'Kakao礼物':'카카오 선물하기',
   message:zh?'已向'+o.recipient+'发送 '+item:o.recipient+'님에게 '+item+' 선물 발송 완료'
  });
- o.smsNotified=true;save();return true;
+ if(!force){o.smsNotified=true;save()}return true;
 }
 function recordEpisodeGift(event){
  if(!event||typeof event.id!=='string'||!getItem(event.itemId)||!Number.isFinite(event.price)||event.price<=0)return false;
@@ -264,10 +264,11 @@ function waitEpisodeGift(fn,ms){const timer=setTimeout(()=>{storyGift.timers=sto
 function playEpisodeGift(event,done){
  stopEpisodeGift();
  if(!event||!getItem(event.itemId)){done?.(false);return}
- if(state.orders.some(o=>o.id===event.id)){recordEpisodeGift(event);done?.(false);return}
+ const existing=state.orders.find(o=>o.id===event.id);
+ if(existing&&!event.replay){recordEpisodeGift(event);done?.(false);return}
  const p=getItem(event.itemId);
  storyGift.active=true;selected=p.id;recipient=event.recipient||'xxx';intent='gift';category=p.kind;searchQuery='';searchResults=[];page='home';storyGift.phase='product';draw();
- waitEpisodeGift(()=>{page='detail';storyGift.phase='choose-before';draw();waitEpisodeGift(()=>{page='recipients';storyGift.phase='recipient';draw();waitEpisodeGift(()=>{storyGift.phase='recipient-next';draw();waitEpisodeGift(()=>{page='checkout';storyGift.phase='purchase';draw();waitEpisodeGift(()=>{recordEpisodeGift(event);orderId=event.id;page='success';storyGift.phase='success';draw();waitEpisodeGift(()=>{storyGift.active=false;done?.(true)},1600)},800)},620)},620)},700)},720)
+ waitEpisodeGift(()=>{page='detail';storyGift.phase='choose-before';draw();waitEpisodeGift(()=>{page='recipients';storyGift.phase='recipient';draw();waitEpisodeGift(()=>{storyGift.phase='recipient-next';draw();waitEpisodeGift(()=>{page='checkout';storyGift.phase='purchase';draw();waitEpisodeGift(()=>{if(existing){syncSMS();notifyEpisodeGiftSMS(existing,p,true)}else recordEpisodeGift(event);orderId=event.id;page='success';storyGift.phase='success';draw();waitEpisodeGift(()=>{storyGift.active=false;done?.(true)},1600)},800)},620)},620)},700)},720)
 }
 const giftReplyPending=new Set();
 const normalizeGiftMarker=value=>{
